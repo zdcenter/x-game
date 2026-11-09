@@ -17,6 +17,7 @@ type SubmitStatRequest struct {
 	Score            int    `json:"score"`
 	Time             int    `json:"time"`
 	Won              bool   `json:"won"`
+	UsedHint         bool   `json:"used_hint"`
 	BountyCoins      int    `json:"bounty_coins,omitempty"`
 	RoomID           string `json:"room_id,omitempty"`
 	OpponentUsername string `json:"opponent_username,omitempty"`
@@ -71,6 +72,11 @@ func SubmitStat(c fiber.Ctx) error {
 
 	isNewRecord := false
 
+	// Eligibility for Best Time & Hall of Fame:
+	// 1. Time must be at least 3 seconds (blocks bot exploits, accidental instant submits, 0.1s/1s anomalies)
+	// 2. Must NOT have used in-game hints (hints mean assisted/casual mode, not eligible for PB or leaderboard)
+	isTimeEligible := req.Won && req.Time >= 3 && !req.UsedHint
+
 	if result.Error != nil {
 		// Create new stat
 		stat = domain.UserGameStat{
@@ -86,13 +92,13 @@ func SubmitStat(c fiber.Ctx) error {
 		}
 
 		// If it's a score based game
-		if req.Score > 0 {
+		if req.Score > 0 && !req.UsedHint {
 			stat.BestScore = req.Score
 			isNewRecord = true
 		}
 
 		// If it's a time based game
-		if req.Time > 0 && req.Won {
+		if isTimeEligible {
 			stat.BestTime = req.Time
 			isNewRecord = true
 		}
@@ -106,13 +112,13 @@ func SubmitStat(c fiber.Ctx) error {
 		}
 
 		// Update Best Score if applicable
-		if req.Score > stat.BestScore {
+		if req.Score > stat.BestScore && !req.UsedHint {
 			stat.BestScore = req.Score
 			isNewRecord = true
 		}
 
 		// Update Best Time if applicable (lower is better, but 0 means not set)
-		if req.Time > 0 && req.Won {
+		if isTimeEligible {
 			if stat.BestTime == 0 || req.Time < stat.BestTime {
 				stat.BestTime = req.Time
 				isNewRecord = true
@@ -210,10 +216,10 @@ func SubmitStat(c fiber.Ctx) error {
 			}
 			var prevChampion ChampionRecord
 
-			if isTimeGame && req.Time > 0 && req.Won {
+			if isTimeGame && isTimeEligible {
 				db.DB.Table("gm_user_game_stats AS s").
 					Joins("JOIN gm_users u ON u.id = s.user_id AND u.deleted_at IS NULL AND u.role != 'guest'").
-					Where("s.game_id = ? AND s.difficulty = ? AND s.best_time > 0 AND s.user_id != ?", gameID, req.Difficulty, userID).
+					Where("s.game_id = ? AND s.difficulty = ? AND s.best_time >= 3 AND s.user_id != ?", gameID, req.Difficulty, userID).
 					Order("s.best_time ASC").
 					Select("s.user_id, u.username, u.avatar, s.best_time, s.best_score").
 					Limit(1).

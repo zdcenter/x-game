@@ -92,7 +92,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		}
 
 		if rankType == "time" {
-			q = q.Where("s.best_time > 0").Order("s.best_time ASC")
+			q = q.Where("s.best_time >= 3").Order("s.best_time ASC")
 		} else if rankType == "rating" {
 			q = q.Order("s.rating DESC")
 		} else {
@@ -112,7 +112,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 			countQ = countQ.Where("s.updated_at > NOW() - INTERVAL '7 days'")
 		}
 		if rankType == "time" {
-			countQ = countQ.Where("s.best_time > 0")
+			countQ = countQ.Where("s.best_time >= 3")
 		} else if rankType != "rating" {
 			countQ = countQ.Where("s.best_score > 0")
 		}
@@ -127,7 +127,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		}
 
 		if rankType == "time" {
-			q = q.Where("s.best_time > 0").
+			q = q.Where("s.best_time >= 3").
 				Group("s.user_id, u.username, u.brain_coins").
 				Order("best_time ASC")
 		} else if rankType == "rating" {
@@ -140,7 +140,7 @@ func GetLeaderboard(c fiber.Ctx) error {
 		}
 
 		q.Select("s.user_id, u.username, " +
-			"COALESCE(MIN(CASE WHEN s.best_time > 0 THEN s.best_time ELSE NULL END), 0) AS best_time, " +
+			"COALESCE(MIN(CASE WHEN s.best_time >= 3 THEN s.best_time ELSE NULL END), 0) AS best_time, " +
 			"COALESCE(MAX(s.best_score), 0) AS best_score, " +
 			"COALESCE(SUM(s.play_count), 0) AS play_count, " +
 			"COALESCE(SUM(s.win_count), 0) AS win_count, " +
@@ -225,8 +225,8 @@ func getUserRank(gameID, mode, difficulty, rankType, period string, userID uint)
 		}
 
 		var rank int64
-		if rankType == "time" && stat.BestTime > 0 {
-			q = q.Where("s.best_time > 0 AND s.best_time < ?", stat.BestTime)
+		if rankType == "time" && stat.BestTime >= 3 {
+			q = q.Where("s.best_time >= 3 AND s.best_time < ?", stat.BestTime)
 		} else if rankType == "score" && stat.BestScore > 0 {
 			q = q.Where("s.best_score > ?", stat.BestScore)
 		} else if rankType == "rating" {
@@ -246,7 +246,7 @@ func getUserRank(gameID, mode, difficulty, rankType, period string, userID uint)
 		Rating    int `gorm:"column:rating"`
 	}
 	err := db.DB.Table("gm_user_game_stats").
-		Select("COALESCE(MIN(CASE WHEN best_time > 0 THEN best_time ELSE NULL END), 0) AS best_time, " +
+		Select("COALESCE(MIN(CASE WHEN best_time >= 3 THEN best_time ELSE NULL END), 0) AS best_time, " +
 			"COALESCE(MAX(best_score), 0) AS best_score, " +
 			"COALESCE(MAX(rating), 1000) AS rating").
 		Where("user_id = ? AND game_id = ?", userID, gameID).
@@ -263,8 +263,8 @@ func getUserRank(gameID, mode, difficulty, rankType, period string, userID uint)
 		q = q.Where("s.updated_at > NOW() - INTERVAL '7 days'")
 	}
 
-	if rankType == "time" && stat.BestTime > 0 {
-		q = q.Where("s.best_time > 0").
+	if rankType == "time" && stat.BestTime >= 3 {
+		q = q.Where("s.best_time >= 3").
 			Group("s.user_id").
 			Having("MIN(s.best_time) < ?", stat.BestTime)
 	} else if rankType != "time" && rankType != "rating" && stat.BestScore > 0 {
@@ -521,7 +521,7 @@ func GetGameDifficultyRecords(c fiber.Ctx) error {
 				gameID, diff, diff)
 
 		if rankType == "time" {
-			q = q.Where("s.best_time > 0").Order("s.best_time ASC")
+			q = q.Where("s.best_time >= 3").Order("s.best_time ASC")
 		} else {
 			q = q.Where("s.best_score > 0").Order("s.best_score DESC")
 		}

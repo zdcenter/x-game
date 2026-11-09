@@ -27,6 +27,7 @@ export interface SubmitStatRequest {
   score: number;
   time: number;
   won: boolean;
+  used_hint?: boolean;
   bounty_coins?: number;
   room_id?: string;
   opponent_username?: string;

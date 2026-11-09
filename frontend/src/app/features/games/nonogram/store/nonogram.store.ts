@@ -231,7 +231,7 @@ export class NonogramStore extends BaseGameStore {
     effect(() => {
       const s = this.status();
       if (s === GameStatus.Finished && this.currentRoomMode() === GameMode.Single) {
-        this.submitSingleStat({ time: this.timeSpent(), won: true }).subscribe();
+        this.submitSingleStat({ time: this.timeSpent(), won: true, usedHint: this.hintsUsed() > 0 }).subscribe();
       }
     });
 
@@ -624,6 +624,8 @@ export class NonogramStore extends BaseGameStore {
     const state = this.localState();
     if (!state || !state.answerGrid || state.answerGrid.length === 0) return;
 
+    this.hintsUsed.update(v => v + 1);
+
     // Find an empty or incorrectly filled cell
     const candidates: {x: number, y: number}[] = [];
     for (let y = 0; y < state.height; y++) {
@@ -694,6 +696,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   private initSinglePlayer(difficulty: string) {
+    this.hintsUsed.set(0);
     const savedDiff = typeof localStorage !== 'undefined' ? localStorage.getItem('nonogram_difficulty') : null;
     if (savedDiff && (!difficulty || difficulty === GameDifficulty.Medium)) {
       difficulty = savedDiff;

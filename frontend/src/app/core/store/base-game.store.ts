@@ -34,6 +34,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
   readonly isPersonalBest = signal<boolean>(false);
+  readonly hintsUsed = signal<number>(0);
 
   // PK stat auto-submit tracking (plain properties, not signals)
   private _pkPrevStatus = '';
@@ -569,6 +570,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
    * 彻底杜绝跨局幽灵状态（如乐观插旗、选中项、临时动画触发器等）残留。
    */
   resetLocalGameState(): void {
+    this.hintsUsed.set(0);
     this.onResetLocalGameState();
   }
 
@@ -606,12 +608,14 @@ export abstract class BaseGameStore implements GameStoreInterface {
    * 提交单机模式统计并结算，自动填入 gameId / mode / difficulty。
    * 子类只需传入游戏特有的 score / time / won。
    */
-  submitSingleStat(payload: { score?: number; time?: number; won?: boolean } = {}): Observable<SubmitStatResponse> {
+  submitSingleStat(payload: { score?: number; time?: number; won?: boolean; usedHint?: boolean } = {}): Observable<SubmitStatResponse> {
     this.lastStatResult.set(null);
     this.isPersonalBest.set(false);
     const won = payload.won ?? true;
+    const usedHint = payload.usedHint ?? (this.hintsUsed() > 0);
 
     // 纯前端 0ms 即时成就与多巴胺里程碑检测 (准则第5条，不依赖服务器，离线或游客立即触发)
+    // 只有在未使用提示辅助且用时达到合规底线(>=3s)时，才判定个人最佳纪录
     try {
       const checkRes = this.localAchievementService.trackGameFinished({
         gameId: this.gameId,
@@ -620,7 +624,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
         score: payload.score,
         timeSpent: payload.time
       });
-      if (checkRes.isPersonalBest) {
+      if (checkRes.isPersonalBest && !usedHint && (payload.time === undefined || payload.time >= 3)) {
         this.isPersonalBest.set(true);
       }
     } catch (e) {
@@ -643,6 +647,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
       score: payload.score ?? 0,
       time:  payload.time  ?? 0,
       won,
+      used_hint: usedHint,
     }).pipe(
       tap(res => {
         this.lastStatResult.set(res);

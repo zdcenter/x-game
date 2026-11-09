@@ -166,7 +166,7 @@ func upsertPuzzleStat(userID uint, gameID, mode, difficulty string, stars, timeS
 			PlayCount:  1,
 			WinCount:   1,
 		}
-		if timeSpent > 0 {
+		if timeSpent >= 3 {
 			stat.BestTime = timeSpent
 			isNewRecord = true
 		}
@@ -178,7 +178,7 @@ func upsertPuzzleStat(userID uint, gameID, mode, difficulty string, stars, timeS
 	} else {
 		stat.PlayCount++
 		stat.WinCount++
-		if timeSpent > 0 && (stat.BestTime == 0 || timeSpent < stat.BestTime) {
+		if timeSpent >= 3 && (stat.BestTime == 0 || timeSpent < stat.BestTime) {
 			stat.BestTime = timeSpent
 			isNewRecord = true
 		}

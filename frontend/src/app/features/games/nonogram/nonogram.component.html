@@ -50,13 +50,27 @@
       (pk)="navigateToPkArena()">
 
       <!-- Center: [🎯 难度选择抽屉 / PK 模式指示] (中间区域) -->
-      <div class="flex items-center justify-center mx-2 min-w-0 flex-1">
+      <div class="flex items-center justify-center mx-2 min-w-0 flex-1 gap-1.5 sm:gap-2">
         @if (store.currentRoomMode() === GameMode.Single) {
           <app-difficulty-selector
             [availableDifficulties]="predefinedDifficulties"
             [currentDifficulty]="store.currentDifficulty()"
             (difficultyChange)="changeSingleDifficulty($event)">
           </app-difficulty-selector>
+
+          <!-- ⏱️ 计时与冲榜标识 (Mobile/Handheld) -->
+          <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg px-2 py-0.5 h-7 justify-center shadow-2xs">
+            <span class="text-xs opacity-80 select-none">⏱️</span>
+            <span class="font-digital font-mono text-cyan-500 font-bold text-xs sm:text-sm tracking-wider leading-none">
+              {{ gameTimer.formatTime(store.timeSpent()) }}
+            </span>
+          </div>
+
+          @if (store.hintsUsed() > 0) {
+            <span class="inline-flex items-center text-[10px] font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md" title="已使用提示辅助，不计入个人最佳纪录">
+              💡 辅助
+            </span>
+          }
         } @else {
           <!-- PK 模式房间信息 -->
           <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs sm:text-sm font-bold truncate">
@@ -70,7 +84,7 @@
 
   <!-- Single Player Board Utility & Zoom Toolbar (PC & Tablet) -->
   @if (store.currentRoomMode() === GameMode.Single && !isHandheld()) {
-    <div class="flex items-center justify-between w-full max-w-4xl px-2 sm:px-4 py-1 text-xs text-[var(--color-text-muted)] select-none shrink-0 gap-2">
+    <div class="flex items-center justify-between w-full max-w-4xl px-2 sm:px-4 py-1.5 text-xs text-[var(--color-text-muted)] select-none shrink-0 gap-2">
       <!-- Left: Grid Size & Completed Line Progress -->
       <div class="flex items-center gap-2 text-xs">
         <span class="font-mono font-bold px-2 py-0.5 rounded-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] text-[var(--color-text-main)]">
@@ -81,6 +95,27 @@
           <strong class="text-emerald-500 font-mono">{{ completedRowsCount() }}/{{ store.height() }}</strong> ·
           <strong class="text-blue-500 font-mono">{{ completedColsCount() }}/{{ store.width() }}</strong>
         </span>
+      </div>
+
+      <!-- Center: Live Timer & Record Eligibility Badge -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-lg px-2.5 py-1 shadow-2xs">
+          <span class="text-xs opacity-80 select-none">⏱️</span>
+          <span class="font-digital font-mono text-cyan-500 font-bold text-sm tracking-wider leading-none">
+            {{ gameTimer.formatTime(store.timeSpent()) }}
+          </span>
+        </div>
+        @if (store.hintsUsed() === 0) {
+          <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md"
+                title="无提示自主解题，成绩有效计入个人最佳与全网极限纪录">
+            🏆 冲榜有效
+          </span>
+        } @else {
+          <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md"
+                [title]="'已使用提示辅助 ' + store.hintsUsed() + ' 次，本局属于娱乐探索，不计入个人最佳与全网极限纪录'">
+            💡 娱乐辅助 (不冲榜)
+          </span>
+        }
       </div>
 
       <!-- Right: Responsive Zoom & Fit Controls -->
