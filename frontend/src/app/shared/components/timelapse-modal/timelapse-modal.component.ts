@@ -1,13 +1,66 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { NonogramEngine } from '../../../features/games/nonogram/store/nonogram-engine';
 
 @Component({
   selector: 'app-timelapse-modal',
   standalone: true,
   imports: [CommonModule],
+  styles: [`
+    .nonogram-replay-board {
+      display: grid;
+    }
+    .col-hints {
+      grid-column: 2;
+      grid-row: 1;
+      display: grid;
+      border-top: 2px solid var(--color-border-card);
+      border-left: 2px solid var(--color-border-card);
+      border-right: 2px solid var(--color-border-card);
+    }
+    .col-hint-item {
+      font-size: clamp(8px, calc(var(--cell-size) * 0.44), 16px);
+      border-right: 1px solid var(--color-border-card);
+    }
+    .col-hint-item.thick-r {
+      border-right: 2px solid var(--color-text-muted);
+    }
+    .row-hints {
+      grid-column: 1;
+      grid-row: 2;
+      display: grid;
+      border-top: 2px solid var(--color-border-card);
+      border-left: 2px solid var(--color-border-card);
+      border-bottom: 2px solid var(--color-border-card);
+    }
+    .row-hint-item {
+      font-size: clamp(8px, calc(var(--cell-size) * 0.44), 16px);
+      border-bottom: 1px solid var(--color-border-card);
+    }
+    .row-hint-item.thick-b {
+      border-bottom: 2px solid var(--color-text-muted);
+    }
+    .cells-grid {
+      grid-column: 2;
+      grid-row: 2;
+      display: grid;
+      border: 2px solid var(--color-text-main);
+    }
+    .cell {
+      border-right: 1px solid var(--color-border-card);
+      border-bottom: 1px solid var(--color-border-card);
+      box-sizing: border-box;
+    }
+    .cell.thick-r {
+      border-right: 2px solid var(--color-text-muted);
+    }
+    .cell.thick-b {
+      border-bottom: 2px solid var(--color-text-muted);
+    }
+  `],
   template: `
     <div class="fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md select-none animate-fade-in"
          (click)="close.emit()">
@@ -37,47 +90,157 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         </div>
 
         <!-- Replay Stage / Screen -->
-        <div class="relative w-full h-[280px] sm:h-[340px] rounded-2xl bg-slate-950 border border-purple-500/30 shadow-inner flex flex-col items-center justify-center overflow-hidden p-3 group">
-          <!-- Top Watermark -->
+        <div class="relative w-full h-[300px] sm:h-[370px] rounded-2xl bg-slate-950/90 border border-purple-500/30 shadow-inner flex flex-col items-center justify-center overflow-hidden p-2 sm:p-3 group">
+          <!-- Top Watermark & HUD -->
           <div class="absolute top-2 left-3 flex items-center gap-1.5 text-[10px] font-mono font-black text-white/60 tracking-wider z-20 pointer-events-none">
             <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
             <span>REC • PUZZLE PK</span>
           </div>
 
-          <!-- Top Right Speed Pill & Step Count -->
-          <div class="absolute top-2 right-3 flex items-center gap-2 z-20 pointer-events-none">
+          <!-- Top Center View Mode Switcher (Real Board vs Pure Art) -->
+          @if (hasReplayMoves()) {
+            <div class="absolute top-2 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/90 border border-slate-700/80 rounded-full p-0.5 z-20 shadow-md">
+              <button (click)="viewMode.set('real')"
+                      class="px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer"
+                      [class.bg-purple-600]="viewMode() === 'real'"
+                      [class.text-white]="viewMode() === 'real'"
+                      [class.text-slate-400]="viewMode() !== 'real'">
+                📋 真实棋盘
+              </button>
+              <button (click)="viewMode.set('art')"
+                      class="px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer"
+                      [class.bg-purple-600]="viewMode() === 'art'"
+                      [class.text-white]="viewMode() === 'art'"
+                      [class.text-slate-400]="viewMode() !== 'art'">
+                🎨 纯净画作
+              </button>
+            </div>
+          }
+
+          <!-- Top Right Step Counter & Speed -->
+          <div class="absolute top-2 right-3 flex items-center gap-1.5 z-20 pointer-events-none">
             @if (hasReplayMoves()) {
               <div class="px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-700 text-[10px] font-mono text-purple-300 font-bold">
-                步数: {{ currentMoveIndex() }}/{{ totalMoves() }}
+                {{ currentMoveIndex() }}/{{ totalMoves() }} 步
               </div>
             }
             <div class="px-2 py-0.5 rounded-full bg-purple-500/30 border border-purple-400/50 text-[10px] font-mono font-black text-purple-300">
-              {{ speed() }}x SPEED
+              {{ speed() }}x
             </div>
           </div>
 
-          <!-- Canvas Nonogram Visualizer -->
+          <!-- Core Replay Stage Content -->
           @if (hasReplayMoves()) {
-            <div class="relative flex items-center justify-center w-full h-full my-auto z-10">
-              <canvas #replayCanvas
-                      class="max-h-[220px] sm:max-h-[270px] max-w-[90%] aspect-square rounded-xl shadow-2xl border border-slate-800 bg-[#090d16]">
-              </canvas>
+            <div class="relative flex items-center justify-center w-full h-full my-auto z-10 overflow-hidden py-1">
+              
+              <!-- Mode 1: 真实棋盘 (含顶部列提示、左侧行提示、完成自动划线) -->
+              @if (viewMode() === 'real') {
+                <div class="flex items-center justify-center transition-transform duration-150"
+                     [style.transform]="'scale(' + boardScale() + ')'"
+                     style="transform-origin: center center;">
+                  <div class="nonogram-replay-board select-none shadow-2xl rounded-lg overflow-hidden border border-[var(--color-border-card)]"
+                       [style.--cell-size.px]="replayCellSize()"
+                       [style.grid-template-columns]="'max-content max-content'"
+                       [style.grid-template-rows]="'max-content max-content'">
+                    
+                    <!-- Top-Left blank corner -->
+                    <div class="bg-[var(--color-bg-card)]"></div>
+
+                    <!-- Col Hints (Top) -->
+                    <div class="col-hints bg-[var(--color-bg-card)]"
+                         [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'">
+                      <div *ngFor="let col of colHints(); let x = index"
+                           class="col-hint-item flex flex-col justify-end items-center pb-0.5 text-[var(--color-text-main)] font-black select-none"
+                           [class.thick-r]="(x + 1) % 5 === 0 && x !== width() - 1"
+                           [class.no-border-r]="x === width() - 1"
+                           [class.bg-emerald-500/10]="completedCols()[x]">
+                        <span *ngFor="let hint of col"
+                              class="font-mono font-black leading-none py-0.5 transition-all"
+                              [class.line-through]="completedCols()[x]"
+                              [class.opacity-35]="completedCols()[x]"
+                              [class.text-emerald-400]="completedCols()[x]">{{ hint }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Row Hints (Left) -->
+                    <div class="row-hints bg-[var(--color-bg-card)]"
+                         [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
+                      <div *ngFor="let row of rowHints(); let y = index"
+                           class="row-hint-item flex justify-end items-center pr-1.5 text-[var(--color-text-main)] font-black select-none"
+                           [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
+                           [class.no-border-b]="y === height() - 1"
+                           [class.bg-emerald-500/10]="completedRows()[y]">
+                        <span *ngFor="let hint of row; let last = last"
+                              class="font-mono font-black leading-none mr-1 transition-all"
+                              [class.line-through]="completedRows()[y]"
+                              [class.opacity-35]="completedRows()[y]"
+                              [class.text-emerald-400]="completedRows()[y]">{{ hint }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Main Grid Cells -->
+                    <div class="cells-grid bg-[var(--color-bg-card)]"
+                         [style.grid-template-columns]="'repeat(' + width() + ', ' + replayCellSize() + 'px)'"
+                         [style.grid-template-rows]="'repeat(' + height() + ', ' + replayCellSize() + 'px)'">
+                      <ng-container *ngFor="let row of currentReplayGrid(); let y = index">
+                        <div *ngFor="let cell of row; let x = index"
+                             class="cell flex items-center justify-center relative overflow-hidden transition-colors duration-75"
+                             [class.thick-b]="(y + 1) % 5 === 0 && y !== height() - 1"
+                             [class.thick-r]="(x + 1) % 5 === 0 && x !== width() - 1"
+                             [class.no-border-r]="x === width() - 1"
+                             [class.no-border-b]="y === height() - 1"
+                             [class.bg-[var(--color-text-main)]]="cell === 1"
+                             [class.ring-2]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                             [class.ring-sky-400]="lastMove()?.x === x && lastMove()?.y === y && currentStep() < 100"
+                             [class.z-10]="lastMove()?.x === x && lastMove()?.y === y">
+                          
+                          <!-- Crossed (2) -->
+                          <div *ngIf="cell === 2"
+                               class="text-rose-500 font-bold select-none flex items-center justify-center leading-none"
+                               [style.font-size.px]="replayCellSize() * 0.72">✕</div>
+                        </div>
+                      </ng-container>
+                    </div>
+
+                  </div>
+                </div>
+              } @else {
+                <!-- Mode 2: 纯净画作 (聚焦像素图案) -->
+                <div class="flex items-center justify-center p-2">
+                  <div class="grid bg-slate-900 border-2 border-indigo-500/50 rounded-xl overflow-hidden shadow-2xl p-1"
+                       [style.grid-template-columns]="'repeat(' + width() + ', minmax(0, 1fr))'"
+                       [style.width.px]="pureArtSize()"
+                       [style.height.px]="pureArtSize()">
+                    <ng-container *ngFor="let row of currentReplayGrid(); let y = index">
+                      <div *ngFor="let cell of row; let x = index"
+                           class="w-full h-full border border-slate-800/40 flex items-center justify-center transition-all duration-75"
+                           [class.bg-indigo-500]="cell === 1"
+                           [class.shadow-inner]="cell === 1"
+                           [class.bg-slate-900]="cell === 0"
+                           [class.bg-slate-950]="cell === 2">
+                        <span *ngIf="cell === 2" class="text-rose-500/70 text-[10px] font-bold">✕</span>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+              }
 
               <!-- Completed Art Celebration Stamp -->
               @if (currentStep() >= 100) {
-                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/35 backdrop-blur-[2px] rounded-xl animate-fade-in pointer-events-none">
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] rounded-xl animate-fade-in pointer-events-none z-30">
                   <div class="animate-scale-up px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-purple-500 text-slate-950 font-black text-xs sm:text-sm shadow-xl flex items-center gap-1.5">
                     <span>🏆</span>
                     <span>PERFECT CLEAR!</span>
                   </div>
                   <span class="mt-1 text-[11px] font-mono font-bold text-amber-300 drop-shadow">
-                    全部 {{ totalMoves() }} 步还原完毕
+                    全部 {{ totalMoves() }} 步还原完毕 · 谜面完全解开
                   </span>
                 </div>
               }
+
             </div>
           } @else {
-            <!-- Fallback Step Visualizer (for games without explicit move history) -->
+            <!-- Fallback Step Visualizer -->
             <div class="flex flex-col items-center justify-center gap-2 my-auto text-center z-10">
               <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-purple-900/40 via-slate-900 to-amber-900/30 border border-purple-400/50 flex items-center justify-center shadow-lg">
                 <span class="text-3xl sm:text-4xl font-black font-mono text-purple-300 tabular-nums">
@@ -121,7 +284,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 
         <!-- Playback Controls -->
         <div class="flex items-center justify-between gap-2 px-1 flex-wrap">
-          <!-- Play / Pause / Restart -->
+          <!-- Play / Pause / Restart / Save -->
           <div class="flex items-center gap-2">
             <button (click)="togglePlay()"
                     class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1 active:scale-95 transition-all shadow-sm cursor-pointer">
@@ -171,14 +334,12 @@ import { I18nService } from '../../../core/i18n/i18n.service';
     </div>
   `
 })
-export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit {
+export class TimelapseModalComponent implements OnInit, OnDestroy {
   @Input() gameTitle: string = '';
   @Input() gameId?: string = '';
   @Input() statSummary: string = '';
   @Input() replayData?: any;
   @Output() close = new EventEmitter<void>();
-
-  @ViewChild('replayCanvas', { static: false }) canvasRef?: ElementRef<HTMLCanvasElement>;
 
   private audio = inject(AudioService);
   private haptic = inject(HapticService);
@@ -186,6 +347,12 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
   currentStep = signal(0);
   isPlaying = signal(true);
   speed = signal(2);
+  viewMode = signal<'real' | 'art'>('real');
+
+  readonly width = computed(() => this.replayData?.width || 5);
+  readonly height = computed(() => this.replayData?.height || 5);
+  readonly rowHints = computed<number[][]>(() => this.replayData?.rowHints || []);
+  readonly colHints = computed<number[][]>(() => this.replayData?.colHints || []);
 
   readonly totalMoves = computed(() => {
     return this.replayData?.moves?.length || 0;
@@ -207,21 +374,102 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
     return s < 10 ? '0' + s : '' + s;
   });
 
+  readonly replayCellSize = computed(() => {
+    const w = this.width();
+    if (w <= 5) return 26;
+    if (w <= 10) return 18;
+    if (w <= 15) return 13;
+    if (w <= 20) return 10;
+    return 8;
+  });
+
+  readonly pureArtSize = computed(() => {
+    return 220;
+  });
+
+  readonly boardScale = computed(() => {
+    const w = this.width();
+    const h = this.height();
+    const cellSize = this.replayCellSize();
+    const maxRowHints = Math.max(1, ...(this.rowHints().map(r => r.length)));
+    const maxColHints = Math.max(1, ...(this.colHints().map(c => c.length)));
+    const approxW = maxRowHints * 14 + w * cellSize + 20;
+    const approxH = maxColHints * 16 + h * cellSize + 20;
+    
+    // Target stage inner dimensions
+    const targetW = 390;
+    const targetH = 260;
+    const scaleX = targetW / Math.max(approxW, 1);
+    const scaleY = targetH / Math.max(approxH, 1);
+    return Math.min(1.15, Math.min(scaleX, scaleY));
+  });
+
+  // Reconstructed board grid at current playback step
+  readonly currentReplayGrid = computed<number[][]>(() => {
+    const W = this.width();
+    const H = this.height();
+    const moves = this.replayData?.moves || [];
+    const moveIdx = this.currentMoveIndex();
+
+    const grid: number[][] = Array(H).fill(0).map(() => Array(W).fill(0));
+    for (let i = 0; i < moveIdx; i++) {
+      const m = moves[i];
+      if (m && m.y < H && m.x < W) {
+        grid[m.y][m.x] = m.state;
+      }
+    }
+
+    if (this.currentStep() >= 100 && this.replayData?.finalGrid) {
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          grid[y][x] = this.replayData.finalGrid[y]?.[x] ?? grid[y][x];
+        }
+      }
+    }
+
+    return grid;
+  });
+
+  readonly lastMove = computed(() => {
+    const moves = this.replayData?.moves || [];
+    const moveIdx = this.currentMoveIndex();
+    return moveIdx > 0 ? moves[moveIdx - 1] : undefined;
+  });
+
+  readonly completedRows = computed<boolean[]>(() => {
+    const g = this.currentReplayGrid();
+    const hints = this.rowHints();
+    if (!g || !hints || g.length === 0 || hints.length === 0) return [];
+    return hints.map((expected: number[], y: number) => {
+      const row = g[y];
+      if (!row) return false;
+      const current = NonogramEngine.getLineHints(row.map((c: number) => c === 1 ? 1 : 0));
+      return current.length === expected.length && current.every((v: number, i: number) => v === expected[i]);
+    });
+  });
+
+  readonly completedCols = computed<boolean[]>(() => {
+    const g = this.currentReplayGrid();
+    const hints = this.colHints();
+    const h = this.height();
+    if (!g || !hints || g.length === 0 || hints.length === 0) return [];
+    return hints.map((expected: number[], x: number) => {
+      const col: number[] = [];
+      for (let y = 0; y < h; y++) {
+        col.push(g[y]?.[x] === 1 ? 1 : 0);
+      }
+      const current = NonogramEngine.getLineHints(col);
+      return current.length === expected.length && current.every((v: number, i: number) => v === expected[i]);
+    });
+  });
+
   private animationFrameId: number | null = null;
   private lastTimestamp: number = 0;
   private currentProgressTimeMs: number = 0;
-  private readonly totalDurationMs: number = 10000; // Standard 10s highlight clip
-  private renderedMoveIndex: number = -1;
+  private readonly totalDurationMs: number = 10000;
 
   ngOnInit() {
     this.startPlayback();
-  }
-
-  ngAfterViewInit() {
-    // Initial canvas render
-    if (this.hasReplayMoves()) {
-      setTimeout(() => this.renderCurrentState(), 50);
-    }
   }
 
   ngOnDestroy() {
@@ -244,8 +492,6 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
     this.stopPlayback();
     this.currentProgressTimeMs = 0;
     this.currentStep.set(0);
-    this.renderedMoveIndex = -1;
-    this.renderCurrentState();
     this.startPlayback();
   }
 
@@ -261,15 +507,35 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
     
     this.currentProgressTimeMs = ratio * this.totalDurationMs;
     this.currentStep.set(Math.round(ratio * 100));
-    this.renderCurrentState();
   }
 
   downloadArtwork() {
-    if (!this.canvasRef?.nativeElement) return;
     try {
       this.haptic.vibrateLight();
       this.audio.playClick();
-      const canvas = this.canvasRef.nativeElement;
+      const canvas = document.createElement('canvas');
+      const W = this.width();
+      const H = this.height();
+      const pixelSize = 24;
+      canvas.width = W * pixelSize;
+      canvas.height = H * pixelSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Dark background
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const grid = this.currentReplayGrid();
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          if (grid[y]?.[x] === 1) {
+            ctx.fillStyle = '#6366f1';
+            ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+          }
+        }
+      }
+
       const dataUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = dataUrl;
@@ -300,7 +566,6 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
     if (this.currentProgressTimeMs >= this.totalDurationMs) {
       this.currentProgressTimeMs = this.totalDurationMs;
       this.currentStep.set(100);
-      this.renderCurrentState();
       this.pausePlayback();
       this.audio.playWin();
       this.haptic.vibrateSuccess();
@@ -309,7 +574,6 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
 
     const step = Math.min(99, Math.floor((this.currentProgressTimeMs / this.totalDurationMs) * 100));
     this.currentStep.set(step);
-    this.renderCurrentState();
 
     this.animationFrameId = requestAnimationFrame(this.runLoop);
   };
@@ -324,164 +588,5 @@ export class TimelapseModalComponent implements OnInit, OnDestroy, AfterViewInit
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-  }
-
-  private renderCurrentState() {
-    if (!this.hasReplayMoves() || !this.canvasRef?.nativeElement) return;
-
-    const total = this.totalMoves();
-    const p = this.currentProgressTimeMs / this.totalDurationMs;
-    const targetMoveCount = total > 0 ? Math.min(total, Math.floor(p * total)) : 0;
-
-    // Avoid redundant canvas draws if move hasn't changed (unless step 100 reached)
-    if (targetMoveCount === this.renderedMoveIndex && this.currentStep() < 100) {
-      return;
-    }
-    this.renderedMoveIndex = targetMoveCount;
-
-    const W = this.replayData.width || 5;
-    const H = this.replayData.height || 5;
-    const moves = this.replayData.moves || [];
-
-    // Reconstruct board grid up to targetMoveCount
-    const grid: number[][] = Array(H).fill(0).map(() => Array(W).fill(0));
-    for (let i = 0; i < targetMoveCount; i++) {
-      const m = moves[i];
-      if (m && m.y < H && m.x < W) {
-        grid[m.y][m.x] = m.state;
-      }
-    }
-
-    // If step is 100% and finalGrid is available, make sure the final result is 100% exact
-    if (this.currentStep() >= 100 && this.replayData.finalGrid) {
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          grid[y][x] = this.replayData.finalGrid[y]?.[x] ?? grid[y][x];
-        }
-      }
-    }
-
-    const lastMove = targetMoveCount > 0 ? moves[targetMoveCount - 1] : undefined;
-    this.drawBoard(grid, W, H, lastMove, this.currentStep() >= 100);
-  }
-
-  private drawBoard(grid: number[][], W: number, H: number, lastMove?: any, isComplete?: boolean) {
-    const canvas = this.canvasRef?.nativeElement;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    const size = Math.max(180, Math.min(rect.width || 260, 320));
-
-    // Ensure backing store matches devicePixelRatio for crisp lines
-    if (canvas.width !== Math.floor(size * dpr) || canvas.height !== Math.floor(size * dpr)) {
-      canvas.width = Math.floor(size * dpr);
-      canvas.height = Math.floor(size * dpr);
-    }
-
-    ctx.save();
-    ctx.scale(dpr, dpr);
-
-    // 1. Board Background
-    ctx.fillStyle = '#090d16';
-    ctx.fillRect(0, 0, size, size);
-
-    const padding = 10;
-    const maxDim = Math.max(W, H);
-    const cellSize = (size - padding * 2) / maxDim;
-    const offsetX = padding + ((size - padding * 2) - W * cellSize) / 2;
-    const offsetY = padding + ((size - padding * 2) - H * cellSize) / 2;
-
-    // 2. Draw Cells
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const val = grid[y]?.[x] || 0;
-        const cx = offsetX + x * cellSize;
-        const cy = offsetY + y * cellSize;
-
-        if (val === 1) {
-          // Fill: Cyber Neon Indigo Gradient
-          const grad = ctx.createLinearGradient(cx, cy, cx, cy + cellSize);
-          grad.addColorStop(0, '#818cf8'); // indigo-400
-          grad.addColorStop(1, '#4f46e5'); // indigo-600
-          ctx.fillStyle = grad;
-          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
-        } else if (val === 2) {
-          // Cross: Sleek red/rose ✕
-          ctx.fillStyle = '#111827';
-          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
-
-          ctx.strokeStyle = '#f87171'; // rose-400
-          ctx.lineWidth = Math.max(1.5, cellSize * 0.12);
-          ctx.lineCap = 'round';
-          const pad = cellSize * 0.28;
-          ctx.beginPath();
-          ctx.moveTo(cx + pad, cy + pad);
-          ctx.lineTo(cx + cellSize - pad, cy + cellSize - pad);
-          ctx.moveTo(cx + cellSize - pad, cy + pad);
-          ctx.lineTo(cx + pad, cy + cellSize - pad);
-          ctx.stroke();
-        } else {
-          // Empty cell
-          ctx.fillStyle = '#1e293b';
-          ctx.fillRect(cx + 0.5, cy + 0.5, cellSize - 1, cellSize - 1);
-        }
-      }
-    }
-
-    // 3. Grid Lines
-    // Thin 1x1 cell boundaries
-    ctx.strokeStyle = '#334155';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x <= W; x++) {
-      const gx = offsetX + x * cellSize;
-      ctx.moveTo(gx, offsetY);
-      ctx.lineTo(gx, offsetY + H * cellSize);
-    }
-    for (let y = 0; y <= H; y++) {
-      const gy = offsetY + y * cellSize;
-      ctx.moveTo(offsetX, gy);
-      ctx.lineTo(offsetX + W * cellSize, gy);
-    }
-    ctx.stroke();
-
-    // Bold 5x5 subgrid boundary lines
-    ctx.strokeStyle = '#6366f1'; // indigo-500
-    ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    for (let x = 0; x <= W; x += 5) {
-      const gx = offsetX + x * cellSize;
-      ctx.moveTo(gx, offsetY);
-      ctx.lineTo(gx, offsetY + H * cellSize);
-    }
-    for (let y = 0; y <= H; y += 5) {
-      const gy = offsetY + y * cellSize;
-      ctx.moveTo(offsetX, gy);
-      ctx.lineTo(offsetX + W * cellSize, gy);
-    }
-    ctx.stroke();
-
-    // 4. Outer Boundary Frame
-    ctx.strokeStyle = isComplete ? '#f59e0b' : '#64748b';
-    ctx.lineWidth = isComplete ? 3 : 2;
-    ctx.strokeRect(offsetX, offsetY, W * cellSize, H * cellSize);
-
-    // 5. Active Cursor / Pen tip on last modified cell
-    if (lastMove && lastMove.x < W && lastMove.y < H && !isComplete) {
-      const lcx = offsetX + lastMove.x * cellSize;
-      const lcy = offsetY + lastMove.y * cellSize;
-      ctx.strokeStyle = '#38bdf8'; // Sky blue beacon
-      ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 8;
-      ctx.strokeRect(lcx - 1, lcy - 1, cellSize + 2, cellSize + 2);
-      ctx.shadowBlur = 0;
-    }
-
-    ctx.restore();
   }
 }
