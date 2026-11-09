@@ -29,11 +29,26 @@ import { ConnectStore } from '../connect.store';
         }
       </div>
 
-      <!-- Level Grid Header -->
-      <div class="flex items-center justify-between px-4 sm:px-6 pt-3 pb-1 shrink-0">
-        <span class="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
-          {{ i18n.t('game.total_levels')() }}: {{ store.levelsList().length }}
-        </span>
+      <!-- Level Grid Header & Quick Start Action Bar -->
+      <div class="flex items-center justify-between px-4 sm:px-6 py-2.5 bg-[var(--color-bg-card)] border-b border-[var(--color-border-card)] shrink-0 gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] truncate">
+            {{ i18n.t('game.total_levels')() }}: {{ store.levelsList().length }}
+          </span>
+          <span class="text-xs text-[var(--color-text-muted)] opacity-40 hidden sm:inline">|</span>
+          <span class="text-xs text-[var(--color-text-muted)] truncate hidden sm:inline">
+            {{ i18n.t('lobby.select_level')() || '请选择关卡或直接极速开局' }}
+          </span>
+        </div>
+
+        @if (store.levelsList().length > 0) {
+          <button 
+            (click)="playNextOrFirstLevel()"
+            class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-cyan-500/20 active:scale-95 transition-all cursor-pointer shrink-0">
+            <span>⚡</span>
+            <span>{{ i18n.t('game.quick_start')() || '快速开始' }} ({{ i18n.t('game.level')() }} {{ getNextOrFirstLevelIndex() | number:'3.0-0' }})</span>
+          </button>
+        }
       </div>
 
       <!-- Level Grid Body -->
@@ -113,6 +128,22 @@ export class ConnectLobbyComponent implements OnInit {
   GameStatus = GameStatus;
 
   @Output() startLevel = new EventEmitter<string>();
+
+  playNextOrFirstLevel(): void {
+    const list = this.store.levelsList();
+    if (!list || list.length === 0) return;
+    const target = list.find(l => l.progress?.status !== GameStatus.Finished) || list[0];
+    if (target) {
+      this.startLevel.emit(target.id);
+    }
+  }
+
+  getNextOrFirstLevelIndex(): number {
+    const list = this.store.levelsList();
+    if (!list || list.length === 0) return 1;
+    const uncompletedIdx = list.findIndex(l => l.progress?.status !== GameStatus.Finished);
+    return (uncompletedIdx !== -1 ? uncompletedIdx : 0) + 1;
+  }
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_easy' },

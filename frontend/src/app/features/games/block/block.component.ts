@@ -263,10 +263,14 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
         this.handleJoinRoom(pending);
       }
     } else {
-      const hasResume = this.checkAndPromptResumeSession('block');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const hasResume = requestedDiff ? false : this.checkAndPromptResumeSession('block');
       if (!hasResume && !this.currentRoomId()) {
-        const savedDiff = getSavedDifficulty('block', GameDifficulty.Medium);
-        this.store.joinRoom('', GameMode.Single, savedDiff, this.playerId);
+        const targetDiff = requestedDiff || getSavedDifficulty('block', GameDifficulty.Medium);
+        setSavedDifficulty('block', targetDiff);
+        this.store.currentDifficulty.set(targetDiff);
+        this.store.joinRoom('', GameMode.Single, targetDiff, this.playerId);
       }
     }
   }

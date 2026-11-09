@@ -107,6 +107,23 @@ export class SokobanLobbyComponent implements OnInit {
     });
   }
 
+  playNextOrFirstLevel(): void {
+    const list = this.levels();
+    if (!list || list.length === 0) return;
+    const target = list.find(l => l.progress?.status !== GameStatus.Finished) || list[0];
+    if (target) {
+      this.playLevel(target);
+    }
+  }
+
+  getNextOrFirstLevelIndex(): number {
+    const list = this.levels();
+    if (!list || list.length === 0) return 1;
+    const uncompletedIdx = list.findIndex(l => l.progress?.status !== GameStatus.Finished);
+    if (uncompletedIdx !== -1) return list[uncompletedIdx].level_num || (uncompletedIdx + 1);
+    return list[0].level_num || 1;
+  }
+
   playLevel(level: LevelResponse) {
     this.levelSelect.emit({
       id: level.id,

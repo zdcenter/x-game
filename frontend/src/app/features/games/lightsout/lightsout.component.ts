@@ -247,9 +247,15 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
         this.handleJoinRoom(pending);
       }
     } else {
-      const savedDiff = getSavedDifficulty('lightsout', GameDifficulty.Medium);
-      this.store.joinRoom('', GameMode.Single, savedDiff);
-      this.checkAndPromptResumeSession('lightsout');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const targetDiff = requestedDiff || getSavedDifficulty('lightsout', GameDifficulty.Medium);
+      setSavedDifficulty('lightsout', targetDiff);
+      this.store.currentDifficulty.set(targetDiff);
+      this.store.joinRoom('', GameMode.Single, targetDiff);
+      if (!requestedDiff) {
+        this.checkAndPromptResumeSession('lightsout');
+      }
     }
   }
 

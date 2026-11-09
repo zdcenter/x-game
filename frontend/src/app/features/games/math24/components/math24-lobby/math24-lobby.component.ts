@@ -1,6 +1,6 @@
 import { GameDifficulty, GameStatus } from "../../../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
-import { Component, EventEmitter, Output, inject, signal, OnInit, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject, signal, OnInit, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
@@ -35,6 +35,30 @@ export class Math24LobbyComponent implements OnInit {
 
   @Output() levelSelect = new EventEmitter<{ id: string, puzzle: string, difficulty: string, levelIndex: number }>();
   @Output() openLobby = new EventEmitter<void>();
+
+  @Input() set currentDifficulty(val: string | undefined) {
+    const valid = this.sanitizeDifficulty(val);
+    if (valid !== this.activeTab()) {
+      this.activeTab.set(valid);
+      this.currentPage.set(1);
+      this.loadLevels(valid);
+    }
+  }
+
+  playNextOrFirstLevel(): void {
+    const list = this.levels();
+    if (!list || list.length === 0) return;
+    const targetIdx = list.findIndex(l => l.progress?.status !== GameStatus.Finished);
+    const idx = targetIdx !== -1 ? targetIdx : 0;
+    this.playLevel(list[idx], idx);
+  }
+
+  getNextOrFirstLevelIndex(): number {
+    const list = this.levels();
+    if (!list || list.length === 0) return 1;
+    const uncompletedIdx = list.findIndex(l => l.progress?.status !== GameStatus.Finished);
+    return (uncompletedIdx !== -1 ? uncompletedIdx : 0) + 1;
+  }
 
   difficulties = [
     { id: 'easy', labelKey: 'game.diff_math24_easy' },

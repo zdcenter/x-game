@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-hint-button',
@@ -87,6 +88,8 @@ export class HintButtonComponent {
   @Output() hintApplied = new EventEmitter<void>();
 
   protected i18n = inject(I18nService);
+  private toast = inject(ToastService);
+  private hasShownNotice = false;
 
   readonly hintLabel = computed(() => this.i18n.t('game.hint')());
   readonly tooltipText = computed(() => {
@@ -98,6 +101,13 @@ export class HintButtonComponent {
   });
 
   onClick(event: MouseEvent) {
+    if (!this.hasShownNotice) {
+      this.hasShownNotice = true;
+      const msg = this.i18n.currentLang() === 'zh'
+        ? '💡 已使用提示：本局标记为娱乐辅助（不计入全网极速榜，通关金币照常）'
+        : '💡 Hint used: Assisted round (not eligible for speed records, coins still awarded)';
+      this.toast.show(msg, 'info');
+    }
     this.hintApplied.emit();
   }
 }

@@ -1,5 +1,5 @@
 import { GameMode, GameStatus } from "../../../core/models/game.model";
-import { setSavedDifficulty } from "../../../core/utils/browser.util";
+import { getSavedDifficulty, setSavedDifficulty } from "../../../core/utils/browser.util";
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, HostListener } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -215,8 +215,15 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         );
       }
     } else {
-      this.store.joinRoom('', GameMode.Single);
-      this.checkAndPromptResumeSession('hashi');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const targetDiff = requestedDiff || getSavedDifficulty('hashi', 'easy');
+      this.store.currentDifficulty.set(targetDiff);
+      setSavedDifficulty('hashi', targetDiff);
+      this.store.joinRoom('', GameMode.Single, targetDiff);
+      if (!requestedDiff) {
+        this.checkAndPromptResumeSession('hashi');
+      }
     }
   }
 

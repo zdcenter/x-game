@@ -98,6 +98,7 @@
 
   @if (view() === 'lobby' && store.currentRoomMode() === GameMode.Single) {
     <app-hashi-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
+      [currentDifficulty]="store.currentDifficulty()"
       (levelSelect)="startLevel($event)">
     </app-hashi-lobby>
   } @else {

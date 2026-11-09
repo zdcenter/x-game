@@ -302,9 +302,15 @@ export class SlidingComponent extends BaseGameComponent {
           );
         }
       } else {
-        const savedDiff = getSavedDifficulty('sliding', 'easy');
-        this.store.joinRoom('', GameMode.Single, savedDiff);
-        this.checkAndPromptResumeSession('sliding');
+        const qp = this._baseRoute.snapshot.queryParamMap;
+        const requestedDiff = qp.get('difficulty') || qp.get('diff');
+        const targetDiff = requestedDiff || getSavedDifficulty('sliding', 'easy');
+        setSavedDifficulty('sliding', targetDiff);
+        this.store.currentDifficulty.set(targetDiff);
+        this.store.joinRoom('', GameMode.Single, targetDiff);
+        if (!requestedDiff) {
+          this.checkAndPromptResumeSession('sliding');
+        }
       }
 
       this.timerInterval = setInterval(() => {
@@ -453,7 +459,9 @@ export class SlidingComponent extends BaseGameComponent {
     const diffX = endX - startX;
     const diffY = endY - startY;
 
-    if (Math.abs(diffX) < 30 && Math.abs(diffY) < 30) return;
+    const absDiffX = Math.abs(diffX);
+    const absDiffY = Math.abs(diffY);
+    if (absDiffX < 25 && absDiffY < 25) return;
 
     const size = board.size;
     const emptyRow = Math.floor(board.emptyIdx / size);
@@ -462,12 +470,14 @@ export class SlidingComponent extends BaseGameComponent {
     let targetRow = emptyRow;
     let targetCol = emptyCol;
 
-    if (Math.abs(diffX) > Math.abs(diffY)) {
+    if (absDiffX > absDiffY * 1.25) {
       if (diffX > 0) targetCol -= 1; // Swipe Right -> Tile LEFT of empty moves
       else targetCol += 1;           // Swipe Left -> Tile RIGHT of empty moves
-    } else {
+    } else if (absDiffY > absDiffX * 1.25) {
       if (diffY > 0) targetRow -= 1; // Swipe Down -> Tile ABOVE empty moves
       else targetRow += 1;           // Swipe Up -> Tile BELOW empty moves
+    } else {
+      return; // Diagonal ambiguous swipe ignored
     }
 
     if (targetRow >= 0 && targetRow < size && targetCol >= 0 && targetCol < size) {

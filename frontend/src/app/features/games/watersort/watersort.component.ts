@@ -133,9 +133,15 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
         this.handleJoinRoom(pending);
       }
     } else {
-      const savedDiff = getSavedDifficulty('watersort', 'easy');
-      this._store.joinRoom('', GameMode.Single, savedDiff, this.myId);
-      this.checkAndPromptResumeSession('watersort');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const targetDiff = requestedDiff || getSavedDifficulty('watersort', 'easy');
+      setSavedDifficulty('watersort', targetDiff);
+      this._store.currentDifficulty.set(targetDiff);
+      this._store.joinRoom('', GameMode.Single, targetDiff, this.myId);
+      if (!requestedDiff) {
+        this.checkAndPromptResumeSession('watersort');
+      }
     }
   }
 

@@ -420,17 +420,22 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
     const dx = touchEndX - this.touchStartX;
     const dy = touchEndY - this.touchStartY;
     
-    if (Math.abs(dx) < 30 && Math.abs(dy) < 30) return; // Ignore small movements
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    if (absDx < 25 && absDy < 25) return; // Ignore small movements
     
-    if (Math.abs(dx) > Math.abs(dy)) {
+    // Require dominant axis (ratio > 1.3) to prevent accidental diagonal swipes from ruining high-score boards
+    if (absDx > absDy * 1.3) {
       if (dx > 0) this.store.move('right');
       else this.store.move('left');
-    } else {
+      this.audio.playDrop2048('move');
+      this.haptic.vibrateSwipe();
+    } else if (absDy > absDx * 1.3) {
       if (dy > 0) this.store.move('down');
       else this.store.move('up');
+      this.audio.playDrop2048('move');
+      this.haptic.vibrateSwipe();
     }
-    this.audio.playDrop2048('move');
-    this.haptic.vibrateSwipe();
   }
 
   getTileClass(value: number): string {

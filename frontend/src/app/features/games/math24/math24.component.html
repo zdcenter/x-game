@@ -98,6 +98,7 @@
 
   @if (view() === 'lobby') {
     <app-math24-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
+      [currentDifficulty]="store.currentDifficulty()"
       (levelSelect)="startLevel($event)"
       (openLobby)="navigateToPkArena()">
     </app-math24-lobby>

@@ -159,6 +159,13 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       } else {
         this.handleJoinRoom(joinInfo);
       }
+    } else {
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      if (requestedDiff) {
+        this.store.currentDifficulty.set(requestedDiff);
+        setSavedDifficulty('math24', requestedDiff);
+        this.view.set('lobby');
+      }
     }
   }
 

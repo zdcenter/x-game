@@ -189,6 +189,15 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
       this.showLobby.set(false);      return;
     }
 
+    const requestedDiff = qp.get('difficulty') || qp.get('diff');
+    if (requestedDiff) {
+      this.pendingResumeSession.set(null);
+      this.store.currentDifficulty.set(requestedDiff);
+      setSavedDifficulty('sokoban', requestedDiff);
+      this.showLobby.set(true);
+      return;
+    }
+
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.password) this.wsService.setPendingPassword(pending.password);

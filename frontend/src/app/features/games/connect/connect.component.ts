@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, 
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { GameMode, GameStatus, GameResult } from "../../../core/models/game.model";
+import { setSavedDifficulty } from "../../../core/utils/browser.util";
 import { ConnectStore } from './connect.store';
 import { ConnectBoardComponent } from './components/connect-board.component';
 import { ConnectLobbyComponent } from './components/connect-lobby.component';
@@ -167,6 +168,13 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
   override ngOnInit() {
     super.ngOnInit();
     this.view.set('lobby');
+
+    const qp = this._baseRoute.snapshot.queryParamMap;
+    const requestedDiff = qp.get('difficulty') || qp.get('diff');
+    if (requestedDiff) {
+      this.store.currentDifficulty.set(requestedDiff);
+      setSavedDifficulty('connect', requestedDiff);
+    }
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
