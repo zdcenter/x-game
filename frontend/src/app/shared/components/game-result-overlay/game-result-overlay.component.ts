@@ -134,6 +134,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   }
 
   @Input() currentGameId?: string;
+  @Input() replayData?: any;
 
   @Input({ required: true }) status!: GameResultType;
   @Input({ required: true }) title!: string;

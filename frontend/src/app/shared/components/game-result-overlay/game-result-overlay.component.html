@@ -693,7 +693,9 @@
 @if (showTimelapseModal()) {
   <app-timelapse-modal
     [gameTitle]="title"
+    [gameId]="currentGameId"
     [statSummary]="stats && stats.length > 0 ? (stats[0].label + ': ' + stats[0].value) : ''"
+    [replayData]="replayData"
     (close)="closeTimelapseModal()" />
 }
 }

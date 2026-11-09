@@ -709,6 +709,7 @@ import { JuiceService } from '../../../core/services/juice.service';
       [pkRoundFormat]="resultPkRoundFormat()"
       [xpResult]="resultXpResult()"
       [isNewRecord]="resultIsNewRecord()"
+      [replayData]="effectiveReplayData()"
       [showLeave]="true"
       [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
       [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
@@ -841,8 +842,21 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   @Input() store?: GameStoreInterface;
   @Input({ transform: booleanAttribute }) autoManageOverlays: boolean = true;
   @Input() overlayStats?: { icon?: string; label?: string; value: string | number }[];
+  @Input() replayData?: any;
   @Input() customResultTitle?: string;
   @Input() customResultSubtitle?: string;
+
+  readonly effectiveReplayData = computed(() => {
+    if (this.replayData) return this.replayData;
+    const s = this.store as any;
+    if (s && typeof s.getReplayData === 'function') {
+      return s.getReplayData();
+    }
+    if (s && s.replayData) {
+      return typeof s.replayData === 'function' ? s.replayData() : s.replayData;
+    }
+    return null;
+  });
   readonly isDefeatSignal = signal<boolean | undefined>(undefined);
   @Input() set isDefeat(val: boolean | undefined) {
     this.isDefeatSignal.set(val);

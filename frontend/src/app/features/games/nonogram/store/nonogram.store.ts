@@ -26,6 +26,27 @@ export interface NonogramHistoryEntry {
   batchId?: number;
 }
 
+export interface NonogramReplayMove {
+  x: number;
+  y: number;
+  state: CellState;
+  time: number;
+  isUndo?: boolean;
+  isHint?: boolean;
+}
+
+export interface NonogramReplayData {
+  gameId: 'nonogram';
+  width: number;
+  height: number;
+  rowHints: number[][];
+  colHints: number[][];
+  answerGrid?: number[][];
+  moves: NonogramReplayMove[];
+  durationMs: number;
+  finalGrid: CellState[][];
+}
+
 @Injectable()
 export class NonogramStore extends BaseGameStore {
   readonly gameId = GameId.Nonogram;
@@ -35,6 +56,7 @@ export class NonogramStore extends BaseGameStore {
 
   private localState = signal<LocalNonogramState | null>(null);
   readonly history = signal<NonogramHistoryEntry[]>([]);
+  readonly moveHistory = signal<NonogramReplayMove[]>([]);
   
   // Single mode compatibility
   override readonly singlePlayerList = computed(() => []);
@@ -342,6 +364,7 @@ export class NonogramStore extends BaseGameStore {
     this.timeSpent.set(0);
     this.localState.set(null);
     this.history.set([]);
+    this.moveHistory.set([]);
   }
 
   override joinRoom(
@@ -369,6 +392,7 @@ export class NonogramStore extends BaseGameStore {
     } else {
       this.localState.set(null);
       this.history.set([]);
+      this.moveHistory.set([]);
     }
   }
 
@@ -431,12 +455,16 @@ export class NonogramStore extends BaseGameStore {
 
     const newGrid = state.grid.map(row => [...row]);
     const changes: NonogramHistoryEntry[] = [];
+    const replayMoves: NonogramReplayMove[] = [];
+    const start = state.startAt || Date.now();
+    const elapsedMs = Math.max(0, Date.now() - start);
 
     for (const { x, y } of cells) {
       if (y >= 0 && y < state.height && x >= 0 && x < state.width) {
         const current = newGrid[y][x];
         if (current !== nextState) {
           changes.push({ x, y, prevState: current, batchId });
+          replayMoves.push({ x, y, state: nextState, time: elapsedMs });
           newGrid[y][x] = nextState;
         }
       }
@@ -445,6 +473,7 @@ export class NonogramStore extends BaseGameStore {
     if (changes.length === 0) return;
 
     this.history.update(h => [...h, ...changes]);
+    this.moveHistory.update(m => [...m, ...replayMoves]);
     this.audio.playPuzzle('move');
     this.localState.set({ ...state, grid: newGrid });
     this.checkProgressAndWin(newGrid, state);
@@ -485,6 +514,8 @@ export class NonogramStore extends BaseGameStore {
     
     if (nextState !== current) {
       this.history.update(h => [...h, { x, y, prevState: current }]);
+      const start = state.startAt || Date.now();
+      this.moveHistory.update(m => [...m, { x, y, state: nextState, time: Math.max(0, Date.now() - start) }]);
     }
     
     newGrid[y][x] = nextState;
@@ -598,12 +629,17 @@ export class NonogramStore extends BaseGameStore {
 
     const movesToUndo = hist.slice(hist.length - countToUndo);
     const newGrid = state.grid.map(row => [...row]);
+    const start = state.startAt || Date.now();
+    const elapsedMs = Math.max(0, Date.now() - start);
+    const undoReplayMoves: NonogramReplayMove[] = [];
     for (let i = movesToUndo.length - 1; i >= 0; i--) {
       const m = movesToUndo[i];
       newGrid[m.y][m.x] = m.prevState;
+      undoReplayMoves.push({ x: m.x, y: m.y, state: m.prevState, time: elapsedMs, isUndo: true });
     }
     
     this.history.set(hist.slice(0, hist.length - countToUndo));
+    this.moveHistory.update(m => [...m, ...undoReplayMoves]);
     this.localState.set({ ...state, grid: newGrid });
     this.audio.playPuzzle('move');
     
@@ -617,8 +653,22 @@ export class NonogramStore extends BaseGameStore {
     const state = this.localState();
     if (!state) return;
 
+    const start = state.startAt || Date.now();
+    const elapsedMs = Math.max(0, Date.now() - start);
+    const clearMoves: NonogramReplayMove[] = [];
+    for (let y = 0; y < state.height; y++) {
+      for (let x = 0; x < state.width; x++) {
+        if (state.grid[y][x] !== 0) {
+          clearMoves.push({ x, y, state: 0, time: elapsedMs });
+        }
+      }
+    }
+
     const newGrid = Array(state.height).fill(0).map(() => Array(state.width).fill(0));
     this.history.set([]);
+    if (clearMoves.length > 0) {
+      this.moveHistory.update(m => [...m, ...clearMoves]);
+    }
     this.localState.set({ ...state, grid: newGrid });
     this.audio.playPuzzle('move');
 
@@ -659,6 +709,9 @@ export class NonogramStore extends BaseGameStore {
     }
 
     const newGrid = state.grid.map(row => [...row]);
+    const start = state.startAt || Date.now();
+    const elapsedMs = Math.max(0, Date.now() - start);
+    const hintMoves: NonogramReplayMove[] = [];
     
     for (let i = 0; i < numToFix; i++) {
       const cell = candidates[i];
@@ -666,10 +719,12 @@ export class NonogramStore extends BaseGameStore {
       // Save to history before modifying so player can undo hint? 
       // Usually hints aren't undoable, or they are. Let's make it undoable.
       this.history.update(h => [...h, { x: cell.x, y: cell.y, prevState: state.grid[cell.y][cell.x] }]);
-      
-      newGrid[cell.y][cell.x] = correct === 1 ? 1 : 2; // Fill or Cross
+      const nextState: CellState = correct === 1 ? 1 : 2; // Fill or Cross
+      hintMoves.push({ x: cell.x, y: cell.y, state: nextState, time: elapsedMs, isHint: true });
+      newGrid[cell.y][cell.x] = nextState;
     }
 
+    this.moveHistory.update(m => [...m, ...hintMoves]);
     this.localState.set({ ...state, grid: newGrid });
     this.audio.playPuzzle('success');
     this.checkProgressAndWin(newGrid, state);
@@ -731,7 +786,39 @@ export class NonogramStore extends BaseGameStore {
       startAt: Date.now()
     });
     this.history.set([]);
+    this.moveHistory.set([]);
     this.timeSpent.set(0);
     this.startTimer();
+  }
+
+  getReplayData(): NonogramReplayData | null {
+    const state = this.localState();
+    if (!state) return null;
+    let moves = this.moveHistory();
+    if (!moves || moves.length === 0) {
+      // Synthesize moves from final grid so replay is never empty
+      moves = [];
+      let t = 0;
+      for (let y = 0; y < state.height; y++) {
+        for (let x = 0; x < state.width; x++) {
+          const val = state.grid[y]?.[x];
+          if (val === 1 || val === 2) {
+            t += 40;
+            moves.push({ x, y, state: val, time: t });
+          }
+        }
+      }
+    }
+    return {
+      gameId: 'nonogram',
+      width: state.width,
+      height: state.height,
+      rowHints: state.rowHints,
+      colHints: state.colHints,
+      answerGrid: state.answerGrid,
+      moves: [...moves],
+      durationMs: Math.max(1000, (state.endAt || Date.now()) - (state.startAt || Date.now())),
+      finalGrid: state.grid.map(row => [...row])
+    };
   }
 }

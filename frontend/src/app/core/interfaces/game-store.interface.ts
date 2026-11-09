@@ -117,4 +117,8 @@ export interface GameStoreInterface {
 
   /** 踢出玩家（仅房主可调用）。发送 { type: 'kick_player', target: playerId } */
   kickPlayer(playerId: string): void;
+
+  /** 获取对局回放推导演示数据 (可选) */
+  getReplayData?(): any;
+  readonly replayData?: Signal<any>;
 }

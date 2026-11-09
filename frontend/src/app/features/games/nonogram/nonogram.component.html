@@ -19,6 +19,7 @@
   [overlayStats]="[
     { label: t('game.time')(), value: gameTimer.formatTime(store.timeSpent()) }
   ]"
+  [replayData]="store.getReplayData()"
   [resumeSession]="pendingResumeSession()"
   (resumeGame)="onResumeSession($event)"
   (discardResume)="onDiscardResume()"
