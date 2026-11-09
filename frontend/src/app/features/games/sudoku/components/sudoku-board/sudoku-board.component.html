@@ -1,5 +1,12 @@
 
     <div class="relative w-full max-w-[500px] aspect-square rounded-xl overflow-hidden bg-[var(--color-sudoku-grid)] p-1 shadow-2xl mx-auto">
+      @if (store.board().length === 0) {
+        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[var(--color-bg-card)]/95 backdrop-blur-xs z-10">
+          <span class="text-4xl mb-3 animate-bounce">🔢</span>
+          <p class="text-sm font-bold text-[var(--color-text-main)] mb-1">数独题目加载中...</p>
+          <p class="text-xs text-[var(--color-text-muted)]">若未自动开始，请返回关卡列表重新选择</p>
+        </div>
+      }
       <div class="w-full h-full grid grid-cols-9 grid-rows-9 gap-[1px] bg-[var(--color-sudoku-grid)]">
         
         @for (row of store.board(); track r; let r = $index) {

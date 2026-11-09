@@ -200,7 +200,12 @@ export class SudokuStore extends BaseGameStore {
     bountyCoins?: number,
     isSpectator?: boolean
   ) {
-    this.view.set('room');
+    if (mode !== GameMode.Single || roomId) {
+      this.view.set('room');
+    }
+    if (diff) {
+      this.currentDifficulty.set(diff);
+    }
     super.joinRoom(roomId, mode, diff, hostId, target, password, bountyCoins, isSpectator);
   }
 

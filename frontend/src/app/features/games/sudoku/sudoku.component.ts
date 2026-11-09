@@ -139,16 +139,17 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   override ngOnInit() {
-    super.ngOnInit(); // connects lobby WS
-    this.view.set('lobby');
-
-    // Ensure initial difficulty is strictly normalized and persisted
-    const initialDiff = this.sanitizeDifficulty(this.activeDifficulty());
+    // Read requested difficulty from query params (e.g. from Hall of Fame)
+    const qp = this.route.snapshot.queryParamMap;
+    const requestedDiff = qp.get('difficulty') || qp.get('diff');
+    const initialDiff = this.sanitizeDifficulty(requestedDiff || this.activeDifficulty());
     this.activeDifficulty.set(initialDiff);
     this.store.currentDifficulty.set(initialDiff);
     setSavedDifficulty('sudoku', initialDiff);
 
-    const qp = this.route.snapshot.queryParamMap;
+    super.ngOnInit(); // connects lobby WS
+    this.view.set('lobby');
+
     const dailyChallengeId = qp.get('dailyChallengeId');
     const puzzleId = qp.get('puzzleId');
     if (dailyChallengeId && puzzleId) {
@@ -203,6 +204,10 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   }
 
   currentDifficulty(): string {
+    const storeDiff = this.store.currentDifficulty?.();
+    if (storeDiff) {
+      return this.sanitizeDifficulty(storeDiff);
+    }
     if (this.store.currentRoomMode() === GameMode.Single) {
       return this.sanitizeDifficulty(this.activeDifficulty());
     }

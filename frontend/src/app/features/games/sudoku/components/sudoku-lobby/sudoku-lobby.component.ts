@@ -112,6 +112,27 @@ export class SudokuLobbyComponent implements OnInit {
     });
   }
 
+  playNextOrFirstLevel(): void {
+    const list = this.levels();
+    if (!list || list.length === 0) return;
+    const target = list.find(l => l.progress?.status === GameStatus.Playing)
+      || list.find(l => l.progress?.status !== GameStatus.Finished)
+      || list[0];
+    if (target) {
+      this.playLevel(target);
+    }
+  }
+
+  getNextOrFirstLevelIndex(): number {
+    const list = this.levels();
+    if (!list || list.length === 0) return 1;
+    const playingIdx = list.findIndex(l => l.progress?.status === GameStatus.Playing);
+    if (playingIdx !== -1) return playingIdx + 1;
+    const uncompletedIdx = list.findIndex(l => l.progress?.status !== GameStatus.Finished);
+    if (uncompletedIdx !== -1) return uncompletedIdx + 1;
+    return 1;
+  }
+
   playLevel(level: LevelResponse) {
     // Fetch the actual puzzle string
     this.http.get<any>(`${environment.apiUrl}/sudoku/puzzle/${level.id}`).subscribe(res => {
