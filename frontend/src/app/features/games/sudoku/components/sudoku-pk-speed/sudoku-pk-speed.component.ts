@@ -1,5 +1,5 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
-import { Component, inject, effect, Output, EventEmitter, signal } from '@angular/core';
+import { Component, inject, Output, EventEmitter, signal } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { SudokuStore } from '../../store/sudoku.store';
 import { SudokuBoardComponent } from '../sudoku-board/sudoku-board.component';
@@ -7,8 +7,6 @@ import { SudokuNumpadComponent } from '../sudoku-numpad/sudoku-numpad.component'
 import { SudokuToolsComponent } from '../sudoku-tools/sudoku-tools.component';
 import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { GameRegistryService } from '../../../../../core/services/game-registry.service';
-import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
-import { PlayerBadgeComponent } from '../../../../../shared/components/player-badge/player-badge.component';
 
 import { GamePkHudComponent } from '../../../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -18,8 +16,7 @@ import { computed } from '@angular/core';
   selector: 'app-sudoku-pk-speed',
   standalone: true,
   imports: [CommonModule, SudokuBoardComponent, SudokuNumpadComponent, SudokuToolsComponent, GamePkHudComponent],
-  templateUrl: './sudoku-pk-speed.component.html',
-  styleUrl: './sudoku-pk-speed.component.css'})
+  templateUrl: './sudoku-pk-speed.component.html'})
 export class SudokuPkSpeedComponent {
   GameMode = GameMode;
   GameStatus = GameStatus;

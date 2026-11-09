@@ -2,7 +2,7 @@ import { GameMode, GameStatus, GameStatusType } from '../../../../core/models/ga
 import { Injectable, computed, inject, signal, effect, OnDestroy } from '@angular/core';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { AudioService } from '../../../../core/services/audio.service';
-import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
+import { storageGet, storageSet } from "../../../../core/utils/browser.util";
 import { Drop2048Engine, Drop2048ActionType, DropBlock, ComboText, DROP2048_ROWS, DROP2048_COLS } from './drop2048-engine';
 export type { DropBlock, ComboText };
 import { C2SAction } from '../../../../core/models/websocket.model';

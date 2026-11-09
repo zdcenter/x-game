@@ -1,4 +1,4 @@
-import { GameModeType, GameStatusType } from '../../../core/models/game.model';
+import { GameStatusType } from "../../../core/models/game.model";
 
 export interface PkMetric {
   icon?: string;

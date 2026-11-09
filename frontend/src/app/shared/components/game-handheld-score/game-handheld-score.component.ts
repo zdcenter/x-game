@@ -1,4 +1,4 @@
-import { Component, Input, computed, inject, signal, HostListener, ElementRef } from '@angular/core';
+import { Component, Input, inject, signal, HostListener } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 

@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from "@angular/platform-browser";
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameService, getLocalizedField } from '../../../core/services/game.service';
 import { marked } from 'marked';

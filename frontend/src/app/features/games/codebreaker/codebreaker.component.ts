@@ -1,21 +1,12 @@
-import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
-import { storageGet, storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { GameDifficulty, GameMode, GameStatus } from "../../../core/models/game.model";
+import { storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty } from "../../../core/utils/browser.util";
 import { Component, inject, OnInit, OnDestroy, signal, computed, effect, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from "@angular/router";
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { WebSocketService } from '../../../core/services/websocket.service';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { CodebreakerStore } from './store/codebreaker.store';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameTimerService } from '../../../core/services/game-timer.service';
-import { GameService } from '../../../core/services/game.service';
-import { ToastService } from '../../../core/services/toast.service';
-import { AudioService } from '../../../core/services/audio.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { SettingsService } from '../../../core/services/settings.service';
 
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
@@ -38,7 +29,7 @@ export class CodebreakerComponent extends BaseGameComponent implements OnInit, O
   route = inject(ActivatedRoute);
   override store = inject(CodebreakerStore);
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
   roomLifecycle: RoomLifecycleHandle;
   // User input signals
   currentInput = signal<string>('');

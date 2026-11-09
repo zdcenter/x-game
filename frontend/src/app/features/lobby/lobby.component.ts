@@ -1,23 +1,21 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit, HostListener } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, computed, HostListener } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { GameService, GameConfig as BackendGameConfig, getLocalizedField } from '../../core/services/game.service';
+import { GameService, GameConfig as BackendGameConfig } from "../../core/services/game.service";
 import { WebSocketService } from '../../core/services/websocket.service';
 import { AuthStore } from '../../core/auth/auth.store';
 import { CrossGameJoinService } from '../../core/services/cross-game-join.service';
-import { GameConfig as RegistryGameConfig, GameRegistryService } from '../../core/services/game-registry.service';
+import { GameRegistryService } from "../../core/services/game-registry.service";
 import { GameMode } from '../../core/models/game.model';
 import { GameLobbyPanelComponent } from '../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { HttpClient } from '@angular/common/http';
 import { environment as versionEnv } from '../../../environments/version';
-import { environment as appEnvironment } from '../../../environments/environment';
 import { SettingsService } from '../../core/services/settings.service';
 import { AnnouncementService, Announcement } from '../../core/services/announcement.service';
 // AdsenseComponent import temporarily removed — ad slots are commented out for AdSense review
 import { ShareService } from '../../core/services/share.service';
-import { SeoService } from '../../core/services/seo.service';
 import { AdService } from '../../core/services/ad.service';
 import { HallOfFameComponent } from './components/hall-of-fame/hall-of-fame.component';
 import { LiveBattleFeedComponent } from './components/live-battle-feed/live-battle-feed.component';

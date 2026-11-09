@@ -1,4 +1,4 @@
-import { Component, computed, signal, effect, OnDestroy, Output, EventEmitter, Input } from '@angular/core';
+import { Component, computed, signal, OnDestroy, Output, EventEmitter, Input } from "@angular/core";
 import { CommonModule } from '@angular/common';
 
 interface TutorialStep {

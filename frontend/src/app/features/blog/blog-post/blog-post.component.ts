@@ -10,14 +10,7 @@ import { marked } from 'marked';
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 const DEFAULT_POST_SLUG = 'tilematch-strategy';
 
-import {
-  BlogGameDef,
-  BlogCategoryDef,
-  BlogCategoryWithPosts,
-  BLOG_TO_GAME_MAP,
-  BLOG_ICON_MAP,
-  BLOG_CATEGORIES
-} from '../../../core/models/blog.model';
+import { BlogGameDef, BlogCategoryWithPosts, BLOG_TO_GAME_MAP, BLOG_ICON_MAP, BLOG_CATEGORIES } from "../../../core/models/blog.model";
 
 @Component({
   selector: 'app-blog-post',

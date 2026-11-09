@@ -1,10 +1,9 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { C2SAction } from '../../../core/models/websocket.model';
+import { GameMode, GameStatus } from "../../../core/models/game.model";
 import {
   Component, Input, Output, EventEmitter, inject, signal, computed,
   ChangeDetectionStrategy, OnInit, OnDestroy
 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from "@angular/common";
 import { Router, ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';

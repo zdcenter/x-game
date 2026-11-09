@@ -1,27 +1,18 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect, untracked } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal, HostListener, HostBinding, effect } from "@angular/core";
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { BlockStore } from './store/block.store';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { AudioService } from '../../../core/services/audio.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { BlockShape } from './utils/shapes';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { HapticService } from '../../../core/services/haptic.service';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
 
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
@@ -172,7 +163,7 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
   
   @HostBinding('class') override get hostClass() { return 'block h-full w-full'; }
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
   @ViewChild('boardElement') boardElement?: ElementRef<HTMLElement>;
 
   // Preview overlay for drop

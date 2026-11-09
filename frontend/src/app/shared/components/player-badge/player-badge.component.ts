@@ -1,5 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, Input, computed, inject, OnInit, OnDestroy, signal, effect } from '@angular/core';
+import { GameStatus } from "../../../core/models/game.model";
+import { Component, Input, inject, OnInit, OnDestroy, signal, effect } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { WebSocketService } from '../../../core/services/websocket.service';

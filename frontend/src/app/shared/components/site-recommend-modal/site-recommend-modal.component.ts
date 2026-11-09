@@ -1,4 +1,4 @@
-import { Component, inject, computed, effect, ViewChild, ElementRef, signal, OnDestroy } from '@angular/core';
+import { Component, inject, computed, effect, ViewChild, ElementRef, signal } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { SiteRecommendService, RecommendScript } from '../../../core/services/site-recommend.service';
 import { I18nService } from '../../../core/i18n/i18n.service';

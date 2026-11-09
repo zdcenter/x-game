@@ -1,7 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
 import { AudioService } from '../../../../core/services/audio.service';
-import { AuthStore } from '../../../../core/auth/auth.store';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';

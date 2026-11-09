@@ -6,8 +6,7 @@ import { SudokuStore } from '../../store/sudoku.store';
   selector: 'app-sudoku-numpad',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './sudoku-numpad.component.html',
-  styleUrl: './sudoku-numpad.component.css'})
+  templateUrl: './sudoku-numpad.component.html'})
 export class SudokuNumpadComponent {
   store = inject(SudokuStore);
 }

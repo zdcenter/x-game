@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameMode } from "../../../core/models/game.model";
 import { Component, Input, Output, EventEmitter, inject, signal, computed, input, OnInit, OnDestroy, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';

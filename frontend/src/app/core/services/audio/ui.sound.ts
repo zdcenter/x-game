@@ -1,4 +1,4 @@
-import { createOsc, createGain, createLpf, createBpf, createNoise } from './audio-utils';
+import { createOsc, createGain, createLpf } from "./audio-utils";
 
 export type UISoundName =
   | 'click'

@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, Inject, PLATFORM_ID, ElementRef, OnDestroy, signal, computed } from '@angular/core';
+import { Component, AfterViewInit, Input, Inject, PLATFORM_ID, ElementRef, OnDestroy, signal } from "@angular/core";
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 
 @Component({

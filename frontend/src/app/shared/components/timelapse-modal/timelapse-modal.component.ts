@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 import fixWebmDuration from 'fix-webm-duration';
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { NonogramEngine } from '../../../features/games/nonogram/store/nonogram-engine';
-import { LocalMinesweeperEngine, MinesweeperReplayData, MinesweeperReplayStep, MinesweeperCellSnapshot } from '../../../features/games/minesweeper/store/minesweeper-engine';
+import { LocalMinesweeperEngine, MinesweeperReplayStep, MinesweeperCellSnapshot } from "../../../features/games/minesweeper/store/minesweeper-engine";
 import { CellState } from '../../../features/games/minesweeper/store/minesweeper.store';
 
 /**

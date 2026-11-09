@@ -4,7 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { LeaderboardService, LeaderboardEntry, LeaderboardResponse } from '../../core/services/leaderboard.service';
 import { GameStatsService, GameDifficultyRecord } from '../../core/services/game-stats.service';
-import { GameRegistryService, GameDifficultyConfig } from '../../core/services/game-registry.service';
+import { GameRegistryService } from "../../core/services/game-registry.service";
 import { FriendService } from '../../core/services/friend.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AudioService } from '../../core/services/audio.service';

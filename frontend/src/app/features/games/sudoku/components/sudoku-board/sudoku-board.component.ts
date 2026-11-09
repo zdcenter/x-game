@@ -11,8 +11,7 @@ import { SudokuStore, SudokuCell } from '../../store/sudoku.store';
     'class': 'w-full flex justify-center'
   },
   
-  templateUrl: './sudoku-board.component.html',
-  styleUrl: './sudoku-board.component.css'})
+  templateUrl: './sudoku-board.component.html'})
 export class SudokuBoardComponent {
   store = inject(SudokuStore);
 

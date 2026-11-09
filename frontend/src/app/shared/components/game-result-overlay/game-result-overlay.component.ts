@@ -9,7 +9,7 @@ import { AdService } from '../../../core/services/ad.service';
 import { AuthStore } from '../../../core/auth/auth.store';
 import { XPResult } from '../../../core/services/game-stats.service';
 import { ShareService } from '../../../core/services/share.service';
-import { TextShareService, TextShareData } from '../../../core/services/text-share.service';
+import { TextShareService } from "../../../core/services/text-share.service";
 import { StreakService } from '../../../core/services/streak.service';
 import { getOrigin } from '../../../core/utils/browser.util';
 import { AdsenseComponent } from '../adsense/adsense.component';

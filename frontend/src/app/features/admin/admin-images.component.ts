@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal, computed, HostListener, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from "@angular/common";
 import { FormsModule } from '@angular/forms';
 import { ImageService, ImageItem } from '../../core/services/image.service';
 import { ToastService } from '../../core/services/toast.service';

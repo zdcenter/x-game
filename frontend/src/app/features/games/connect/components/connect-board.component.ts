@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { ConnectEngine, Position } from '../connect-engine';
 

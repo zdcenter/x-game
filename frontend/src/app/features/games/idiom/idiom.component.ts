@@ -1,8 +1,6 @@
 import { Component, computed, effect, inject, OnDestroy, OnInit, signal, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { GameStatus, GameMode, GameResult } from '../../../core/models/game.model';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -10,7 +8,6 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { IdiomPKStore } from './store/idiom-pk.store';
 import { IdiomSolitaireEngine, IdiomItem, ChainMode } from './store/idiom-engine';
-import { AudioService } from '../../../core/services/audio.service';
 import { XpService } from '../../../core/services/xp.service';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';

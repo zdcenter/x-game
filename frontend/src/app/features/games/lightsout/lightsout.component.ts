@@ -3,19 +3,13 @@ import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/brow
 import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { RoomLifecycleHandle, setupRoomLifecycle } from '../../../core/services/room-lifecycle';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { Router } from '@angular/router';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { CommonModule } from '@angular/common';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { HapticService } from '../../../core/services/haptic.service';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
@@ -72,7 +66,7 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
 export class LightsoutComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(LightsoutStore);
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
 
   hintCell = signal<{r: number, c: number} | null>(null);
   keyboardCursor = signal<{ row: number; col: number }>({ row: 2, col: 2 });

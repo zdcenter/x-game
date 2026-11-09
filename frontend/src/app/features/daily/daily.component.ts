@@ -1,9 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { DailyQuestService, DailyQuestsResponse, DailyQuestItem, StreakMilestone, ClaimQuestResponse } from '../../core/services/daily-quest.service';
+import { DailyQuestService } from "../../core/services/daily-quest.service";
 import { AuthStore } from '../../core/auth/auth.store';
 import { AudioService } from '../../core/services/audio.service';
 import { ToastService } from '../../core/services/toast.service';

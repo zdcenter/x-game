@@ -8,7 +8,7 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { SudokuStore } from '../../store/sudoku.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
-import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
+import { getSavedDifficulty, setSavedDifficulty } from "../../../../../core/utils/browser.util";
 
 import { environment } from '../../../../../../environments/environment';
 
@@ -35,8 +35,7 @@ export const sudokuDifficulties = [
   standalone: true,
   imports: [CommonModule],
   host: { class: 'flex-grow flex flex-col w-full h-full min-h-0' },
-  templateUrl: './sudoku-lobby.component.html',
-  styleUrl: './sudoku-lobby.component.css'})
+  templateUrl: './sudoku-lobby.component.html'})
 export class SudokuLobbyComponent implements OnInit {
   GameMode = GameMode;
   GameStatus = GameStatus;

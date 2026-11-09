@@ -1,5 +1,4 @@
-import { GameDifficulty, GameStatus } from '../../../../../core/models/game.model';
-import { Component, EventEmitter, Output, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal, OnInit } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { I18nService } from '../../../../../core/i18n/i18n.service';

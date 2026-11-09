@@ -1,6 +1,6 @@
 import { GameDifficulty, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { ILocalEngine } from '../../../../core/interfaces/local-engine.interface';
-import { TentsPuzzle, TENTS_LEVELS, generateProceduralTents } from './tents-levels';
+import { TentsPuzzle, generateProceduralTents } from "./tents-levels";
 
 export enum TentsCellState {
   Empty = 0,

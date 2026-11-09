@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../core/models/game.model';
+import { GameDifficulty } from "../../../../core/models/game.model";
 export type GomokuColor = 0 | 1 | 2; // 0=Empty, 1=Black, 2=White
 
 export class GomokuAI {

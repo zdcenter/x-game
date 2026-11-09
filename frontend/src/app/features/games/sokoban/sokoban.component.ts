@@ -1,31 +1,22 @@
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, computed } from '@angular/core';
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { AdService } from '../../../core/services/ad.service';
-import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameDifficulty, GameMode, GameStatus } from "../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from "@angular/router";
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { SokobanStore } from './store/sokoban.store';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { ToastService } from '../../../core/services/toast.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
 import { EditRoomService } from '../../../core/services/edit-room.service';
 import { SokobanBoardComponent } from './components/board/sokoban-board.component';
 import { SokobanLobbyComponent } from './components/sokoban-lobby/sokoban-lobby.component';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
-import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { PkPlayerStats } from "../../../shared/components/game-pk-hud/game-pk-hud.model";
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
@@ -53,7 +44,7 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   private pendingDailyChallengeId = signal<string | null>(null);
   private roomLifecycle!: RoomLifecycleHandle;
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
   @ViewChild(SokobanLobbyComponent) sokobanLobby?: SokobanLobbyComponent;
   showLobby = signal(true);
 

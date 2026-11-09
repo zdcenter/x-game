@@ -1,4 +1,4 @@
-import { createOsc, createGain, createNoise, createLpf, createBpf } from './audio-utils';
+import { createOsc, createGain, createNoise, createLpf } from "./audio-utils";
 
 export function playSokobanSound(audioCtx: AudioContext, out: AudioNode, name: 'move' | 'push' | 'bump' | 'target') {
   const t = audioCtx.currentTime;

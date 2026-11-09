@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
+import { GameStatus } from "../../core/models/game.model";
 import { Component, OnInit, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AdminService } from '../../core/services/admin.service';

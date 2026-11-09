@@ -1,5 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
-import { Signal, WritableSignal, effect, inject, untracked, DestroyRef } from '@angular/core';
+import { GameMode } from "../../core/models/game.model";
+import { effect, inject, untracked, DestroyRef } from "@angular/core";
 import { Router, NavigationStart } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

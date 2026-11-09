@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { GameDifficulty, GameStatus } from "../../../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
 import { Component, EventEmitter, Output, inject, signal, OnInit, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';

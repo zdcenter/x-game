@@ -1,30 +1,19 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TetrisStore } from './store/tetris.store';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameTimerService } from '../../../core/services/game-timer.service';
-import { ToastService } from '../../../core/services/toast.service';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TETRIS_COLS, TETRIS_ROWS, TETROMINO_COLORS, Tetromino, TETROMINO_SHAPES, TETROMINO_THEMES } from './models/tetris.model';
-import { HapticService } from '../../../core/services/haptic.service';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
 
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
 

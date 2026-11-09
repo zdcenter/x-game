@@ -1,4 +1,4 @@
-import { createOsc, createGain, createNoise, createLpf, createBpf } from './audio-utils';
+import { createOsc, createGain, createNoise, createBpf } from "./audio-utils";
 
 export type BlockSoundType = 'place' | 'clear' | 'error' | 'pickup' | 'gameover';
 

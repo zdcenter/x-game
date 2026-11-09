@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameMode, GameStatus } from "../../../core/models/game.model";
 import { Component, computed, effect, HostListener, inject, ViewChild, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

@@ -1,21 +1,14 @@
-import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
-import { storageGet, storageSet, getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { GameDifficulty, GameMode, GameStatus } from "../../../core/models/game.model";
+import { getSavedDifficulty, setSavedDifficulty } from "../../../core/utils/browser.util";
 import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ViewChildren, ElementRef, QueryList, effect, ChangeDetectorRef, computed, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { WatersortStore } from './store/watersort.store';
 import { TubeComponent } from './components/tube/tube.component';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameTimerService } from '../../../core/services/game-timer.service';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { ToastService } from '../../../core/services/toast.service';
-import { AudioService } from '../../../core/services/audio.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
@@ -67,7 +60,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   `]
 })
 export class WatersortComponent extends BaseGameComponent implements OnInit, OnDestroy {
-  @ViewChild('lobbyPanel') lobbyPanel!: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel!: GameLobbyPanelComponent;
   @ViewChildren('tubeElements', { read: ElementRef }) tubeElements!: QueryList<ElementRef>;
   public _store = inject(WatersortStore);
   

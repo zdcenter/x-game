@@ -1,4 +1,4 @@
-import { createOsc, createGain, createNoise, createLpf, createHpf } from './audio-utils';
+import { createOsc, createGain, createNoise, createLpf } from "./audio-utils";
 
 export function playPuzzleSound(audioCtx: AudioContext, out: AudioNode, name: 'move' | 'toggle' | 'guess' | 'success' | 'error') {
   const t = audioCtx.currentTime;

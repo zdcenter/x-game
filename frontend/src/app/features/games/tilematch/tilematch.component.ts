@@ -5,10 +5,8 @@ import { TilematchStore } from './store/tilematch.store';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameMode, GameStatus } from "../../../core/models/game.model";
 import { TILE_EMOJIS, TileCard } from './store/tilematch-engine';
-import { DeviceService } from '../../../core/services/device.service';
-import { ZenModeService } from '../../../core/services/zen-mode.service';
 
 import { TileIconComponent } from './components/tile-icon/tile-icon.component';
 

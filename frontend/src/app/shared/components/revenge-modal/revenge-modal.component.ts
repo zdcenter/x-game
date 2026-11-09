@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { NotificationService, NotificationItem } from '../../../core/services/notification.service';
 import { GameRegistryService } from '../../../core/services/game-registry.service';

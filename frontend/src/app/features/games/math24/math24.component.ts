@@ -1,11 +1,10 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { setSavedDifficulty } from "../../../core/utils/browser.util";
 import { Component, inject, OnInit, OnDestroy, ViewChild, signal, effect, untracked, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Math24Store } from './store/math24.store';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
@@ -13,15 +12,11 @@ import { Math24PkStealComponent } from './components/math24-pk-steal/math24-pk-s
 import { Math24PkSpeedComponent } from './components/math24-pk-speed/math24-pk-speed.component';
 import { Math24BoardComponent } from './components/math24-board/math24-board.component';
 import { Math24LobbyComponent } from './components/math24-lobby/math24-lobby.component';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from "@angular/router";
 import { environment } from '../../../../environments/environment';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { FormsModule } from '@angular/forms';
 
-import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
@@ -44,7 +39,7 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   override store = inject(Math24Store);
   private roomLifecycle!: RoomLifecycleHandle;
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
 
   private dailyService = inject(DailyChallengeService);
   private route = inject(ActivatedRoute);

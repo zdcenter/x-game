@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, effect } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { I18nService } from '../../../../core/i18n/i18n.service';

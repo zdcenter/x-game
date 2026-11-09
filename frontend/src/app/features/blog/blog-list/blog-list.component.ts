@@ -5,13 +5,7 @@ import { Title, Meta } from '@angular/platform-browser';
 import { BlogService, BlogPostMeta, BlogLanguageMeta } from '../../../core/services/blog.service';
 import { I18nService, LANG_LOCALES } from '../../../core/i18n/i18n.service';
 import { optimizeMetaTitle, optimizeMetaDescription } from '../../../core/utils/seo.util';
-import {
-  BlogCategoryDef,
-  BlogCategoryWithPosts,
-  BLOG_TO_GAME_MAP,
-  BLOG_ICON_MAP,
-  BLOG_CATEGORIES
-} from '../../../core/models/blog.model';
+import { BlogCategoryWithPosts, BLOG_ICON_MAP, BLOG_CATEGORIES } from "../../../core/models/blog.model";
 
 const PROD_ORIGIN = 'https://www.puzzlepk.com';
 

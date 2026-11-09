@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from "@angular/core";
 import { isBrowser } from '../utils/browser.util';
 import { GAME_DEFINITIONS } from '../config/game-definitions';
 

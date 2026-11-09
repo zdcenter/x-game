@@ -1,4 +1,4 @@
-import { DemoConfig, DemoCell } from '../components/game-step-player/game-step-player.component';
+import { DemoConfig } from "../components/game-step-player/game-step-player.component";
 
 const TILE = 'bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md text-amber-500';
 const TILE_OK = 'bg-emerald-500/20 border border-emerald-500/50 shadow-md text-emerald-500';

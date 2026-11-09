@@ -2,38 +2,26 @@ import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from "@angular/router";
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { I18nService } from '../../../core/i18n/i18n.service';
 import { SudokuStore } from './store/sudoku.store';
 import { SudokuLobbyComponent, sudokuDifficulties } from './components/sudoku-lobby/sudoku-lobby.component';
 import { SudokuBoardComponent } from './components/sudoku-board/sudoku-board.component';
 import { SudokuNumpadComponent } from './components/sudoku-numpad/sudoku-numpad.component';
 import { SudokuToolsComponent } from './components/sudoku-tools/sudoku-tools.component';
-import { SudokuPkStealComponent } from './components/sudoku-pk-steal/sudoku-pk-steal.component';
 import { SudokuPkSpeedComponent } from './components/sudoku-pk-speed/sudoku-pk-speed.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { WebSocketService } from '../../../core/services/websocket.service';
-import { AuthStore } from '../../../core/auth/auth.store';
-import { AudioService } from '../../../core/services/audio.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { FormsModule } from '@angular/forms';
-import { GamePkModeBadgeComponent } from '../../../shared/components/game-pk-mode-badge/game-pk-mode-badge.component';
 import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { DeviceService } from '../../../core/services/device.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
-import { ZenModeService } from '../../../core/services/zen-mode.service';
 import { PwaService } from '../../../core/services/pwa.service';
 import { FeedbackService } from '../../../core/services/feedback.service';
-import { CoinIconComponent } from '../../../shared/components/coin-icon/coin-icon.component';
-import { ElementRef, HostListener } from '@angular/core';
+import { ElementRef } from "@angular/core";
 
-import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
@@ -58,8 +46,7 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './sudoku.component.html',
-  styleUrl: './sudoku.component.css'})
+  templateUrl: './sudoku.component.html'})
 export class SudokuComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(SudokuStore);
   http = inject(HttpClient);

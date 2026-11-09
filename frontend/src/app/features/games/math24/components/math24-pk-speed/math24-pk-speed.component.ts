@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { GameMode, GameStatus } from "../../../../../core/models/game.model";
 import { Component, effect, inject, Input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Math24Store } from '../../store/math24.store';

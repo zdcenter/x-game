@@ -9,8 +9,7 @@ import { GameToolbarComponent } from '../../../../../shared/components/game-tool
   selector: 'app-sudoku-tools',
   standalone: true,
   imports: [CommonModule, GameToolbarComponent],
-  templateUrl: './sudoku-tools.component.html',
-  styleUrl: './sudoku-tools.component.css'})
+  templateUrl: './sudoku-tools.component.html'})
 export class SudokuToolsComponent {
   GameMode = GameMode;
   GameStatus = GameStatus;

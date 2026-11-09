@@ -1,29 +1,20 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { AdService } from '../../../core/services/ad.service';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
-import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, HostListener } from "@angular/core";
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Drop2048Store } from './store/drop2048.store';
 import { getDrop2048BlockStyle } from './store/drop2048-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { GameTimerService } from '../../../core/services/game-timer.service';
-import { CrossGameJoinService } from '../../../core/services/cross-game-join.service';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
@@ -105,7 +96,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     };
   });
 
-  @ViewChild('lobbyPanel') lobbyPanel?: GameLobbyPanelComponent;
+  @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
 
   getModeName(): string {
     const mode = this.store.currentRoomMode();

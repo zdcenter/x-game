@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../core/models/game.model';
+import { GameMode } from "../../core/models/game.model";
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ import { LevelBadgeComponent } from '../../shared/components/level-badge/level-b
 import { AvatarFrameComponent } from '../../shared/components/avatar-frame/avatar-frame.component';
 import { BrainRadarComponent } from '../../shared/components/brain-radar/brain-radar.component';
 import { BrainRadarService, BrainRadarData } from '../../core/services/brain-radar.service';
-import { ShopService, ShopResponse, ShopItem } from '../../core/services/shop.service';
+import { ShopService, ShopResponse } from "../../core/services/shop.service";
 import { GAME_DEFINITIONS } from '../../core/config/game-definitions';
 import { ShareService } from '../../core/services/share.service';
 import { ShareImageService, ProfileCardData } from '../../core/services/share-image.service';

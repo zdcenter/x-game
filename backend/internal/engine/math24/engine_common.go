@@ -11,7 +11,7 @@ import (
 type Math24Player struct {
 	ID          string `json:"id"`
 	Progress    int    `json:"progress"`
-	Score       int    `json:string(domain.ModeScore)`
+	Score       int    `json:"score"`
 	FreezeUntil int64  `json:"freezeUntil"` // Timestamp in ms
 }
 

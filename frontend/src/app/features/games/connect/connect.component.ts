@@ -1,35 +1,21 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { AuthStore } from '../../../core/auth/auth.store';
-import { GameDifficulty, GameMode, GameStatus, GameResult } from '../../../core/models/game.model';
+import { GameMode, GameStatus, GameResult } from "../../../core/models/game.model";
 import { ConnectStore } from './connect.store';
 import { ConnectBoardComponent } from './components/connect-board.component';
 import { ConnectLobbyComponent } from './components/connect-lobby.component';
 import { EditRoomService } from '../../../core/services/edit-room.service';
-import { ToastService } from '../../../core/services/toast.service';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
-import { GameResultOverlayComponent } from '../../../shared/components/game-result-overlay/game-result-overlay.component';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
-import { GameHeaderComponent } from '../../../shared/components/game-header/game-header.component';
-import { PlayerListContainerComponent } from '../../../shared/components/player-list-container/player-list-container.component';
-import { PlayerBadgeComponent } from '../../../shared/components/player-badge/player-badge.component';
-import { GameRulesModalComponent } from '../../../shared/components/game-rules-modal/game-rules-modal.component';
-import { GameWaitingRoomComponent } from '../../../shared/components/game-waiting-room/game-waiting-room.component';
 
-import { WebSocketService } from '../../../core/services/websocket.service';
-import { AudioService } from '../../../core/services/audio.service';
-import { DailyChallengeService } from '../../../core/services/daily-challenge.service';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
-import { PkPlayerStats, PkMetric } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { GameStartingOverlayComponent } from '../../../shared/components/game-starting-overlay/game-starting-overlay.component';
+import { PkPlayerStats } from "../../../shared/components/game-pk-hud/game-pk-hud.model";
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';

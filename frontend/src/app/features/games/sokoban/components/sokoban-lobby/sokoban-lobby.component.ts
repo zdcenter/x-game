@@ -1,6 +1,5 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { GameDifficulty, GameStatus } from "../../../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty } from '../../../../../core/utils/browser.util';
-import { GameHeaderComponent } from '../../../../../shared/components/game-header/game-header.component';
 import { Component, Input, Output, EventEmitter, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -9,7 +8,6 @@ import { I18nService } from '../../../../../core/i18n/i18n.service';
 import { SokobanStore } from '../../store/sokoban.store';
 import { AuthStore } from '../../../../../core/auth/auth.store';
 import { WebSocketService } from '../../../../../core/services/websocket.service';
-import { GameRulesModalComponent } from '../../../../../shared/components/game-rules-modal/game-rules-modal.component';
 import { environment } from '../../../../../../environments/environment';
 import { SettingsService } from '../../../../../core/services/settings.service';
 

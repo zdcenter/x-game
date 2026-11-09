@@ -1,12 +1,12 @@
 import { GameDifficulty, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
-import { Injectable, computed, inject, signal, effect, Signal } from '@angular/core';
+import { Injectable, computed, inject, signal, effect } from "@angular/core";
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameTimerService } from '../../../../core/services/game-timer.service';
 import { AudioService } from '../../../../core/services/audio.service';
-import { BlockEngine, BlockActionType, BlockGameState } from './block-engine';
+import { BlockEngine, BlockActionType } from "./block-engine";
 import { BlockShape } from '../utils/shapes';
 import { C2SAction } from '../../../../core/models/websocket.model';
-import { storageGet, storageSet, storageRemove } from '../../../../core/utils/browser.util';
+import { storageGet, storageSet } from "../../../../core/utils/browser.util";
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 export interface BlockOpponent {

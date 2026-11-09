@@ -1,7 +1,6 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, computed, inject, signal, effect, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AuthStore } from '../../../../core/auth/auth.store';
 import { LocalSokobanEngine, SokobanActionType } from './local-sokoban-engine';
 import { environment } from '../../../../../environments/environment';
 import { AudioService } from '../../../../core/services/audio.service';

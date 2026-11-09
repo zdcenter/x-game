@@ -1,4 +1,4 @@
-import { GameDifficulty, GameMode, GameStatus } from '../../../../../core/models/game.model';
+import { GameStatus } from "../../../../../core/models/game.model";
 import { Component, HostListener, computed, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';

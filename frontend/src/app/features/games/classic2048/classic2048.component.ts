@@ -1,29 +1,18 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { AdService } from '../../../core/services/ad.service';
 import { computed, Component, inject, OnInit, OnDestroy, HostListener, ViewChild, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthStore } from '../../../core/auth/auth.store';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Classic2048Store } from './store/classic2048.store';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
-import { I18nService } from '../../../core/i18n/i18n.service';
-import { SettingsService } from '../../../core/services/settings.service';
-import { WindowSizeService } from '../../../core/services/window-size.service';
-import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
-import { ToastService } from '../../../core/services/toast.service';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 
-import { AudioService } from '../../../core/services/audio.service';
-import { HapticService } from '../../../core/services/haptic.service';
-import { LeaderboardService } from '../../../core/services/leaderboard.service';
-import { GameRegistryService } from '../../../core/services/game-registry.service';
 
 export type C2048Theme = 'classic' | 'neon' | 'glacier';
 

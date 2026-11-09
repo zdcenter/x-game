@@ -1,8 +1,7 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, computed } from "@angular/core";
 import { WebSocketService } from './websocket.service';
 import { AuthStore } from '../auth/auth.store';
 import { I18nService } from '../i18n/i18n.service';
-import { LobbyActivity } from '../models/activity.model';
 
 @Injectable({
   providedIn: 'root'
