@@ -15,32 +15,66 @@ class MiniGifEncoder {
   private height: number;
   private palette: number[][];
   private out: number[] = [];
+  private colorCache = new Map<number, number>();
 
   constructor(width: number, height: number, customPalette?: number[][]) {
     this.width = width;
     this.height = height;
-    this.palette = customPalette || [
-      [15, 23, 42],   // 0: bgMain (#0f172a)
-      [30, 41, 59],   // 1: bgCard (#1e293b)
-      [248, 250, 252],// 2: textMain (#f8fafc)
-      [51, 65, 85],   // 3: borderThick (#334155)
-      [100, 116, 139],// 4: textMuted (#64748b)
-      [244, 63, 94],  // 5: roseCross (#f43f5e)
-      [245, 158, 11], // 6: amberGold (#f59e0b)
-      [56, 189, 248], // 7: skyBeacon (#38bdf8)
-      [255, 255, 255],// 8: white
-      [0, 0, 0],      // 9: black
-      [16, 185, 129], // 10: green
-      [239, 68, 68],  // 11: red
-      [99, 102, 241], // 12: indigo
-      [71, 85, 105],  // 13: slate
-      [148, 163, 184],// 14: light slate
-      [2, 6, 23]      // 15: slate-950
+
+    const baseBrandColors: number[][] = [
+      [8, 13, 26],    // #080d1a
+      [15, 23, 42],   // #0f172a
+      [19, 27, 46],   // #131b2e
+      [30, 41, 59],   // #1e293b
+      [30, 27, 75],   // #1e1b4b
+      [51, 65, 85],   // #334155
+      [71, 85, 105],  // #475569
+      [100, 116, 139],// #64748b
+      [148, 163, 184],// #94a3b8
+      [203, 213, 225],// #cbd5e1
+      [226, 232, 240],// #e2e8f0
+      [248, 250, 252],// #f8fafc
+      [255, 255, 255],// #ffffff
+      [0, 0, 0],      // black
+      [168, 85, 247], // #a855f7
+      [147, 51, 234], // #9333ea
+      [192, 132, 252],// #c084fc
+      [216, 180, 254],// #d8b4fe
+      [233, 213, 255],// #e9d5ff
+      [88, 28, 135],  // #581c87
+      [245, 158, 11], // #f59e0b
+      [251, 191, 36], // #fbbf24
+      [253, 224, 71], // #fde047
+      [180, 83, 9],   // #b45309
+      [217, 119, 6],  // #d97706
+      [14, 165, 233], // #0ea5e9
+      [56, 189, 248], // #38bdf8
+      [125, 211, 252],// #7dd3fc
+      [2, 132, 199],  // #0284c7
+      [99, 102, 241], // #6366f1
+      [129, 140, 248],// #818cf8
+      [16, 185, 129], // #10b981
+      [52, 211, 153], // #34d399
+      [239, 68, 68],  // #ef4444
+      [244, 63, 94]   // #f43f5e
     ];
-    // Ensure palette has 16 entries
-    while (this.palette.length < 16) {
+
+    const initial = customPalette && customPalette.length > 0 ? customPalette : baseBrandColors;
+    this.palette = [...initial];
+
+    // 补充标准 6x6x6 网页调色板至 256 色，确保任何中间色彩均能无失真映射
+    for (let r = 0; r < 6; r++) {
+      for (let g = 0; g < 6; g++) {
+        for (let b = 0; b < 6; b++) {
+          if (this.palette.length >= 256) break;
+          this.palette.push([r * 51, g * 51, b * 51]);
+        }
+      }
+    }
+    while (this.palette.length < 256) {
       this.palette.push([0, 0, 0]);
     }
+
     this.writeHeader();
   }
 
@@ -50,11 +84,11 @@ class MiniGifEncoder {
 
     this.writeShort(this.width);
     this.writeShort(this.height);
-    this.out.push(0xF3); // 16 colors (2^(3+1))
+    this.out.push(0xF7); // 256 色全局调色板标志 (2^(7+1))
     this.out.push(0);
     this.out.push(0);
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 256; i++) {
       const c = this.palette[i];
       this.out.push(c[0], c[1], c[2]);
     }
@@ -85,10 +119,14 @@ class MiniGifEncoder {
       indexed[j] = this.findClosestColor(pixels[i], pixels[i + 1], pixels[i + 2]);
     }
 
-    this.lzwEncode(indexed, 4);
+    this.lzwEncode(indexed, 8);
   }
 
   private findClosestColor(r: number, g: number, b: number): number {
+    const key = (r << 16) | (g << 8) | b;
+    const cached = this.colorCache.get(key);
+    if (cached !== undefined) return cached;
+
     let minD = Infinity;
     let best = 0;
     for (let i = 0; i < this.palette.length; i++) {
@@ -103,6 +141,7 @@ class MiniGifEncoder {
         if (d === 0) break;
       }
     }
+    this.colorCache.set(key, best);
     return best;
   }
 
@@ -1164,22 +1203,22 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 渲染官方品牌片头（100% 契合网站暗黑竞技霓虹视觉规范）
+   * 渲染官方顶级电竞级高光品牌片头（双栏画作展台 + 赛事认证徽章 + 官网引流）
    */
   private renderIntroFrame(ctx: CanvasRenderingContext2D, size: number, progress: number) {
-    // 1. 官网级深邃星空底色 + 径向紫色霓虹氛围光
+    // 1. 官网级深邃曜石底色 + 柔和紫色霓虹光晕
     ctx.fillStyle = '#080d1a';
     ctx.fillRect(0, 0, size, size);
 
-    const grad = ctx.createRadialGradient(size / 2, size / 2 - 30, 40, size / 2, size / 2 - 30, size * 0.65);
-    grad.addColorStop(0, 'rgba(147, 51, 234, 0.32)');
-    grad.addColorStop(0.5, 'rgba(99, 102, 241, 0.15)');
-    grad.addColorStop(1, 'rgba(8, 13, 26, 0.95)');
+    const grad = ctx.createRadialGradient(size / 2, size / 2 - 30, 40, size / 2, size / 2 - 30, size * 0.7);
+    grad.addColorStop(0, 'rgba(147, 51, 234, 0.28)');
+    grad.addColorStop(0.5, 'rgba(99, 102, 241, 0.14)');
+    grad.addColorStop(1, 'rgba(8, 13, 26, 0.98)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
 
-    // 点阵暗纹装饰
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    // 细致网格暗纹
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
     for (let gx = 36; gx < size; gx += 36) {
       for (let gy = 36; gy < size; gy += 36) {
         ctx.beginPath();
@@ -1188,7 +1227,7 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 2. 顶部 HUD
+    // 2. 顶部 HUD 导航栏
     ctx.fillStyle = '#ef4444';
     ctx.beginPath();
     ctx.arc(36, 36, 5, 0, Math.PI * 2);
@@ -1199,137 +1238,254 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.textAlign = 'left';
     ctx.fillText('REC • PUZZLE PK', 48, 41);
 
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#c084fc';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('⚔️ 多人益智竞技场 · 官方高光复盘', size / 2, 41);
+
     ctx.textAlign = 'right';
     ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText('puzzlepk.com', size - 36, 41);
+    ctx.fillText('puzzlepk.com 🌐', size - 36, 41);
 
-    // 3. 中央官方卡片
-    const cardW = 620;
-    const cardH = 470;
-    const cardX = (size - cardW) / 2;
-    const cardY = (size - cardH) / 2;
+    // 3. 舞台区：左右双展台卡片布局 (Stage: Y = 62 ~ 432, Height = 370px)
+    const W = this.width();
+    const H = this.height();
+    const finalGrid = this.replayData?.finalGrid || this.buildGridForMoveCount(this.totalMoves(), true);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(168, 85, 247, 0.35)';
-    ctx.shadowBlur = 32;
+    // === 左侧卡片：终局像素杰作原图展台 (Width: 290px, Height: 370px) ===
+    const leftX = 35;
+    const leftY = 62;
+    const leftW = 290;
+    const leftH = 370;
+
     ctx.fillStyle = '#0f172a';
-    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.fill();
-    ctx.restore();
-
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+    ctx.strokeStyle = '#a855f7';
     ctx.lineWidth = 2;
-    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
+    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.stroke();
 
-    // 顶部紫色光刃线条
-    const accentGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
-    accentGrad.addColorStop(0, 'transparent');
-    accentGrad.addColorStop(0.5, '#c084fc');
-    accentGrad.addColorStop(1, 'transparent');
-    ctx.strokeStyle = accentGrad;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cardX + 40, cardY);
-    ctx.lineTo(cardX + cardW - 40, cardY);
-    ctx.stroke();
-
-    // 官方竞技大厅徽章胶囊
-    const badgeW = 340;
-    const badgeH = 36;
-    const bx = (size - badgeW) / 2;
-    const by = cardY + 36;
-    ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
-    this.safeRoundRect(ctx, bx, by, badgeW, badgeH, 18);
+    // 左卡片顶部小徽章
+    const lPillW = 190;
+    const lPillH = 26;
+    const lpx = leftX + (leftW - lPillW) / 2;
+    const lpy = leftY + 14;
+    ctx.fillStyle = '#1e1b4b';
+    this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 13);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 1;
+    this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 13);
     ctx.stroke();
 
-    ctx.fillStyle = '#d8b4fe';
-    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = '#e9d5ff';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('⚔️ PUZZLE PK · 全球益智竞技大厅', size / 2, by + 23);
+    ctx.fillText('🎨 终局像素画作预览', leftX + leftW / 2, lpy + 18);
 
-    // 主标题
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('高光破局 · 极限时光倒流', size / 2, cardY + 120);
+    // 绘制像素画作真实缩略图
+    const maxArtW = 210;
+    const maxArtH = 210;
+    const cellSize = Math.max(4, Math.floor(Math.min(maxArtW / W, maxArtH / H)));
+    const artW = W * cellSize;
+    const artH = H * cellSize;
+    const artX = Math.round(leftX + (leftW - artW) / 2);
+    const artY = Math.round(leftY + 48 + (maxArtH - artH) / 2);
 
-    // 游戏详情与难度
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    const subText = `${this.gameTitle || '数织对决'} · ${this.statSummary || '巅峰对局推演'}`;
-    ctx.fillText(subText, size / 2, cardY + 160);
-
-    // 推广引流核心通告栏
-    const boxW = 540;
-    const boxH = 130;
-    const boxX = (size - boxW) / 2;
-    const boxY = cardY + 195;
-
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-    this.safeRoundRect(ctx, boxX, boxY, boxW, boxH, 16);
+    ctx.fillStyle = '#1e293b';
+    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1.5;
+    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
     ctx.stroke();
 
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('🔥 浏览器直接输入 puzzlepk.com 即开即玩', size / 2, boxY + 40);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const val = finalGrid[y]?.[x];
+        const cx = artX + x * cellSize;
+        const cy = artY + y * cellSize;
+        if (val === 1) {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(cx, cy, cellSize, cellSize);
+        } else {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(cx, cy, cellSize, cellSize);
+        }
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(cx, cy, cellSize, cellSize);
+      }
+    }
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('⚡ 扫雷 · 数织 · 数独 · 俄罗斯方块 · 推箱子 · 24点', size / 2, boxY + 74);
+    // 左卡片底部金标
+    const artBadgeY = leftY + leftH - 46;
+    ctx.fillStyle = '#1e293b';
+    this.safeRoundRect(ctx, leftX + 18, artBadgeY, leftW - 36, 32, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.2;
+    this.safeRoundRect(ctx, leftX + 18, artBadgeY, leftW - 36, 32, 16);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 100% 完整解开 · 终局真容', leftX + leftW / 2, artBadgeY + 21);
+
+    // === 右侧卡片：赛事级高光认证与对局数据 (Width: 360px, Height: 370px) ===
+    const rightX = 335;
+    const rightY = 62;
+    const rightW = 350;
+    const rightH = 370;
+
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.stroke();
+
+    // 右卡片顶部官方胶囊
+    const rBadgeW = 260;
+    const rBadgeH = 30;
+    const rbx = rightX + (rightW - rBadgeW) / 2;
+    const rby = rightY + 16;
+    ctx.fillStyle = '#1e1b4b';
+    this.safeRoundRect(ctx, rbx, rby, rBadgeW, rBadgeH, 15);
+    ctx.fill();
+    ctx.strokeStyle = '#818cf8';
+    ctx.lineWidth = 1;
+    this.safeRoundRect(ctx, rbx, rby, rBadgeW, rBadgeH, 15);
+    ctx.stroke();
+
+    ctx.fillStyle = '#c7d2fe';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚔️ PUZZLE PK · 官方认证复盘', rightX + rightW / 2, rby + 20);
+
+    // 游戏大标题
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('数织 NONOGRAM', rightX + rightW / 2, rightY + 84);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('高光破局 · 极限时光倒流推演', rightX + rightW / 2, rightY + 108);
+
+    // 3 条赛事级对局规格指标条 (Chips)
+    const chips = [
+      { icon: '📐', label: '谜盘规格', value: `${W} × ${H} 网格` },
+      { icon: '⏱️', label: '破局用时', value: this.statSummary || '01:19' },
+      { icon: '🎯', label: '推演步数', value: `${this.totalMoves()} 步零失误` }
+    ];
+
+    const chipYStart = rightY + 128;
+    const chipH = 46;
+    for (let i = 0; i < chips.length; i++) {
+      const cy = chipYStart + i * (chipH + 8);
+      const chip = chips[i];
+
+      ctx.fillStyle = '#1e293b';
+      this.safeRoundRect(ctx, rightX + 16, cy, rightW - 32, chipH, 12);
+      ctx.fill();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      this.safeRoundRect(ctx, rightX + 16, cy, rightW - 32, chipH, 12);
+      ctx.stroke();
+
+      ctx.textAlign = 'left';
+      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(chip.icon, rightX + 28, cy + 30);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(chip.label, rightX + 58, cy + 29);
+
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(chip.value, rightX + rightW - 28, cy + 29);
+    }
+
+    // 右卡片底部殿堂认证标
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⭐ 益智极限殿堂收录 · 破局战绩核验保真', rightX + rightW / 2, rightY + rightH - 20);
+
+    // 4. 底部推广引流大卡片 (Y = 450 ~ 580, Height = 130px)
+    const bottomX = 35;
+    const bottomY = 450;
+    const bottomW = 650;
+    const bottomH = 130;
+
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '900 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('🔥 官网直达：puzzlepk.com · 浏览器打开即玩', size / 2, bottomY + 40);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('⚡ 扫雷 · 数织 · 数独 · 俄罗斯方块 · 推箱子 · 24点 · 全网高手对决', size / 2, bottomY + 74);
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('零下载安装 · 零广告打扰 · 全网玩家在线排位对战', size / 2, boxY + 104);
+    ctx.fillText('✨ 零下载安装 · 零广告干扰 · 手机电脑随时开战 · 实时排位榜', size / 2, bottomY + 104);
 
-    // 底部即将开始提示
+    // 5. 倒计时过渡条 (Y = 600 ~ 670)
+    const footY = 608;
     ctx.fillStyle = '#c084fc';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText('🎬 精彩推演示意即将开始...', size / 2, cardY + 375);
+    ctx.textAlign = 'center';
+    ctx.fillText('🎬 极速推演即将开始...', size / 2, footY);
 
-    // 倒计时进度条
-    const pbarW = 380;
+    const pbarW = 420;
     const pbarH = 6;
     const px = (size - pbarW) / 2;
-    const py = cardY + 400;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    const py = footY + 16;
+    ctx.fillStyle = '#1e293b';
     this.safeRoundRect(ctx, px, py, pbarW, pbarH, 3);
     ctx.fill();
 
     const pFill = Math.min(1, Math.max(0, progress));
     ctx.fillStyle = '#a855f7';
-    this.safeRoundRect(ctx, px, py, Math.max(4, pbarW * pFill), pbarH, 3);
+    this.safeRoundRect(ctx, px, py, Math.max(6, pbarW * pFill), pbarH, 3);
     ctx.fill();
 
-    // 底部版权
     ctx.fillStyle = '#64748b';
     ctx.font = '12px monospace';
-    ctx.fillText('Official Game Replay · puzzlepk.com', size / 2, size - 24);
+    ctx.fillText('puzzlepk.com · Official Game Replay', size / 2, size - 24);
   }
 
   /**
-   * 渲染官方品牌片尾（高转化引流 Call-To-Action）
+   * 渲染官方顶级片尾（高转化引流 Call-To-Action）
    */
   private renderOutroFrame(ctx: CanvasRenderingContext2D, size: number, progress: number) {
-    // 1. 官网级深邃底色 + 暖金/紫色庆贺光晕
+    // 1. 曜石底色 + 暖金/紫色胜者光晕
     ctx.fillStyle = '#080d1a';
     ctx.fillRect(0, 0, size, size);
 
-    const grad = ctx.createRadialGradient(size / 2, size / 2 - 20, 50, size / 2, size / 2 - 20, size * 0.7);
+    const grad = ctx.createRadialGradient(size / 2, size / 2 - 30, 40, size / 2, size / 2 - 30, size * 0.7);
     grad.addColorStop(0, 'rgba(245, 158, 11, 0.28)');
-    grad.addColorStop(0.4, 'rgba(147, 51, 234, 0.2)');
-    grad.addColorStop(1, 'rgba(8, 13, 26, 0.95)');
+    grad.addColorStop(0.5, 'rgba(147, 51, 234, 0.16)');
+    grad.addColorStop(1, 'rgba(8, 13, 26, 0.98)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
 
     // 点阵暗纹
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
     for (let gx = 36; gx < size; gx += 36) {
       for (let gy = 36; gy < size; gy += 36) {
         ctx.beginPath();
@@ -1344,110 +1500,189 @@ export class TimelapseModalComponent implements OnInit, OnDestroy {
     ctx.textAlign = 'left';
     ctx.fillText('PUZZLE PK • REPLAY COMPLETE', 36, 41);
 
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('🏆 巅峰挑战已完成', size / 2, 41);
+
     ctx.textAlign = 'right';
     ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText('puzzlepk.com', size - 36, 41);
+    ctx.fillText('puzzlepk.com 🌐', size - 36, 41);
 
-    // 3. 中央高光转化卡片
-    const cardW = 630;
-    const cardH = 500;
-    const cardX = (size - cardW) / 2;
-    const cardY = (size - cardH) / 2;
+    // 3. 舞台区：双展台卡片布局
+    const W = this.width();
+    const H = this.height();
+    const finalGrid = this.replayData?.finalGrid || this.buildGridForMoveCount(this.totalMoves(), true);
 
-    ctx.save();
-    ctx.shadowColor = 'rgba(245, 158, 11, 0.35)';
-    ctx.shadowBlur = 36;
-    ctx.fillStyle = '#0f172a';
-    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
-    ctx.lineWidth = 2.5;
-    this.safeRoundRect(ctx, cardX, cardY, cardW, cardH, 24);
-    ctx.stroke();
-
-    // 通关荣耀横幅
-    const trophyW = 380;
-    const trophyH = 48;
-    const tx = (size - trophyW) / 2;
-    const ty = cardY + 28;
-
-    const goldGrad = ctx.createLinearGradient(tx, ty, tx + trophyW, ty);
-    goldGrad.addColorStop(0, '#f59e0b');
-    goldGrad.addColorStop(0.5, '#fbbf24');
-    goldGrad.addColorStop(1, '#f59e0b');
-    ctx.fillStyle = goldGrad;
-    this.safeRoundRect(ctx, tx, ty, trophyW, trophyH, 24);
-    ctx.fill();
+    // === 左侧卡片：终局荣耀杰作 (Width: 290px, Height: 370px) ===
+    const leftX = 35;
+    const leftY = 62;
+    const leftW = 290;
+    const leftH = 370;
 
     ctx.fillStyle = '#0f172a';
-    ctx.font = '900 21px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🏆 100% PERFECT CLEAR!', size / 2, ty + 31);
-
-    // 步数与战绩
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText(`谜面已完全解开 · 全程 ${this.totalMoves()} 步推演无误`, size / 2, cardY + 112);
-
-    // 推广转化大卡片 (CTA)
-    const promoW = 550;
-    const promoH = 225;
-    const px = (size - promoW) / 2;
-    const py = cardY + 140;
-
-    const promoGrad = ctx.createLinearGradient(px, py, px, py + promoH);
-    promoGrad.addColorStop(0, 'rgba(147, 51, 234, 0.28)');
-    promoGrad.addColorStop(1, 'rgba(99, 102, 241, 0.28)');
-    ctx.fillStyle = promoGrad;
-    this.safeRoundRect(ctx, px, py, promoW, promoH, 18);
+    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.55)';
-    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, leftX, leftY, leftW, leftH, 20);
     ctx.stroke();
 
-    // 引导标语
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('⚔️ 挑战全网极限记录 · 与好友真人实时对决', size / 2, py + 38);
-
-    // 醒目网站域名大胶囊按钮
-    const pillW = 440;
-    const pillH = 54;
-    const pillX = (size - pillW) / 2;
-    const pillY = py + 58;
-
+    // 顶部荣耀金条
+    const lPillW = 220;
+    const lPillH = 30;
+    const lpx = leftX + (leftW - lPillW) / 2;
+    const lpy = leftY + 14;
     ctx.fillStyle = '#f59e0b';
-    this.safeRoundRect(ctx, pillX, pillY, pillW, pillH, 14);
+    this.safeRoundRect(ctx, lpx, lpy, lPillW, lPillH, 15);
     ctx.fill();
 
-    ctx.fillStyle = '#090d16';
-    ctx.font = '900 25px monospace';
-    ctx.fillText('👉 puzzlepk.com 👈', size / 2, pillY + 36);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆 100% PERFECT CLEAR!', leftX + leftW / 2, lpy + 20);
 
-    // 核心卖点
+    // 终局画作
+    const maxArtW = 210;
+    const maxArtH = 210;
+    const cellSize = Math.max(4, Math.floor(Math.min(maxArtW / W, maxArtH / H)));
+    const artW = W * cellSize;
+    const artH = H * cellSize;
+    const artX = Math.round(leftX + (leftW - artW) / 2);
+    const artY = Math.round(leftY + 50 + (maxArtH - artH) / 2);
+
+    ctx.fillStyle = '#1e293b';
+    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 1.5;
+    this.safeRoundRect(ctx, artX - 5, artY - 5, artW + 10, artH + 10, 8);
+    ctx.stroke();
+
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const val = finalGrid[y]?.[x];
+        const cx = artX + x * cellSize;
+        const cy = artY + y * cellSize;
+        if (val === 1) {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(cx, cy, cellSize, cellSize);
+        } else {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(cx, cy, cellSize, cellSize);
+        }
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(cx, cy, cellSize, cellSize);
+      }
+    }
+
+    // 左卡片底部战绩
+    const artBadgeY = leftY + leftH - 46;
+    ctx.fillStyle = '#1e293b';
+    this.safeRoundRect(ctx, leftX + 16, artBadgeY, leftW - 32, 32, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1.2;
+    this.safeRoundRect(ctx, leftX + 16, artBadgeY, leftW - 32, 32, 16);
+    ctx.stroke();
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`✨ 全部 ${this.totalMoves()} 步推演无误 · 完美通关`, leftX + leftW / 2, artBadgeY + 21);
+
+    // === 右侧卡片：强引流转化 Call-To-Action (Width: 350px, Height: 370px) ===
+    const rightX = 335;
+    const rightY = 62;
+    const rightW = 350;
+    const rightH = 370;
+
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#a855f7';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, rightX, rightY, rightW, rightH, 20);
+    ctx.stroke();
+
+    // 标语
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚔️ 挑战全网高玩 · 刷新记录', rightX + rightW / 2, rightY + 38);
+
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('📱 手机 / 电脑浏览器打开即玩 · 零下载 · 零广告', size / 2, py + 152);
+    ctx.font = '900 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('你能打破这个用时吗？', rightX + rightW / 2, rightY + 76);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('数织 · 扫雷 · 数独 · 俄罗斯方块 · 24点 · 天梯排位榜', size / 2, py + 184);
+    ctx.fillText('来与全网真人玩家一决高下！', rightX + rightW / 2, rightY + 104);
 
-    // 底部提示
+    // 巨型域名按钮
+    const btnW = 300;
+    const btnH = 54;
+    const bx = rightX + (rightW - btnW) / 2;
+    const by = rightY + 126;
+    ctx.fillStyle = '#f59e0b';
+    this.safeRoundRect(ctx, bx, by, btnW, btnH, 16);
+    ctx.fill();
+
+    ctx.fillStyle = '#090d16';
+    ctx.font = '900 22px monospace';
+    ctx.fillText('👉 puzzlepk.com 👈', rightX + rightW / 2, by + 35);
+
+    // 3 项卖点
+    const benefits = [
+      '✓ 手机 / 电脑浏览器打开直接玩',
+      '✓ 零下载 · 零广告 · 纯粹益智竞技',
+      '✓ 每日极限挑战榜 · 实时天梯排位'
+    ];
+    for (let i = 0; i < benefits.length; i++) {
+      const bY = rightY + 215 + i * 30;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(benefits[i], rightX + rightW / 2, bY);
+    }
+
+    // 殿堂收录小标
     ctx.fillStyle = '#c084fc';
-    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('🔍 搜索「Puzzle PK」或保存视频分享给好友挑战！', size / 2, cardY + 415);
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('Puzzle PK · 极限记录殿堂收录', rightX + rightW / 2, rightY + rightH - 20);
 
+    // 4. 底部引流大卡片 (Y = 450 ~ 580, Height = 130px)
+    const bottomX = 35;
+    const bottomY = 450;
+    const bottomW = 650;
+    const bottomH = 130;
+
+    ctx.fillStyle = '#0f172a';
+    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.fill();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    this.safeRoundRect(ctx, bottomX, bottomY, bottomW, bottomH, 20);
+    ctx.stroke();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '900 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('🔍 浏览器搜索「Puzzle PK」开启你的智力对决！', size / 2, bottomY + 40);
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('⚡ 数织 · 扫雷 · 数独 · 俄罗斯方块 · 24点 · 益智联机对战', size / 2, bottomY + 74);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('✨ 复制网址 puzzlepk.com 或保存本视频分享给好友对战！', size / 2, bottomY + 104);
+
+    // 5. 底脚
     ctx.fillStyle = '#64748b';
     ctx.font = '12px monospace';
-    ctx.fillText('Puzzle PK · 极限记录殿堂收录', size / 2, cardY + 450);
-
-    // 底脚
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
     ctx.fillText('puzzlepk.com · Play Online Anytime', size / 2, size - 24);
   }
 
