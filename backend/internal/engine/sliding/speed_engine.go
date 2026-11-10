@@ -185,8 +185,13 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 
 	if baseAction.Action == string(domain.ActionForfeit) {
 		e.RemovePlayer(playerID)
-		if len(e.Boards) == 0 {
+		if len(e.Boards) <= 1 {
 			e.State = engine.StateFinished
+			for id := range e.Boards {
+				e.Winners = []string{id}
+				e.Wins[id]++
+				break
+			}
 		}
 		return e.State, nil
 	}

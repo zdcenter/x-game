@@ -265,6 +265,7 @@ export class UiOverlayComponent implements OnDestroy {
     const match = rooms.find((r: any) => {
       if (!r || (r.status !== 'playing' && r.status !== 'starting')) return false;
       if (this.dismissedMatchRoomId() === r.id) return false;
+      if (this.isRoomForfeited(r.id)) return false;
       const isContestant = clean(r.host) === u || clean(r.opponent) === u ||
         (Array.isArray(r.contestants) && r.contestants.some((c: string) => clean(c) === u)) ||
         (Array.isArray(r.playersList) && r.playersList.some((c: string) => clean(c) === u));
@@ -282,6 +283,16 @@ export class UiOverlayComponent implements OnDestroy {
       gameTitle
     };
   });
+
+  isRoomForfeited(roomId: string): boolean {
+    if (!roomId || typeof sessionStorage === 'undefined') return false;
+    try {
+      const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+      return Array.isArray(list) && list.includes(roomId);
+    } catch {
+      return false;
+    }
+  }
 
   returnToOngoingMatch(match: any) {
     const room = match.room;

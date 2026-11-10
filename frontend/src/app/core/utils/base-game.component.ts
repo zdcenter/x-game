@@ -378,12 +378,24 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             this.navigateToLobby();
           },
           onCancel: () => {
+            const rId = this.store.roomId();
+            if (rId && typeof sessionStorage !== 'undefined') {
+              try {
+                const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+                if (!list.includes(rId)) {
+                  list.push(rId);
+                  sessionStorage.setItem('forfeited_rooms', JSON.stringify(list));
+                }
+              } catch (e) {}
+            }
             if (this.store.forfeitMatch) {
               this.store.forfeitMatch();
             } else {
               this.store.leaveRoom(true);
             }
-            this.navigateToLobby();
+            setTimeout(() => {
+              this.navigateToLobby();
+            }, 120);
           }
         });
         return;

@@ -526,6 +526,18 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
     // 仅在明确认输或非对战进行状态时才清理重连凭证；暂回大厅时保留凭证供断线秒重连
     const isPlaying = this.isPlaying() || this.status() === GameStatus.Playing;
+    if (forfeit) {
+      const rId = this.roomId();
+      if (rId && typeof sessionStorage !== 'undefined') {
+        try {
+          const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+          if (!list.includes(rId)) {
+            list.push(rId);
+            sessionStorage.setItem('forfeited_rooms', JSON.stringify(list));
+          }
+        } catch (e) {}
+      }
+    }
     if (forfeit || !isPlaying) {
       if (typeof sessionStorage !== 'undefined' && this.gameId) {
         const prefix = `${this.gameId}_reconnect`;
@@ -555,6 +567,16 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   forfeitMatch() {
+    const rId = this.roomId();
+    if (rId && typeof sessionStorage !== 'undefined') {
+      try {
+        const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+        if (!list.includes(rId)) {
+          list.push(rId);
+          sessionStorage.setItem('forfeited_rooms', JSON.stringify(list));
+        }
+      } catch (e) {}
+    }
     if (this.currentRoomMode() !== GameMode.Single) {
       this.ws.send({ action: C2SAction.Forfeit });
     }

@@ -180,6 +180,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   isMyRoom(room: any): boolean {
     const myId = this.playerId();
     if (!myId || !room) return false;
+    if (this.isRoomForfeited(room.id)) return false;
     const clean = (s: string) => (s || '').toLowerCase().trim();
     const m = clean(myId);
     if (clean(room.host) === m || clean(room.opponent) === m) return true;
@@ -560,12 +561,23 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   isUserInRoom(room: any): boolean {
     const myId = this.playerId();
     if (!myId || !room) return false;
+    if (this.isRoomForfeited(room.id)) return false;
     const clean = (s: string) => (s || '').toLowerCase().trim();
     const m = clean(myId);
     if (clean(room.host) === m || clean(room.opponent) === m) return true;
     if (Array.isArray(room.contestants) && room.contestants.some((c: string) => clean(c) === m)) return true;
     if (Array.isArray(room.playersList) && room.playersList.some((c: string) => clean(c) === m)) return true;
     return false;
+  }
+
+  isRoomForfeited(roomId: string): boolean {
+    if (!roomId || typeof sessionStorage === 'undefined') return false;
+    try {
+      const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+      return Array.isArray(list) && list.includes(roomId);
+    } catch {
+      return false;
+    }
   }
 
   playSameGame(player: any) {

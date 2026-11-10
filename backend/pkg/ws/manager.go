@@ -1085,6 +1085,19 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 		if isForfeit && r.Engine != nil && gameStatus == engine.StatePlaying {
 			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
+			// Guarantee match concludes if only 0 or 1 active contestant remains after forfeit
+			activeRemaining := 0
+			var winnerID string
+			for pid, c := range r.Clients {
+				if !c.IsSpectator && pid != clientID {
+					activeRemaining++
+					winnerID = pid
+				}
+			}
+			if activeRemaining <= 1 && r.Engine.GetStatus() == engine.StatePlaying {
+				r.Engine.HandleAction(clientID, "game_over", []byte(`{"action":"game_over"}`))
+				log.Printf("Room %s: game concluded by forfeit of %s, remaining contestant: %s", r.ID, clientID, winnerID)
+			}
 		}
 		delete(r.Clients, clientID)
 		delete(r.Contestants, clientID)
@@ -1137,6 +1150,21 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				for _, c := range r.Clients {
 					c.WriteMessage(websocket.TextMessage, msg)
 				}
+			} else {
+				// No other active contestants available: dismiss room directly!
+				roomID := r.ID
+				mu.Lock()
+				delete(Rooms, roomID)
+				mu.Unlock()
+				go Lobby.BroadcastLobbyUpdate()
+
+				msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, msg)
+					c.Close()
+				}
+				r.Clients = make(map[string]*Client)
+				return
 			}
 		}
 

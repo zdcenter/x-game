@@ -167,7 +167,16 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 		}
 	} else if action == string(domain.ActionForfeit) {
 		player.Finished = true
-		e.checkGameEnd()
+		delete(e.Players, playerID)
+		if len(e.Players) <= 1 {
+			e.State = engine.StateFinished
+			for id := range e.Players {
+				e.Winners = []string{id}
+				break
+			}
+		} else {
+			e.checkGameEnd()
+		}
 	}
 
 	return e.State, nil

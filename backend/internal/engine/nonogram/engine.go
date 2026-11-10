@@ -247,6 +247,17 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 				}
 			}
 		}
+	case "forfeit":
+		e.RemovePlayer(playerID)
+		if len(e.Players) <= 1 {
+			e.State = engine.StateFinished
+			for id := range e.Players {
+				e.Winner = id
+				e.Winners = []string{id}
+				e.Wins[id]++
+				break
+			}
+		}
 	}
 
 	return e.State, nil
