@@ -101,17 +101,6 @@ export function setupRoomLifecycle(config: RoomLifecycleConfig): RoomLifecycleHa
     }
   };
 
-  // Clear session storage if user navigates away via Angular SPA router
-  router.events.pipe(
-    filter((event): event is NavigationStart => event instanceof NavigationStart),
-    takeUntilDestroyed(destroyRef)
-  ).subscribe(event => {
-    if (!event.url.includes(`/games/${config.gameId}`)) {
-      clearReconnectInfo();
-    }
-  });
-
-
   // Auto-register room dismissed handler via Angular effect()
   effect(() => {
     const dismissed = wsService.roomDismissedEvent();

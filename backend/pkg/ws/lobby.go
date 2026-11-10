@@ -276,6 +276,7 @@ func (l *GlobalLobby) buildLobbyPayload() ([]byte, error) {
 			"game":        r.Game,
 			"host":        r.Host,
 			"opponent":    r.Opponent,
+			"contestants": r.Contestants,
 			"players":     r.PlayerCount,
 			"maxPlayers":  r.MaxPlayers,
 			"spectators":  r.SpectatorCount,
@@ -430,16 +431,17 @@ func (l *GlobalLobby) BroadcastLobbyUpdate() {
 			safeRooms := GetActiveRooms()
 			for _, r := range safeRooms {
 				activeRooms = append(activeRooms, map[string]interface{}{
-					"id":         r.ID,
-					"game":       r.Game,
-					"host":       r.Host,
-					"opponent":   r.Opponent,
-					"players":    r.PlayerCount,
-					"spectators": r.SpectatorCount,
-					"mode":       r.Mode,
-					"difficulty": r.Difficulty,
-					"status":     r.Status,
-					"createdAt":  r.CreatedAt,
+					"id":          r.ID,
+					"game":        r.Game,
+					"host":        r.Host,
+					"opponent":    r.Opponent,
+					"contestants": r.Contestants,
+					"players":     r.PlayerCount,
+					"spectators":  r.SpectatorCount,
+					"mode":        r.Mode,
+					"difficulty":  r.Difficulty,
+					"status":      r.Status,
+					"createdAt":   r.CreatedAt,
 				})
 			}
 			adminPayload, _ := json.Marshal(map[string]interface{}{

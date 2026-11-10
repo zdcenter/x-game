@@ -7,9 +7,10 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { GameMode, GameStatus } from '../../../core/models/game.model';
+import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { TentsCellState } from './store/tents-engine';
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 
 @Component({
   selector: 'app-tents',
@@ -68,8 +69,21 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
       }));
   });
 
+  private roomLifecycle: RoomLifecycleHandle;
+
   constructor() {
     super();
+
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: GameId.Tents,
+      getCurrentMode: () => this.store.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        if (this.roomLifecycle) {
+          this.roomLifecycle.clearReconnectInfo();
+        }
+      },
+    });
 
     // 通关多巴胺礼花喷射与触感回馈
     effect(() => {
@@ -82,7 +96,20 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override ngOnInit(): void {
     super.ngOnInit();
-    if (this.store.currentRoomMode() === GameMode.Single) {
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      this.pendingResumeSession.set(null);
+      this.store.joinRoom(
+        pending.roomId,
+        pending.mode,
+        pending.difficulty,
+        pending.host || '',
+        pending.target ?? 1,
+        pending.password,
+        pending.bountyCoins,
+        pending.isSpectator
+      );
+    } else if (this.store.currentRoomMode() === GameMode.Single) {
       const qp = this._baseRoute.snapshot.queryParamMap;
       const requestedDiff = qp.get('difficulty') || qp.get('diff');
       const diff = requestedDiff || this.store.restoreSavedDifficulty('easy');

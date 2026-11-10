@@ -5,7 +5,8 @@ import { TilematchStore } from './store/tilematch.store';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
-import { GameMode, GameStatus } from "../../../core/models/game.model";
+import { GameId, GameMode, GameStatus } from "../../../core/models/game.model";
+import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TILE_EMOJIS, TileCard } from './store/tilematch-engine';
 
 import { TileIconComponent } from './components/tile-icon/tile-icon.component';
@@ -186,8 +187,21 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
       }));
   });
 
+  private roomLifecycle: RoomLifecycleHandle;
+
   constructor() {
     super();
+
+    this.roomLifecycle = setupRoomLifecycle({
+      gameId: GameId.Tilematch,
+      getCurrentMode: () => this.store.currentRoomMode(),
+      onLeaveRoom: () => {
+        this.store.leaveRoom();
+        if (this.roomLifecycle) {
+          this.roomLifecycle.clearReconnectInfo();
+        }
+      },
+    });
 
     // 监听消除事件，触发浮动多巴胺激励效果
     effect(() => {
@@ -286,7 +300,20 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
 
   override ngOnInit(): void {
     super.ngOnInit();
-    if (this.store.currentRoomMode() === GameMode.Single) {
+    const pending = this.roomLifecycle.consumePendingOrReconnect();
+    if (pending) {
+      this.pendingResumeSession.set(null);
+      this.store.joinRoom(
+        pending.roomId,
+        pending.mode,
+        pending.difficulty,
+        pending.host || '',
+        pending.target ?? 1,
+        pending.password,
+        pending.bountyCoins,
+        pending.isSpectator
+      );
+    } else if (this.store.currentRoomMode() === GameMode.Single) {
       const qp = this._baseRoute.snapshot.queryParamMap;
       const requestedDiff = qp.get('difficulty') || qp.get('diff');
       if (requestedDiff) {

@@ -177,10 +177,19 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     return { challenger: q['challenge'] as string, score: (q['score'] as string) || '' };
   });
 
+  isMyRoom(room: any): boolean {
+    const myId = this.playerId();
+    if (!myId || !room) return false;
+    if (room.host === myId || room.opponent === myId) return true;
+    if (Array.isArray(room.contestants) && room.contestants.includes(myId)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.includes(myId)) return true;
+    return false;
+  }
+
   allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single));
-  myRooms    = computed(() => this.allRooms().filter((r: any) => r.host === this.playerId()));
+  myRooms    = computed(() => this.allRooms().filter((r: any) => this.isMyRoom(r)));
   otherRooms = computed(() => {
-    const others = this.allRooms().filter((r: any) => r.host !== this.playerId());
+    const others = this.allRooms().filter((r: any) => !this.isMyRoom(r));
     const filter = this.roomGameFilter();
     return filter ? others.filter((r: any) => r.game === filter) : others;
   });
@@ -189,7 +198,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // Unique game IDs appearing in other rooms (for filter chips)
   activeRoomGameIds = computed(() => {
     const ids = this.allRooms()
-      .filter((r: any) => r.host !== this.playerId())
+      .filter((r: any) => !this.isMyRoom(r))
       .map((r: any) => r.game as string);
     return [...new Set(ids)];
   });

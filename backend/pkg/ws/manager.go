@@ -55,6 +55,7 @@ type Room struct {
 	Clients       map[string]*Client
 	Engine        engine.GameEngine
 	KickedPlayers map[string]time.Time // playerID -> kick timestamp for cooldown
+	Contestants   map[string]bool      // playerID -> true for all registered contestants (persists across disconnects)
 	mu            sync.Mutex
 }
 
@@ -69,6 +70,7 @@ type RoomSnapshot struct {
 	Game           domain.GameId         `json:"game"`
 	Host           string                `json:"host"`
 	Opponent       string                `json:"opponent,omitempty"`
+	Contestants    []string              `json:"contestants,omitempty"`
 	Mode           domain.GameMode       `json:"mode"`
 	Difficulty     domain.GameDifficulty `json:"difficulty"`
 	Status         domain.GameStatus     `json:"status"`
@@ -106,6 +108,25 @@ func GetActiveRooms() []RoomSnapshot {
 				}
 			}
 		}
+
+		// Fallback for opponent from contestants if opponent is temporarily reconnecting
+		if opponent == "" && len(r.Contestants) > 0 {
+			for cid := range r.Contestants {
+				if cid != r.Host {
+					opponent = cid
+					break
+				}
+			}
+		}
+
+		var contestants []string
+		for cid := range r.Contestants {
+			contestants = append(contestants, cid)
+		}
+		if len(contestants) > playerCount {
+			playerCount = len(contestants)
+		}
+
 		game := r.Game
 		host := r.Host
 		mode := r.Mode
@@ -141,6 +162,7 @@ func GetActiveRooms() []RoomSnapshot {
 			Game:           game,
 			Host:           host,
 			Opponent:       opponent,
+			Contestants:    contestants,
 			Mode:           mode,
 			Difficulty:     diff,
 			Status:         status,
@@ -233,6 +255,10 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 		Clients:       make(map[string]*Client),
 		Engine:        eng,
 		KickedPlayers: make(map[string]time.Time),
+		Contestants:   make(map[string]bool),
+	}
+	if hostId != "" {
+		r.Contestants[hostId] = true
 	}
 
 	options := getGameOptions(gameId, mode, difficulty, target)
@@ -411,8 +437,17 @@ func (r *Room) AddClient(client *Client, password string) error {
 
 	r.LastActivity = time.Now().Unix()
 
-	// Check password (host always skips password check)
-	if r.Password != "" && client.ID != r.Host && password != r.Password {
+	if r.Contestants == nil {
+		r.Contestants = make(map[string]bool)
+	}
+	if r.Host != "" {
+		r.Contestants[r.Host] = true
+	}
+
+	isReturningContestant := client.ID == r.Host || (r.Engine != nil && r.Engine.HasPlayer(client.ID)) || r.Contestants[client.ID]
+
+	// Check password (host and returning contestants skip password check)
+	if !isReturningContestant && r.Password != "" && client.ID != r.Host && password != r.Password {
 		return fmt.Errorf(string(domain.ErrWrongPassword))
 	}
 
@@ -425,8 +460,15 @@ func (r *Room) AddClient(client *Client, password string) error {
 		delete(r.KickedPlayers, client.ID)
 	}
 
+	// If player was a contestant in this room, automatically restore their contestant status
+	// (protects against accidentally connecting with spectate flag when returning from lobby)
+	if isReturningContestant && client.IsSpectator {
+		log.Printf("Restoring returning player %s in room %s to contestant seat", client.ID, r.ID)
+		client.IsSpectator = false
+	}
+
 	// Reject if room reached max player capacity (spectators can always join)
-	if !client.IsSpectator {
+	if !client.IsSpectator && !isReturningContestant {
 		currentContestants := 0
 		for pid, c := range r.Clients {
 			if !c.IsSpectator && pid != client.ID {
@@ -442,14 +484,18 @@ func (r *Room) AddClient(client *Client, password string) error {
 		}
 	}
 
-	// Reject if game actively in progress and player is new (allow host and spectators to bypass)
+	// Reject if game actively in progress and player is new (allow host, returning contestants, and spectators to bypass)
 	st := r.Engine.GetStatus()
-	if !client.IsSpectator && st != engine.StateWaiting && st != engine.StateFinished && !r.Engine.HasPlayer(client.ID) && r.Host != client.ID {
+	if !client.IsSpectator && st != engine.StateWaiting && st != engine.StateFinished && !isReturningContestant {
 		return fmt.Errorf("game already started")
 	}
 
 	if r.Host == "" && !client.IsSpectator {
 		r.Host = client.ID
+	}
+
+	if !client.IsSpectator {
+		r.Contestants[client.ID] = true
 	}
 
 	// Preserve IsReady state on reconnect
@@ -459,7 +505,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 
 	r.Clients[client.ID] = client
 
-	if !client.IsSpectator && (st == engine.StateWaiting || st == engine.StateFinished || r.Engine.HasPlayer(client.ID)) {
+	if !client.IsSpectator && (st == engine.StateWaiting || st == engine.StateFinished || r.Engine.HasPlayer(client.ID) || isReturningContestant) {
 		r.Engine.AddPlayer(client.ID)
 	}
 
@@ -613,6 +659,12 @@ func (r *Room) RemoveClient(client *Client) {
 // transferHost picks the next available client as host. If no clients remain, dismisses the room.
 func (r *Room) transferHost(oldHostID string) {
 	r.mu.Lock()
+	// If the original host has already reconnected as a contestant, cancel transfer
+	if c, reconnected := r.Clients[oldHostID]; reconnected && !c.IsSpectator {
+		r.mu.Unlock()
+		return
+	}
+	delete(r.Contestants, oldHostID)
 	roomID := r.ID
 
 	// Pick the first connected non-spectator client as new host
@@ -821,6 +873,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		leavingClient, exists := r.Clients[clientID]
 		if exists {
 			delete(r.Clients, clientID)
+			delete(r.Contestants, clientID)
 			if r.Engine != nil {
 				r.Engine.RemovePlayer(clientID)
 			}
@@ -958,6 +1011,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					r.KickedPlayers[targetID] = time.Now()
 					targetClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventKicked)))
 					delete(r.Clients, targetID)
+					delete(r.Contestants, targetID)
 					if r.Engine != nil {
 						r.Engine.RemovePlayer(targetID)
 					}

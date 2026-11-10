@@ -17,6 +17,14 @@ import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { LocalAchievementService } from '../services/local-achievement.service';
 import { storageGet, storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty, getSavedLevel, setSavedLevel } from '../utils/browser.util';
 
+// Listen to beforeunload to detect browser refresh (F5/Reload) vs voluntary SPA exit
+if (typeof window !== 'undefined' && !(window as any).__unloadListenerAttached) {
+  (window as any).__unloadListenerAttached = true;
+  window.addEventListener('beforeunload', () => {
+    (window as any).__isPageUnloading = true;
+  });
+}
+
 @Injectable()
 export abstract class BaseGameStore implements GameStoreInterface {
   readonly ws = inject(WebSocketService);
@@ -463,6 +471,21 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._pkPrevStatus = '';
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
+
+    // Auto-save reconnect info to sessionStorage for refresh protection
+    if (typeof sessionStorage !== 'undefined' && this.gameId && mode !== GameMode.Single && roomId) {
+      const prefix = `${this.gameId}_reconnect`;
+      sessionStorage.setItem(`${prefix}_room`, roomId);
+      sessionStorage.setItem(`${prefix}_mode`, mode);
+      sessionStorage.setItem(`${prefix}_diff`, difficulty);
+      if (hostId) sessionStorage.setItem(`${prefix}_host`, hostId);
+      if (isSpectator) {
+        sessionStorage.setItem(`${prefix}_spectator`, 'true');
+      } else {
+        sessionStorage.removeItem(`${prefix}_spectator`);
+      }
+    }
+
     if (mode !== GameMode.Single || isSpectator) {
       this.resetLocalGameState();
       const explicitAction = action || (isSpectator ? 'spectate' : '');
@@ -491,6 +514,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
     const pending = this.crossGameJoin.pendingJoin();
     const currentRoom = this.roomId() || this.ws.currentRoomId();
     if (pending && currentRoom && pending.roomId === currentRoom) {
+      return;
+    }
+
+    // 关键防御：如果是由于页面刷新 (F5/Reload) 导致的组件销毁，
+    // 绝不向后端发送 LeaveRoom，绝不清理 sessionStorage 重连凭证！
+    // 允许后端保留 25-30s 宽限期，并在页面加载后无缝自动重连回对战席位！
+    if (typeof window !== 'undefined' && (window as any).__isPageUnloading) {
       return;
     }
 

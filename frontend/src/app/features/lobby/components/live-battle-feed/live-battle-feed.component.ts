@@ -201,12 +201,24 @@ import { GameMode } from '../../../../core/models/game.model';
                       </span>
                     </div>
 
-                    <!-- Action: 严格专属【实时观战】按钮 (游戏中不允许半途插队，只能观战) -->
-                    <button (click)="spectateRoom(room)"
-                            class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
-                      <span>👁️</span>
-                      <span>{{ i18n.t('lobby.spectate_btn')() || '实时观战' }}</span>
-                    </button>
+                    <!-- Action: 参战者提供【返回对决】，旁观者提供【实时观战】 -->
+                    @if (isUserInRoom(room)) {
+                      <button (click)="reconnectRoom(room)"
+                              class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-md shadow-emerald-500/30 ring-2 ring-emerald-400/50 animate-pulse shrink-0">
+                        <span class="relative flex h-2 w-2 shrink-0">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                        </span>
+                        <span>⚡</span>
+                        <span>{{ i18n.t('lobby.reconnect_match_btn')() || '返回对决' }}</span>
+                      </button>
+                    } @else {
+                      <button (click)="spectateRoom(room)"
+                              class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs shrink-0">
+                        <span>👁️</span>
+                        <span>{{ i18n.t('lobby.spectate_btn')() || '实时观战' }}</span>
+                      </button>
+                    }
                   </div>
 
                   <!-- Real-time Commentary -->
@@ -520,8 +532,11 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
 
   isUserInRoom(room: any): boolean {
     const myId = this.currentUserId();
-    if (!myId) return false;
-    return room.host === myId || room.opponent === myId;
+    if (!myId || !room) return false;
+    if (room.host === myId || room.opponent === myId) return true;
+    if (Array.isArray(room.contestants) && room.contestants.includes(myId)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.includes(myId)) return true;
+    return false;
   }
 
   private timer: any;
@@ -635,6 +650,20 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
     if (room.targetRounds === 3 || room.mode === 'bo3') return 'BO3';
     if (room.targetRounds === 5 || room.mode === 'bo5') return 'BO5';
     return '单局';
+  }
+
+  reconnectRoom(room: any): void {
+    const lang = this.i18n.currentLang() || 'zh';
+    this.crossGameJoin.setPendingJoin({
+      game: room.game,
+      roomId: room.id,
+      mode: room.mode,
+      difficulty: room.difficulty,
+      host: room.host,
+      action: 'join',
+      spectate: false,
+    });
+    this.router.navigate([`/${lang}/games/${room.game}`]);
   }
 
   spectateRoom(room: any): void {
