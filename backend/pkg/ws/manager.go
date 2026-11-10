@@ -657,7 +657,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		if action == string(domain.ActionJoinContestant) || action == "join_contestant" || action == "take_seat" {
 			st := r.Engine.GetStatus()
 			if st != engine.StateWaiting {
-				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","payload":"对战已在进行中，无法入席"}`))
+				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","payload":"对战已在进行中，无法参战"}`))
 				return
 			}
 			currentContestants := 0

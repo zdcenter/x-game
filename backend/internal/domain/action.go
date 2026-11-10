@@ -9,7 +9,7 @@ const (
 	ActionJoinRoom    C2SAction = "join"
 	// 请求观战房间
 	ActionSpectate    C2SAction = "spectate"
-	// 观战者就地入席转为参赛选手
+	// 观战者就地参战转为参赛选手
 	ActionJoinContestant C2SAction = "join_contestant"
 	// 请求离开房间
 	ActionLeaveRoom   C2SAction = "leave_game"

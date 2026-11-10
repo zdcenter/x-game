@@ -278,7 +278,7 @@ import { GameMode } from '../../../../core/models/game.model';
                           👤 {{ room.host }}
                         </span>
                         @if (room.players > 1) {
-                          <span class="text-[10px] text-emerald-500 font-bold">等 {{ room.players }} 人已入席</span>
+                          <span class="text-[10px] text-emerald-500 font-bold">等 {{ room.players }} 人已参战</span>
                         } @else {
                           <span class="text-[10px] text-amber-500 font-bold">已摆擂台</span>
                         }
@@ -316,7 +316,7 @@ import { GameMode } from '../../../../core/models/game.model';
                         <!-- 旁观入口 (带文字表达) -->
                         <button (click)="spectateRoom(room)"
                                 class="px-2.5 py-1.5 rounded-lg border border-[var(--color-border-card)] hover:border-violet-500/60 bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-violet-500 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
-                                title="入席观战">
+                                title="实时观战">
                           <span>👁️</span>
                           <span>{{ i18n.t('lobby.spectate_btn')() || '观战' }}</span>
                         </button>
@@ -325,7 +325,7 @@ import { GameMode } from '../../../../core/models/game.model';
                         <button (click)="spectateRoom(room)"
                                 class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1 transition-all active:scale-95 cursor-pointer shadow-xs">
                           <span>👁️</span>
-                          <span>{{ i18n.t('lobby.spectate_btn')() || '入席观战' }}</span>
+                          <span>{{ i18n.t('lobby.spectate_btn')() || '观战' }}</span>
                         </button>
                       }
                     </div>

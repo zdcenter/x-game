@@ -200,7 +200,7 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
     }
     const count = this.sortedPlayers.length;
     if (count <= 1) return `1人等待中`;
-    if (count === 2) return `2人已入席`;
+    if (count === 2) return `2人已参战`;
     if (count <= 4) return `${count}人对决席`;
     return `${count}人大乱斗`;
   }

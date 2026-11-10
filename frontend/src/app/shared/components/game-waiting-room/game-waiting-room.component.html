@@ -284,7 +284,7 @@
                     </div>
 
                     <p class="text-[11px] sm:text-xs font-bold text-[var(--color-text-secondary)] mb-2 text-center leading-tight">
-                      {{ i18n.t('game.waiting_challenger_seat')() || '虚位以待，等待对手入席...' }}
+                      {{ i18n.t('game.waiting_challenger_seat')() || '虚位以待，等待对手参战...' }}
                     </p>
 
                     <div class="flex flex-row items-center gap-1.5 w-full max-w-[200px]">
@@ -409,7 +409,7 @@
                       <button (click)="shareInviteLink()"
                               class="w-full py-1 px-1.5 rounded-lg text-[9px] font-bold bg-[var(--color-bg-main)] border border-[var(--color-border-card)] hover:border-amber-400 text-[var(--color-text-main)] shadow-xs flex items-center justify-center gap-0.5 active:scale-95 transition-all cursor-pointer">
                         <span>🔗</span>
-                        <span class="truncate">邀请入席</span>
+                        <span class="truncate">邀请参战</span>
                       </button>
                     </div>
                   </div>
@@ -628,7 +628,7 @@
                               type="button"
                               class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs uppercase tracking-wide shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
                         <span>⚡</span>
-                        <span>{{ i18n.t('game.take_seat_btn')() || '尚有空位 · 立即入席参战' }}</span>
+                        <span>{{ i18n.t('game.take_seat_btn')() || '尚有空位 · 立即上场参战' }}</span>
                       </button>
                     }
 
