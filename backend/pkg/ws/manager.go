@@ -208,23 +208,25 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 	var staleToDismiss []*Room
 	var staleToTransfer []*Room
 
-	for id, existing := range Rooms {
-		if existing.Host == hostId {
-			existing.mu.Lock()
-			_, hostStillConnected := existing.Clients[hostId]
-			remainingClients := len(existing.Clients)
-			if hostStillConnected {
-				remainingClients--
-			}
-			existing.mu.Unlock()
+	if hostId != "" && hostId != "anonymous" {
+		for id, existing := range Rooms {
+			if existing.Host == hostId {
+				existing.mu.Lock()
+				_, hostStillConnected := existing.Clients[hostId]
+				remainingClients := len(existing.Clients)
+				if hostStillConnected {
+					remainingClients--
+				}
+				existing.mu.Unlock()
 
-			if remainingClients <= 0 {
-				log.Printf("Host %s creating new room %s, auto-dismissing empty/stale room %s", hostId, roomID, id)
-				delete(Rooms, id)
-				DismissedRooms[id] = time.Now()
-				staleToDismiss = append(staleToDismiss, existing)
-			} else {
-				staleToTransfer = append(staleToTransfer, existing)
+				if remainingClients <= 0 {
+					log.Printf("Host %s creating new room %s, auto-dismissing empty/stale room %s", hostId, roomID, id)
+					delete(Rooms, id)
+					DismissedRooms[id] = time.Now()
+					staleToDismiss = append(staleToDismiss, existing)
+				} else {
+					staleToTransfer = append(staleToTransfer, existing)
+				}
 			}
 		}
 	}

@@ -148,9 +148,9 @@ func Register(router fiber.Router) {
 			return
 		}
 
-		if isNewRoom {
+		if isNewRoom && password == "" && mode != string(domain.ModeSingle) && mode != "single" {
 			creatorName := hostId
-			if creatorName == "" {
+			if creatorName == "" || creatorName == "anonymous" {
 				creatorName = playerID
 			}
 			wsManager.Lobby.AddActivity(wsManager.LobbyActivity{

@@ -60,14 +60,15 @@ export class LiveRoomService {
       // Monitor new rooms for in-game / live notifications
       effect(() => {
         const rooms = this.waitingRooms();
-        const myId = this.currentUserId();
+        const myId = (this.currentUserId() || '').toLowerCase().trim();
         
         for (const room of rooms) {
           if (!this.knownRoomIds.has(room.id)) {
             this.knownRoomIds.add(room.id);
-            // Trigger alert if not my own room and created recently (within last 30s)
+            // Trigger alert if not my own room, created recently (within last 30s), and is a public room without password
             const isRecent = !room.createdAt || (Date.now() / 1000 - room.createdAt) < 30;
-            if (room.host !== myId && isRecent) {
+            const isMyRoom = (room.host || '').toLowerCase().trim() === myId;
+            if (!isMyRoom && isRecent && !room.hasPassword) {
               this.triggerNewRoomAlert(room);
               break;
             }

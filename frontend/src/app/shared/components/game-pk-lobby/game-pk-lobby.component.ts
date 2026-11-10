@@ -489,13 +489,14 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
 
   onQuickMatch() {
     const targetGame = this.createGameId() || this.gameId;
+    const getRoomPlayers = (r: any) => typeof r.players === 'number' ? r.players : (r.player_count ?? (Array.isArray(r.players) ? r.players.length : 1));
 
     // First priority: Same game, waiting, no password, seats available
     let match = this.otherRooms().find((r: any) => 
       (!targetGame || r.game === targetGame) &&
       r.status === GameStatus.Waiting &&
       !r.hasPassword &&
-      (r.player_count ?? r.players?.length ?? 1) < this.getMaxPlayers(r.game || 'minesweeper')
+      getRoomPlayers(r) < this.getMaxPlayers(r.game || 'minesweeper')
     );
 
     // Second priority: Any game, waiting, no password, seats available
@@ -503,7 +504,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       match = this.otherRooms().find((r: any) => 
         r.status === GameStatus.Waiting &&
         !r.hasPassword &&
-        (r.player_count ?? r.players?.length ?? 1) < this.getMaxPlayers(r.game || 'minesweeper')
+        getRoomPlayers(r) < this.getMaxPlayers(r.game || 'minesweeper')
       );
     }
 
