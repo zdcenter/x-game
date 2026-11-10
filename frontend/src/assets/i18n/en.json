@@ -2298,5 +2298,12 @@
   "game.pk_leaving_title": "Match in Progress",
   "game.pk_leaving_msg": "The battle is still ongoing! You can choose \"Leave Temporarily\" to hold your seat for 30 seconds and return anytime. Choosing \"Forfeit & Leave\" will concede the match to your opponent.",
   "game.pk_temporary_leave": "Leave Temporarily (Hold 30s)",
-  "game.pk_forfeit_leave": "Forfeit & Leave"
+  "game.pk_forfeit_leave": "Forfeit & Leave",
+  "game.pk_opponent_disconnected_title": "Opponent Temporarily Disconnected",
+  "game.pk_opponent_disconnected_desc": "Holding seat for 【{{ player }}】, waiting to reconnect: {{ seconds }}s",
+  "game.pk_opponent_disconnected_toast": "Opponent 【{{ player }}】 disconnected. Holding their seat for {{ seconds }}s, please wait...",
+  "game.pk_opponent_reconnected_toast": "Opponent 【{{ player }}】 reconnected! Battle continues!",
+  "game.pk_opponent_forfeited_toast": "Opponent 【{{ player }}】 forfeited! Congratulations, you win!",
+  "game.pk_player_left_toast": "Player 【{{ player }}】 left the room",
+  "game.pk_host_changed_toast": "Host transferred: 【{{ newHost }}】 is now host"
 }

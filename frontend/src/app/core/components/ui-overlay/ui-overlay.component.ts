@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ToastService, GameInviteBanner } from '../../services/toast.service';
@@ -13,6 +13,31 @@ import { GameRegistryService } from '../../services/game-registry.service';
   standalone: true,
   imports: [CommonModule],
   template: `
+    <!-- Opponent Disconnected Grace Period Capsule (Shown to remaining player in-game) -->
+    @if (opponentDisconnect(); as dis) {
+      <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] w-[calc(100vw-24px)] max-w-md bg-amber-500/95 dark:bg-amber-600/95 text-white border-2 border-amber-300 dark:border-amber-400 rounded-2xl shadow-[0_0_25px_rgba(245,158,11,0.5)] p-3 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md pointer-events-auto">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="relative flex h-3 w-3 shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-black truncate flex items-center gap-1">
+              <span>⚠️ {{ i18n.t('game.pk_opponent_disconnected_title')() || '对手暂时断开连接' }}</span>
+            </p>
+            <p class="text-[11px] text-amber-100 truncate">
+              {{ i18n.t('game.pk_opponent_disconnected_desc', { player: dis.playerId, seconds: dis.remaining })() || ('对手【' + dis.playerId + '】席位保留中，等待重连: ' + dis.remaining + 's') }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="px-2.5 py-1 rounded-xl bg-black/25 text-white font-mono text-xs font-bold border border-white/20">
+            {{ dis.remaining }}s
+          </span>
+        </div>
+      </div>
+    }
+
     <!-- Sticky Floating Active Battle Reconnect Capsule -->
     @if (ongoingMatch(); as active) {
       <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] w-[calc(100vw-24px)] max-w-md bg-[var(--color-bg-card)]/95 border-2 border-emerald-400 dark:border-emerald-500 rounded-2xl shadow-[0_0_25px_rgba(16,185,129,0.35)] p-3 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md pointer-events-auto">
@@ -120,7 +145,7 @@ import { GameRegistryService } from '../../services/game-registry.service';
     .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
   `]
 })
-export class UiOverlayComponent {
+export class UiOverlayComponent implements OnDestroy {
   toastService = inject(ToastService);
   i18n = inject(I18nService);
   private readonly wsService = inject(WebSocketService);
@@ -130,6 +155,99 @@ export class UiOverlayComponent {
   private readonly gameRegistry = inject(GameRegistryService);
 
   readonly dismissedMatchRoomId = signal<string | null>(null);
+  readonly opponentDisconnect = signal<{ playerId: string; remaining: number } | null>(null);
+  private opponentCountdownTimer?: any;
+
+  constructor() {
+    // 监听对手断开连接事件
+    effect(() => {
+      const dis = this.wsService.playerDisconnectedEvent();
+      if (dis) {
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        if (dis.playerId.toLowerCase().trim() !== myName) {
+          const secs = dis.gracePeriod || 30;
+          this.startOpponentCountdown(dis.playerId, secs);
+          const toastMsg = this.i18n.t('game.pk_opponent_disconnected_toast', { player: dis.playerId, seconds: secs })()
+            || `对手【${dis.playerId}】暂时断开连接，系统为其保留 ${secs} 秒席位，请稍候...`;
+          this.toastService.warning(toastMsg);
+        }
+      } else {
+        this.clearOpponentCountdown();
+      }
+    });
+
+    // 监听对手重新连接事件
+    effect(() => {
+      const rec = this.wsService.playerReconnectedEvent();
+      if (rec) {
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        if (rec.toLowerCase().trim() !== myName) {
+          this.clearOpponentCountdown();
+          const toastMsg = this.i18n.t('game.pk_opponent_reconnected_toast', { player: rec })()
+            || `对手【${rec}】已恢复连接，战斗继续！`;
+          this.toastService.success(toastMsg);
+        }
+      }
+    });
+
+    // 监听玩家主动退出或弃赛认输事件
+    effect(() => {
+      const left = this.wsService.playerLeftEvent();
+      if (left) {
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        if (left.playerId.toLowerCase().trim() !== myName) {
+          this.clearOpponentCountdown();
+          if (left.reason === 'forfeit' || left.reason === 'timeout') {
+            const toastMsg = this.i18n.t('game.pk_opponent_forfeited_toast', { player: left.playerId })()
+              || `对手【${left.playerId}】已认输离开，恭喜您获得对决胜利！`;
+            this.toastService.success(toastMsg);
+          } else {
+            const toastMsg = this.i18n.t('game.pk_player_left_toast', { player: left.playerId })()
+              || `玩家【${left.playerId}】退出了房间`;
+            this.toastService.info(toastMsg);
+          }
+        }
+      }
+    });
+
+    // 监听房主转移事件
+    effect(() => {
+      const host = this.wsService.hostChangedEvent();
+      if (host) {
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        if (host.oldHost.toLowerCase().trim() !== myName) {
+          const toastMsg = this.i18n.t('game.pk_host_changed_toast', { oldHost: host.oldHost, newHost: host.newHost })()
+            || `房主已转移：【${host.newHost}】成为新房主`;
+          this.toastService.info(toastMsg);
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearOpponentCountdown();
+  }
+
+  private startOpponentCountdown(playerId: string, seconds: number) {
+    this.clearOpponentCountdown();
+    this.opponentDisconnect.set({ playerId, remaining: seconds });
+    this.opponentCountdownTimer = setInterval(() => {
+      const cur = this.opponentDisconnect();
+      if (!cur || cur.remaining <= 1) {
+        this.clearOpponentCountdown();
+      } else {
+        this.opponentDisconnect.set({ playerId: cur.playerId, remaining: cur.remaining - 1 });
+      }
+    }, 1000);
+  }
+
+  private clearOpponentCountdown() {
+    if (this.opponentCountdownTimer) {
+      clearInterval(this.opponentCountdownTimer);
+      this.opponentCountdownTimer = undefined;
+    }
+    this.opponentDisconnect.set(null);
+  }
 
   readonly ongoingMatch = computed(() => {
     const user = this.auth.currentUser()?.username || this.auth.guestId;

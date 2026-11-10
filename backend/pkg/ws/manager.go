@@ -629,6 +629,10 @@ func (r *Room) RemoveClient(client *Client) {
 					log.Printf("Contestant %s forfeited by disconnect timeout in room %s", pID, rID)
 					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 					delete(room.Contestants, pID)
+					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "timeout"}`, domain.EventPlayerLeft, pID))
+					for _, c := range room.Clients {
+						c.WriteMessage(websocket.TextMessage, leftMsg)
+					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
 				}
@@ -688,6 +692,10 @@ func (r *Room) RemoveClient(client *Client) {
 			if _, reconnected := room.Clients[pID]; !reconnected {
 				if room.Engine != nil && room.Engine.GetStatus() == engine.StateWaiting {
 					room.Engine.RemovePlayer(pID)
+					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "leave"}`, domain.EventPlayerLeft, pID))
+					for _, c := range room.Clients {
+						c.WriteMessage(websocket.TextMessage, leftMsg)
+					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
 				}
@@ -1059,6 +1067,10 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					log.Printf("Contestant %s forfeited by temporary leave timeout in room %s", pID, rID)
 					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 					delete(room.Contestants, pID)
+					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "timeout"}`, domain.EventPlayerLeft, pID))
+					for _, c := range room.Clients {
+						c.WriteMessage(websocket.TextMessage, leftMsg)
+					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
 				}
@@ -1067,6 +1079,10 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 
 		// Permanent leave (waiting room, finished, spectator, or explicit forfeit)
+		reason := "leave"
+		if isForfeit {
+			reason = "forfeit"
+		}
 		if isForfeit && r.Engine != nil && gameStatus == engine.StatePlaying {
 			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 		}
@@ -1076,6 +1092,12 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			r.Engine.RemovePlayer(clientID)
 		}
 		leavingClient.Close()
+
+		// Broadcast player_left event to remaining clients
+		leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "%s"}`, domain.EventPlayerLeft, clientID, reason))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, leftMsg)
+		}
 
 		activeCount := 0
 		for _, c := range r.Clients {

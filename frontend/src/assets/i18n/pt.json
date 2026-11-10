@@ -2161,5 +2161,12 @@
   "game.pk_temporary_leave": "Sair temporariamente (30s)",
   "game.pk_forfeit_leave": "Desistir e sair",
   "game.reconnect_match": "Volver à partida",
-  "lobby.reconnect_match_btn": "Volver à partida"
+  "lobby.reconnect_match_btn": "Volver à partida",
+  "game.pk_opponent_disconnected_title": "Oponente temporariamente desconectado",
+  "game.pk_opponent_disconnected_desc": "Guardando lugar para 【{{ player }}】, aguardando reconexão: {{ seconds }}s",
+  "game.pk_opponent_disconnected_toast": "O oponente 【{{ player }}】 desconectou. Seu lugar está reservado por {{ seconds }}s, por favor aguarde...",
+  "game.pk_opponent_reconnected_toast": "O oponente 【{{ player }}】 reconectou! A batalha continua!",
+  "game.pk_opponent_forfeited_toast": "O oponente 【{{ player }}】 desistiu! Parabéns pela vitória!",
+  "game.pk_player_left_toast": "O jogador 【{{ player }}】 saiu da sala",
+  "game.pk_host_changed_toast": "Anfitrião transferido: 【{{ newHost }}】 agora é o anfitrião"
 }

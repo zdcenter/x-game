@@ -2161,5 +2161,12 @@
   "game.pk_temporary_leave": "一時退席 (席を30秒保持)",
   "game.pk_forfeit_leave": "降伏して退出",
   "game.reconnect_match": "対局に戻る",
-  "lobby.reconnect_match_btn": "対局に戻る"
+  "lobby.reconnect_match_btn": "対局に戻る",
+  "game.pk_opponent_disconnected_title": "対戦相手が一時切断されました",
+  "game.pk_opponent_disconnected_desc": "【{{ player }}】の席を保持中、再接続待ち: {{ seconds }}秒",
+  "game.pk_opponent_disconnected_toast": "対戦相手【{{ player }}】が一時切断されました。{{ seconds }}秒間席を保持しますのでお待ちください...",
+  "game.pk_opponent_reconnected_toast": "対戦相手【{{ player }}】が復帰しました！バトル再開！",
+  "game.pk_opponent_forfeited_toast": "対戦相手【{{ player }}】が降伏・退出しました。あなたの勝利です！",
+  "game.pk_player_left_toast": "プレイヤー【{{ player }}】がルームを退出しました",
+  "game.pk_host_changed_toast": "ホストが交代しました：【{{ newHost }}】が新しいホストです"
 }

@@ -126,6 +126,8 @@ export enum S2CEvent {
   PlayerDisconnected = 'player_disconnected',
   /** 对战选手恢复连接 */
   PlayerReconnected = 'player_reconnected',
+  /** 玩家主动退出或弃赛认输离开房间 */
+  PlayerLeft = 'player_left',
 
   // ===== 系统级事件 =====
   /** 服务器返回报错信息 (例如非法移动、权限不足) */

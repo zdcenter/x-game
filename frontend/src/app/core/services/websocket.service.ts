@@ -126,9 +126,10 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
-  // Triggered when an in-game opponent temporarily disconnects / reconnects
+  // Triggered when an in-game opponent temporarily disconnects / reconnects / leaves
   readonly playerDisconnectedEvent = signal<{playerId: string, gracePeriod: number} | null>(null);
   readonly playerReconnectedEvent = signal<string | null>(null);
+  readonly playerLeftEvent = signal<{playerId: string, reason: string} | null>(null);
 
   constructor() {
     if (isBrowser()) {
@@ -374,6 +375,11 @@ export class WebSocketService {
       } else if (msg.type === S2CEvent.PlayerReconnected) {
         this.playerReconnectedEvent.set(msg.playerId);
         this.playerDisconnectedEvent.set(null);
+      } else if (msg.type === S2CEvent.PlayerLeft) {
+        this.playerLeftEvent.set({ playerId: msg.playerId, reason: msg.reason || 'leave' });
+        if (this.playerDisconnectedEvent()?.playerId === msg.playerId) {
+          this.playerDisconnectedEvent.set(null);
+        }
       } else if (msg.type === S2CEvent.StartRejected) {
         // Host tried to start but was rejected (player not ready / not enough players)
         const reason = msg.reason;
@@ -642,6 +648,7 @@ export class WebSocketService {
     this.isCurrentSpectator.set(false);
     this.playerDisconnectedEvent.set(null);
     this.playerReconnectedEvent.set(null);
+    this.playerLeftEvent.set(null);
     this.lastGameConnectConfig = null;
     this.gameState.set(null);
   }

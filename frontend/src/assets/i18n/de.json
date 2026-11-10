@@ -2161,5 +2161,12 @@
   "game.pk_temporary_leave": "Kurz zur Lobby (30s)",
   "game.pk_forfeit_leave": "Aufgeben & Verlassen",
   "game.reconnect_match": "Zurück zum Spiel",
-  "lobby.reconnect_match_btn": "Zurück zum Spiel"
+  "lobby.reconnect_match_btn": "Zurück zum Spiel",
+  "game.pk_opponent_disconnected_title": "Gegner vorübergehend getrennt",
+  "game.pk_opponent_disconnected_desc": "Platz reserviert für 【{{ player }}】, warte auf Wiederverbindung: {{ seconds }}s",
+  "game.pk_opponent_disconnected_toast": "Gegner 【{{ player }}】 getrennt. Platz ist für {{ seconds }}s reserviert, bitte warten...",
+  "game.pk_opponent_reconnected_toast": "Gegner 【{{ player }}】 wieder verbunden! Der Kampf geht weiter!",
+  "game.pk_opponent_forfeited_toast": "Gegner 【{{ player }}】 hat aufgegeben! Glückwunsch zum Sieg!",
+  "game.pk_player_left_toast": "Spieler 【{{ player }}】 hat den Raum verlassen",
+  "game.pk_host_changed_toast": "Host übertragen: 【{{ newHost }}】 ist nun Host"
 }
