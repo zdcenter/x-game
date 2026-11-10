@@ -15,6 +15,8 @@ import { CoinService } from '../services/coin.service';
 import { LiveActivityService } from '../services/live-activity.service';
 import { CrossGameJoinService } from '../services/cross-game-join.service';
 import { LocalAchievementService } from '../services/local-achievement.service';
+import { ToastService } from '../services/toast.service';
+import { I18nService } from '../i18n/i18n.service';
 import { storageGet, storageSet, storageRemove, getSavedDifficulty, setSavedDifficulty, getSavedLevel, setSavedLevel } from '../utils/browser.util';
 
 // Listen to beforeunload to detect browser refresh (F5/Reload) vs voluntary SPA exit
@@ -38,6 +40,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly liveActivity = inject(LiveActivityService);
   protected readonly crossGameJoin = inject(CrossGameJoinService);
   protected readonly localAchievementService = inject(LocalAchievementService);
+  protected readonly toast = inject(ToastService);
+  protected readonly i18n = inject(I18nService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
@@ -604,8 +608,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.roomId.set('');
     this.isWalkoverVictory.set(false);
     this.ws.disconnect();
-    this.notificationService?.success(
-      this.i18nBase?.t('game.walkover_solo_practice')() || '已转为单人练习模式，继续挑战吧！'
+    this.toast.success(
+      this.i18n.t('game.walkover_solo_practice')() || '已转为单人练习模式，继续挑战吧！'
     );
   }
 
@@ -614,9 +618,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   resetRoomToWaiting() {
     this.isWalkoverVictory.set(false);
-    this.ws.sendMessage({ action: 'restart' });
-    this.notificationService?.info(
-      this.i18nBase?.t('game.walkover_wait_new_opponent')() || '房间已重置，等待新对手加入...'
+    this.restartGame();
+    this.toast.info(
+      this.i18n.t('game.walkover_wait_new_opponent')() || '房间已重置，等待新对手加入...'
     );
   }
 
