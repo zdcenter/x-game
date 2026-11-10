@@ -540,9 +540,11 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   isUserInRoom(room: any): boolean {
     const myId = this.currentUserId();
     if (!myId || !room) return false;
-    if (room.host === myId || room.opponent === myId) return true;
-    if (Array.isArray(room.contestants) && room.contestants.includes(myId)) return true;
-    if (Array.isArray(room.playersList) && room.playersList.includes(myId)) return true;
+    const clean = (s: string) => (s || '').toLowerCase().trim();
+    const m = clean(myId);
+    if (clean(room.host) === m || clean(room.opponent) === m) return true;
+    if (Array.isArray(room.contestants) && room.contestants.some((c: string) => clean(c) === m)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.some((c: string) => clean(c) === m)) return true;
     return false;
   }
 

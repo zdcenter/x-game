@@ -180,9 +180,11 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   isMyRoom(room: any): boolean {
     const myId = this.playerId();
     if (!myId || !room) return false;
-    if (room.host === myId || room.opponent === myId) return true;
-    if (Array.isArray(room.contestants) && room.contestants.includes(myId)) return true;
-    if (Array.isArray(room.playersList) && room.playersList.includes(myId)) return true;
+    const clean = (s: string) => (s || '').toLowerCase().trim();
+    const m = clean(myId);
+    if (clean(room.host) === m || clean(room.opponent) === m) return true;
+    if (Array.isArray(room.contestants) && room.contestants.some((c: string) => clean(c) === m)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.some((c: string) => clean(c) === m)) return true;
     return false;
   }
 
@@ -553,6 +555,17 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
       (this.t('activity.challenge_created') || '已创建对决房间，正在进入并邀请 {user}...').replace('{user}', player.username),
       'success'
     );
+  }
+
+  isUserInRoom(room: any): boolean {
+    const myId = this.playerId();
+    if (!myId || !room) return false;
+    const clean = (s: string) => (s || '').toLowerCase().trim();
+    const m = clean(myId);
+    if (clean(room.host) === m || clean(room.opponent) === m) return true;
+    if (Array.isArray(room.contestants) && room.contestants.some((c: string) => clean(c) === m)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.some((c: string) => clean(c) === m)) return true;
+    return false;
   }
 
   playSameGame(player: any) {

@@ -1,12 +1,47 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ToastService, GameInviteBanner } from '../../services/toast.service';
 import { I18nService } from '../../i18n/i18n.service';
+import { WebSocketService } from '../../services/websocket.service';
+import { AuthStore } from '../../auth/auth.store';
+import { CrossGameJoinService } from '../../services/cross-game-join.service';
+import { GameRegistryService } from '../../services/game-registry.service';
+
 @Component({
   selector: 'app-ui-overlay',
   standalone: true,
   imports: [CommonModule],
   template: `
+    <!-- Sticky Floating Active Battle Reconnect Capsule -->
+    @if (ongoingMatch(); as active) {
+      <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[100001] w-[calc(100vw-24px)] max-w-md bg-[var(--color-bg-card)]/95 border-2 border-emerald-400 dark:border-emerald-500 rounded-2xl shadow-[0_0_25px_rgba(16,185,129,0.35)] p-3 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md pointer-events-auto">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="relative flex h-3 w-3 shrink-0">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate flex items-center gap-1">
+              <span>⚔️ 您有一场进行中的对决！</span>
+            </p>
+            <p class="text-[11px] text-[var(--color-text-muted)] truncate">
+              {{ active.gameTitle }} · 房间 #{{ active.room.id }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button (click)="returnToOngoingMatch(active)" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1">
+            <span>⚡</span>
+            <span>返回对决</span>
+          </button>
+          <button (click)="dismissOngoingMatch(active.room.id)" class="p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] text-sm transition-colors cursor-pointer" title="隐藏提示">
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Non-blocking Floating Battle Challenge Capsule -->
     @if (toastService.activeInvite(); as invite) {
       <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-[100000] max-w-sm w-[calc(100vw-32px)] sm:w-auto bg-[var(--color-bg-card)] border-2 border-amber-400/80 rounded-2xl shadow-2xl p-3.5 flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md pointer-events-auto">
@@ -88,6 +123,66 @@ import { I18nService } from '../../i18n/i18n.service';
 export class UiOverlayComponent {
   toastService = inject(ToastService);
   i18n = inject(I18nService);
+  private readonly wsService = inject(WebSocketService);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthStore);
+  private readonly crossGameJoin = inject(CrossGameJoinService);
+  private readonly gameRegistry = inject(GameRegistryService);
+
+  readonly dismissedMatchRoomId = signal<string | null>(null);
+
+  readonly ongoingMatch = computed(() => {
+    const user = this.auth.currentUser()?.username || this.auth.guestId;
+    if (!user) return null;
+    const clean = (s: string) => (s || '').toLowerCase().trim();
+    const u = clean(user);
+
+    // If already on a game page, don't show the global re-entry bar
+    const currentUrl = this.router.url || '';
+    if (currentUrl.includes('/games/')) {
+      return null;
+    }
+
+    const rooms = this.wsService.activeRooms() || [];
+    const match = rooms.find((r: any) => {
+      if (!r || (r.status !== 'playing' && r.status !== 'starting')) return false;
+      if (this.dismissedMatchRoomId() === r.id) return false;
+      const isContestant = clean(r.host) === u || clean(r.opponent) === u ||
+        (Array.isArray(r.contestants) && r.contestants.some((c: string) => clean(c) === u)) ||
+        (Array.isArray(r.playersList) && r.playersList.some((c: string) => clean(c) === u));
+      return isContestant;
+    });
+
+    if (!match) return null;
+
+    const gameConfig = this.gameRegistry.getConfig(match.game);
+    const gameTitleKey = gameConfig?.titleKey || `lobby.${match.game}`;
+    const gameTitle = this.i18n.t(gameTitleKey)() || match.game;
+
+    return {
+      room: match,
+      gameTitle
+    };
+  });
+
+  returnToOngoingMatch(match: any) {
+    const room = match.room;
+    this.crossGameJoin.setPendingJoin({
+      game: room.game,
+      roomId: room.id,
+      mode: room.mode,
+      difficulty: room.difficulty,
+      host: room.host,
+      action: 'join',
+      spectate: false,
+    });
+    const lang = this.i18n.currentLang() || 'zh';
+    this.router.navigate([`/${lang}/games/${room.game}`]);
+  }
+
+  dismissOngoingMatch(roomId: string) {
+    this.dismissedMatchRoomId.set(roomId);
+  }
 
   acceptInvite(invite: GameInviteBanner) {
     this.toastService.dismissInvite();

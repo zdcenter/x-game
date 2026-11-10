@@ -95,8 +95,12 @@ export interface GameStoreInterface {
   /**
    * 离开房间。
    * 清理 WebSocket 连接和本地状态。
+   * @param forfeit 是否为认输退出（默认 false，若 true 则直接判定弃赛认输）
    */
-  leaveRoom(): void;
+  leaveRoom(forfeit?: boolean): void;
+
+  /** 主动认输（在进行中对决向服务端发送 forfeit） */
+  forfeitMatch?(): void;
 
   // ===== 对战操作方法 =====
 

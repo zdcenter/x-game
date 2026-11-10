@@ -1012,14 +1012,70 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 
 		leavingClient, exists := r.Clients[clientID]
-		if exists {
-			delete(r.Clients, clientID)
-			delete(r.Contestants, clientID)
-			if r.Engine != nil {
-				r.Engine.RemovePlayer(clientID)
-			}
-			leavingClient.Close()
+		if !exists {
+			return
 		}
+
+		isForfeit := false
+		if fVal, ok := baseMsg["forfeit"].(bool); ok && fVal {
+			isForfeit = true
+		}
+
+		gameStatus := engine.StateWaiting
+		if r.Engine != nil {
+			gameStatus = r.Engine.GetStatus()
+		}
+
+		// In-game temporary leave (player did NOT explicitly forfeit): hold contestant seat for 30s
+		if gameStatus == engine.StatePlaying && !leavingClient.IsSpectator && !isForfeit {
+			log.Printf("Contestant %s temporarily left active game in room %s, holding seat for 30s", clientID, r.ID)
+			delete(r.Clients, clientID)
+			leavingClient.Close()
+
+			// Broadcast disconnection event to remaining players
+			disMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "gracePeriod": 30}`, domain.EventPlayerDisconnected, clientID))
+			for _, c := range r.Clients {
+				c.WriteMessage(websocket.TextMessage, disMsg)
+			}
+
+			r.BroadcastStateLocked()
+			go Lobby.BroadcastLobbyUpdate()
+
+			// Start 30s forfeit timer if player does not return
+			go func(rID string, pID string) {
+				time.Sleep(30 * time.Second)
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+				if !exists {
+					return
+				}
+				room.mu.Lock()
+				defer room.mu.Unlock()
+				if c, reconnected := room.Clients[pID]; reconnected && !c.IsSpectator {
+					return
+				}
+				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
+					log.Printf("Contestant %s forfeited by temporary leave timeout in room %s", pID, rID)
+					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
+					delete(room.Contestants, pID)
+					room.BroadcastStateLocked()
+					go Lobby.BroadcastLobbyUpdate()
+				}
+			}(r.ID, clientID)
+			return
+		}
+
+		// Permanent leave (waiting room, finished, spectator, or explicit forfeit)
+		if isForfeit && r.Engine != nil && gameStatus == engine.StatePlaying {
+			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
+		}
+		delete(r.Clients, clientID)
+		delete(r.Contestants, clientID)
+		if r.Engine != nil {
+			r.Engine.RemovePlayer(clientID)
+		}
+		leavingClient.Close()
 
 		activeCount := 0
 		for _, c := range r.Clients {

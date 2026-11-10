@@ -503,7 +503,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.ws.send({ action: C2SAction.JoinContestant });
   }
 
-  leaveRoom() {
+  leaveRoom(forfeit: boolean = false) {
     this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {
       this.clearSinglePlayerSave();
@@ -524,22 +524,25 @@ export abstract class BaseGameStore implements GameStoreInterface {
       return;
     }
 
-    // 清理 sessionStorage 中的重连记录，防止下次进入该游戏时被自动重连进旧房间
-    if (typeof sessionStorage !== 'undefined' && this.gameId) {
-      const prefix = `${this.gameId}_reconnect`;
-      const room = sessionStorage.getItem(`${prefix}_room`);
-      if (room) {
-        sessionStorage.removeItem(`room_password_${room}`);
+    // 仅在明确认输或非对战进行状态时才清理重连凭证；暂回大厅时保留凭证供断线秒重连
+    const isPlaying = this.isPlaying() || this.status() === GameStatus.Playing;
+    if (forfeit || !isPlaying) {
+      if (typeof sessionStorage !== 'undefined' && this.gameId) {
+        const prefix = `${this.gameId}_reconnect`;
+        const room = sessionStorage.getItem(`${prefix}_room`);
+        if (room) {
+          sessionStorage.removeItem(`room_password_${room}`);
+        }
+        sessionStorage.removeItem(`${prefix}_room`);
+        sessionStorage.removeItem(`${prefix}_mode`);
+        sessionStorage.removeItem(`${prefix}_diff`);
+        sessionStorage.removeItem(`${prefix}_host`);
+        sessionStorage.removeItem(`${prefix}_spectator`);
       }
-      sessionStorage.removeItem(`${prefix}_room`);
-      sessionStorage.removeItem(`${prefix}_mode`);
-      sessionStorage.removeItem(`${prefix}_diff`);
-      sessionStorage.removeItem(`${prefix}_host`);
-      sessionStorage.removeItem(`${prefix}_spectator`);
     }
 
     if (this.currentRoomMode() !== GameMode.Single) {
-      this.ws.send({ action: C2SAction.LeaveRoom });
+      this.ws.send({ action: C2SAction.LeaveRoom, forfeit: forfeit } as any);
     }
     // Give it a tiny delay to ensure the message is sent before the connection closes
     setTimeout(() => {
@@ -549,6 +552,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._isSpectator.set(false);
     this.focusedPlayerId.set('');
     this.currentRoomMode.set(GameMode.Single);
+  }
+
+  forfeitMatch() {
+    if (this.currentRoomMode() !== GameMode.Single) {
+      this.ws.send({ action: C2SAction.Forfeit });
+    }
+    this.leaveRoom(true);
   }
 
   startGame() {
