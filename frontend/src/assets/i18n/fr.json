@@ -2155,5 +2155,11 @@
   "xp.level": "Niveau",
   "xp.leveled_up": "Montez de niveau !",
   "xp.login_streak": "Série de connexions",
-  "xp.to_next_level": "au niveau suivant"
+  "xp.to_next_level": "au niveau suivant",
+  "game.pk_leaving_title": "Match en cours",
+  "game.pk_leaving_msg": "Le duel est toujours en cours ! Choisissez \"Quitter temporairement\" pour conserver votre place pendant 30s et revenir à tout moment. \"Déclarer forfait\" accordera la victoire à l'adversaire.",
+  "game.pk_temporary_leave": "Quitter temporairement (30s)",
+  "game.pk_forfeit_leave": "Déclarer forfait",
+  "game.reconnect_match": "Retour au match",
+  "lobby.reconnect_match_btn": "Retour au match"
 }

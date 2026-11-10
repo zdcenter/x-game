@@ -2155,5 +2155,11 @@
   "xp.level": "Nível",
   "xp.leveled_up": "Suba de nível!",
   "xp.login_streak": "Sequência de Login",
-  "xp.to_next_level": "para o próximo nível"
+  "xp.to_next_level": "para o próximo nível",
+  "game.pk_leaving_title": "Partida em andamento",
+  "game.pk_leaving_msg": "A batalha ainda está em andamento! Escolha \"Sair temporariamente\" para guardar seu lugar por 30s e voltar a qualquer momento. \"Desistir e sair\" concederá a vitória ao oponente.",
+  "game.pk_temporary_leave": "Sair temporariamente (30s)",
+  "game.pk_forfeit_leave": "Desistir e sair",
+  "game.reconnect_match": "Volver à partida",
+  "lobby.reconnect_match_btn": "Volver à partida"
 }

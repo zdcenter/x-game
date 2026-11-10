@@ -2155,5 +2155,11 @@
   "xp.level": "レベル",
   "xp.leveled_up": "レベルアップ！",
   "xp.login_streak": "ログイン連続記録",
-  "xp.to_next_level": "次のレベルへ"
+  "xp.to_next_level": "次のレベルへ",
+  "game.pk_leaving_title": "対戦が進行中です",
+  "game.pk_leaving_msg": "対戦はまだ続いています！「ロビーへ一時退席」を選ぶと30秒間席が保持され、いつでも対局に復帰できます。「降伏して退出」を選ぶと相手の不战勝となります。",
+  "game.pk_temporary_leave": "一時退席 (席を30秒保持)",
+  "game.pk_forfeit_leave": "降伏して退出",
+  "game.reconnect_match": "対局に戻る",
+  "lobby.reconnect_match_btn": "対局に戻る"
 }

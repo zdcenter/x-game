@@ -2294,5 +2294,9 @@
   "xp.level": "Level",
   "xp.leveled_up": "Level Up!",
   "xp.login_streak": "Login Streak",
-  "xp.to_next_level": "to next level"
+  "xp.to_next_level": "to next level",
+  "game.pk_leaving_title": "Match in Progress",
+  "game.pk_leaving_msg": "The battle is still ongoing! You can choose \"Leave Temporarily\" to hold your seat for 30 seconds and return anytime. Choosing \"Forfeit & Leave\" will concede the match to your opponent.",
+  "game.pk_temporary_leave": "Leave Temporarily (Hold 30s)",
+  "game.pk_forfeit_leave": "Forfeit & Leave"
 }

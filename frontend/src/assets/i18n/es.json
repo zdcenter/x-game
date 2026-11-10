@@ -2155,5 +2155,11 @@
   "xp.level": "Nivel",
   "xp.leveled_up": "¡Sube de nivel!",
   "xp.login_streak": "Racha de inicio de sesión",
-  "xp.to_next_level": "al siguiente nivel"
+  "xp.to_next_level": "al siguiente nivel",
+  "game.pk_leaving_title": "Partida en curso",
+  "game.pk_leaving_msg": "¡El duelo sigue en curso! Puedes elegir \"Salir temporalmente\" para reservar tu asiento durante 30s y volver en cualquier momento. \"Rendirse y salir\" otorgará la victoria a tu oponente.",
+  "game.pk_temporary_leave": "Salir temporalmente (30s)",
+  "game.pk_forfeit_leave": "Rendirse y salir",
+  "game.reconnect_match": "Volver a la partida",
+  "lobby.reconnect_match_btn": "Volver a la partida"
 }

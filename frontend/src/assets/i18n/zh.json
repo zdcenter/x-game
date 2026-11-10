@@ -2294,5 +2294,9 @@
   "xp.level": "等级",
   "xp.leveled_up": "升级了！",
   "xp.login_streak": "连续登录",
-  "xp.to_next_level": "升级所需"
+  "xp.to_next_level": "升级所需",
+  "game.pk_leaving_title": "正在激烈对决中",
+  "game.pk_leaving_msg": "对决仍在进行中！您可选择【暂回大厅】，系统将保留 30 秒席位，30秒内可随时一键返回对决；若选择【认输退出】将直接判定对方获胜。",
+  "game.pk_temporary_leave": "暂回大厅 (保留席位)",
+  "game.pk_forfeit_leave": "认输退出"
 }
