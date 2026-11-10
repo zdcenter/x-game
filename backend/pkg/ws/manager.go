@@ -192,7 +192,6 @@ func GetRoomPassword(roomID string) string {
 // CreateRoom creates a new room. Returns error if the room already exists or was recently dismissed.
 func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, target, bountyCoins int) (*Room, error) {
 	mu.Lock()
-	defer mu.Unlock()
 
 	// Clean up old dismissed rooms periodically
 	cleanDismissedRooms()
@@ -202,8 +201,12 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 	}
 
 	if _, exists := Rooms[roomID]; exists {
+		mu.Unlock()
 		return nil, fmt.Errorf(string(domain.ErrRoomAlreadyExists))
 	}
+
+	var staleToDismiss []*Room
+	var staleToTransfer []*Room
 
 	for id, existing := range Rooms {
 		if existing.Host == hostId {
@@ -219,13 +222,28 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 				log.Printf("Host %s creating new room %s, auto-dismissing empty/stale room %s", hostId, roomID, id)
 				delete(Rooms, id)
 				DismissedRooms[id] = time.Now()
+				staleToDismiss = append(staleToDismiss, existing)
 			} else {
-				// Other players are still in the room! Transfer host immediately so they can keep playing,
-				// and free this host to create their new room.
-				log.Printf("Host %s creating new room %s, transferring host of active room %s to remaining player", hostId, roomID, id)
-				existing.transferHost(hostId)
+				staleToTransfer = append(staleToTransfer, existing)
 			}
 		}
+	}
+	mu.Unlock()
+
+	// Perform stale cleanup outside of global mu.Lock to prevent lock inversion/deadlock
+	for _, old := range staleToDismiss {
+		old.mu.Lock()
+		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+		for _, c := range old.Clients {
+			c.WriteMessage(websocket.TextMessage, msg)
+			c.Close()
+		}
+		old.Clients = make(map[string]*Client)
+		old.mu.Unlock()
+	}
+	for _, old := range staleToTransfer {
+		log.Printf("Host %s creating new room %s, transferring host of active room %s to remaining player", hostId, roomID, old.ID)
+		old.transferHost(hostId)
 	}
 
 	if mode == "" {
@@ -271,7 +289,9 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 		asyncEng.SetBroadcaster(r.BroadcastState)
 	}
 
+	mu.Lock()
 	Rooms[roomID] = r
+	mu.Unlock()
 	return r, nil
 }
 
@@ -654,8 +674,6 @@ func (r *Room) RemoveClient(client *Client) {
 			}
 
 			room.mu.Lock()
-			defer room.mu.Unlock()
-
 			hasContestant := false
 			for _, c := range room.Clients {
 				if !c.IsSpectator {
@@ -663,6 +681,15 @@ func (r *Room) RemoveClient(client *Client) {
 					break
 				}
 			}
+			var clientsToClose []*Client
+			if !hasContestant {
+				for _, c := range room.Clients {
+					clientsToClose = append(clientsToClose, c)
+				}
+				room.Clients = make(map[string]*Client)
+			}
+			room.mu.Unlock()
+
 			if !hasContestant {
 				mu.Lock()
 				delete(Rooms, rID)
@@ -670,11 +697,10 @@ func (r *Room) RemoveClient(client *Client) {
 				go Lobby.BroadcastLobbyUpdate()
 
 				msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
-				for _, c := range room.Clients {
+				for _, c := range clientsToClose {
 					c.WriteMessage(websocket.TextMessage, msg)
 					c.Close()
 				}
-				room.Clients = make(map[string]*Client)
 			}
 		}(roomID)
 		return
@@ -716,7 +742,7 @@ func (r *Room) RemoveClient(client *Client) {
 				return
 			}
 			room.mu.Lock()
-			defer room.mu.Unlock()
+			shouldDelete := false
 			if room.GameChangedAt == changedAt {
 				active := 0
 				for _, c := range room.Clients {
@@ -725,11 +751,16 @@ func (r *Room) RemoveClient(client *Client) {
 					}
 				}
 				if active == 0 {
-					mu.Lock()
-					delete(Rooms, rID)
-					mu.Unlock()
-					go Lobby.BroadcastLobbyUpdate()
+					shouldDelete = true
 				}
+			}
+			room.mu.Unlock()
+
+			if shouldDelete {
+				mu.Lock()
+				delete(Rooms, rID)
+				mu.Unlock()
+				go Lobby.BroadcastLobbyUpdate()
 			}
 		}(roomID, r.GameChangedAt)
 	} else if isHostLeaving && gameStatus == engine.StateWaiting && !isSwitchingGame {

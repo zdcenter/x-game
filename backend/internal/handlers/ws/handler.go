@@ -91,6 +91,7 @@ func Register(router fiber.Router) {
 			bountyCoins = 0
 		}
 		var room *wsManager.Room
+		isNewRoom := false
 
 		if isSpectator {
 			// Spectators always join an existing room
@@ -98,7 +99,9 @@ func Register(router fiber.Router) {
 		} else if action == "create" {
 			// Explicit create: only create, fail if exists
 			room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target, bountyCoins)
-			if err != nil && err.Error() != string(domain.ErrHostRoomLimit) {
+			if err == nil {
+				isNewRoom = true
+			} else if err.Error() != string(domain.ErrHostRoomLimit) {
 				// Room might already exist (e.g. reconnect after page refresh).
 				// Only allow fallback to join if caller is already the host of this room AND it's for the same game.
 				if existingRoom, joinErr := wsManager.JoinRoom(roomID); joinErr == nil {
@@ -113,6 +116,9 @@ func Register(router fiber.Router) {
 			room, err = wsManager.JoinRoom(roomID)
 			if err != nil && err.Error() == string(domain.ErrRoomNotFound) && hostId != "" && (hostId == playerID || strings.HasPrefix(playerID, hostId) || hostId == "Host") {
 				room, err = wsManager.CreateRoom(roomID, gameId, mode, difficulty, hostId, password, target, bountyCoins)
+				if err == nil {
+					isNewRoom = true
+				}
 			}
 		} else {
 			// Backward compatible: use GetOrCreateRoom
@@ -140,6 +146,22 @@ func Register(router fiber.Router) {
 			c.WriteMessage(websocket.TextMessage, []byte(msg))
 			c.Close()
 			return
+		}
+
+		if isNewRoom {
+			creatorName := hostId
+			if creatorName == "" {
+				creatorName = playerID
+			}
+			wsManager.Lobby.AddActivity(wsManager.LobbyActivity{
+				Type:      "room_created",
+				PlayerID:  playerID,
+				Username:  creatorName,
+				GameID:    gameId,
+				Mode:      mode,
+				Diff:      difficulty,
+				Timestamp: time.Now().UnixMilli(),
+			})
 		}
 
 		defer func() {
