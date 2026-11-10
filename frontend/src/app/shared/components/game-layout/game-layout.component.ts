@@ -709,9 +709,10 @@ import { JuiceService } from '../../../core/services/juice.service';
       [currentGameId]="gameId"
       [status]="resultStatus()"
       [title]="resultTitle()"
-      [subtitle]="customResultSubtitle"
+      [subtitle]="effectiveResultSubtitle()"
       [stats]="overlayStats || []"
       [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
+      [isWalkover]="store?.isWalkoverVictory?.() ?? false"
       [opponentInfo]="resultOpponent()"
       [pkSeriesScore]="resultPkSeriesScore()"
       [pkRoundFormat]="resultPkRoundFormat()"
@@ -723,6 +724,8 @@ import { JuiceService } from '../../../core/services/juice.service';
       [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
       [showRevive]="effectiveShowRevive()"
       [showNextLevel]="showNextLevel"
+      (soloPractice)="onSoloPractice()"
+      (waitOpponent)="onWaitOpponent()"
       (rematch)="onResultRematch()"
       (leave)="back.emit()"
       (restart)="onResultRestart()"
@@ -1144,6 +1147,9 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
 
   readonly resultTitle = computed(() => {
     if (this.customResultTitle) return this.customResultTitle;
+    if (this.store?.isWalkoverVictory?.()) {
+      return this.i18n.t('game.walkover_win_title')() || '🏆 不战而胜！';
+    }
     if (this.isSpectatorActive()) {
       const winners = (this.store as any)?.winners?.() || [];
       const winnerName = winners.length > 0 ? winners[0] : '';
@@ -1152,6 +1158,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     const isWin = this.resultStatus() === 'win';
     if (isWin) return this.i18n.t('game.you_win')() || '🎉 胜利！';
     return this.effectiveRoomMode() === GameMode.Single ? (this.i18n.t('game.game_over')() || '游戏结束') : (this.i18n.t('game.you_lose')() || '惜败');
+  });
+
+  readonly effectiveResultSubtitle = computed(() => {
+    if (this.customResultSubtitle) return this.customResultSubtitle;
+    if (this.store?.isWalkoverVictory?.()) {
+      return this.i18n.t('game.walkover_win_subtitle')() || '其他对手已全部退出，恭喜您赢得本场对决胜利！';
+    }
+    return '';
   });
 
   readonly resultOpponent = computed(() => {
@@ -1177,6 +1191,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     const s = this.store as any;
     return !!(s?.isPersonalBest?.() || s?.lastStatResult?.()?.isNewRecord);
   });
+
+  onSoloPractice() {
+    this.store?.continueAsSoloPractice?.();
+  }
+
+  onWaitOpponent() {
+    this.store?.resetRoomToWaiting?.();
+  }
 
   onPlayAgainClicked() {
     this.playAgain.emit();

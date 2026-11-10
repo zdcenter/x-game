@@ -2168,5 +2168,10 @@
   "game.pk_opponent_reconnected_toast": "¡El oponente 【{{ player }}】 se ha reconectado! ¡La batalla continúa!",
   "game.pk_opponent_forfeited_toast": "¡El oponente 【{{ player }}】 se ha rendido! ¡Enhorabuena, has ganado!",
   "game.pk_player_left_toast": "El jugador 【{{ player }}】 ha salido de la sala",
-  "game.pk_host_changed_toast": "Anfitrión transferido: 【{{ newHost }}】 es ahora el anfitrión"
+  "game.pk_host_changed_toast": "Anfitrión transferido: 【{{ newHost }}】 es ahora el anfitrión",
+  "game.walkover_win_title": "¡Victoria por abandono!",
+  "game.walkover_win_subtitle": "Todos los oponentes han salido. ¡Felicidades por tu victoria!",
+  "game.walkover_solo_practice": "Continuar como práctica individual",
+  "game.walkover_wait_new_opponent": "Esperar nuevo oponente",
+  "game.walkover_toast": "Todos los oponentes salieron. ¡Has ganado la partida!"
 }

@@ -44,6 +44,9 @@ type GameEngine interface {
 
 	// HasPlayer checks if a player is already part of the game session
 	HasPlayer(playerID string) bool
+
+	// ForceFinish forces the engine state to StateFinished
+	ForceFinish()
 }
 
 // EngineFactory is a function that creates a new instance of a GameEngine

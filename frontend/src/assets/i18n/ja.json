@@ -2168,5 +2168,10 @@
   "game.pk_opponent_reconnected_toast": "対戦相手【{{ player }}】が復帰しました！バトル再開！",
   "game.pk_opponent_forfeited_toast": "対戦相手【{{ player }}】が降伏・退出しました。あなたの勝利です！",
   "game.pk_player_left_toast": "プレイヤー【{{ player }}】がルームを退出しました",
-  "game.pk_host_changed_toast": "ホストが交代しました：【{{ newHost }}】が新しいホストです"
+  "game.pk_host_changed_toast": "ホストが交代しました：【{{ newHost }}】が新しいホストです",
+  "game.walkover_win_title": "不戦勝！",
+  "game.walkover_win_subtitle": "対戦相手が全員退出したため、あなたの勝利となりました！",
+  "game.walkover_solo_practice": "一人練習に切り替え",
+  "game.walkover_wait_new_opponent": "新たな挑戦者を待つ",
+  "game.walkover_toast": "相手が全員退出したため、あなたの勝利となりました！"
 }

@@ -519,17 +519,24 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   // Active multiplayer rooms from websocket lobby
   activeRooms = computed(() => {
     const raw = this.wsService.activeRooms() || [];
-    return raw.filter((r: any) => r && r.mode !== GameMode.Single);
+    return raw.filter((r: any) => r && r.mode !== GameMode.Single && r.status !== 'finished');
   });
 
-  // Rooms actively dueling / in-game (Status is playing/starting) -> Strictly Spectate
+  // Rooms actively dueling / in-game (Status is playing/starting AND has at least 2 players) -> Strictly Spectate
   playingRooms = computed(() => {
-    return this.activeRooms().filter((r: any) => r && (r.status === 'playing' || r.status === 'starting'));
+    return this.activeRooms().filter((r: any) =>
+      r &&
+      (r.status === 'playing' || r.status === 'starting') &&
+      ((r.players && r.players > 1) || (r.opponent && r.opponent.trim() !== ''))
+    );
   });
 
-  // Rooms waiting for challenger / contestants in lobby (Status is NOT playing) -> Prioritize Join
+  // Rooms waiting for challenger / contestants in lobby (Status is NOT playing, or only 1 player waiting) -> Prioritize Join
   waitingRooms = computed(() => {
-    return this.activeRooms().filter((r: any) => r && r.status !== 'playing' && r.status !== 'starting');
+    return this.activeRooms().filter((r: any) =>
+      r &&
+      ((r.status !== 'playing' && r.status !== 'starting') || ((r.players || 0) <= 1 && (!r.opponent || r.opponent.trim() === '')))
+    );
   });
 
   isRoomFull(room: any): boolean {

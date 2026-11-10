@@ -109,6 +109,13 @@ func (b *BaseEngine) GetStatus() GameState {
 	return b.State
 }
 
+// ForceFinish forcefully sets the engine state to StateFinished
+func (b *BaseEngine) ForceFinish() {
+	b.Mu.Lock()
+	defer b.Mu.Unlock()
+	b.State = StateFinished
+}
+
 // SetBroadcaster allows the engine to trigger a websocket broadcast asynchronously
 func (b *BaseEngine) SetBroadcaster(broadcaster func()) {
 	b.broadcast = broadcaster

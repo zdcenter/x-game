@@ -217,6 +217,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   /** PK Match Specific Inputs */
   @Input() isPkMatch: boolean = false;
+  @Input() isWalkover: boolean = false;
   @Input() isHost: boolean = false;
   @Input() opponentInfo?: { nickname?: string; avatar?: string; score?: number | string; isHost?: boolean; id?: string; playerId?: string };
   @Input() pkSeriesScore?: { me: number; opponent: number };
@@ -273,6 +274,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   @Output() changeRoomGame = new EventEmitter<string>();
   @Output() revive = new EventEmitter<void>();
   @Output() rematch = new EventEmitter<void>();
+  @Output() soloPractice = new EventEmitter<void>();
+  @Output() waitOpponent = new EventEmitter<void>();
 
   private audioPlayed = false;
   recommendedGames: GameConfig[] = [];
@@ -293,6 +296,18 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
         this.handleRestart();
       }
     }
+  }
+
+  handleSoloPractice() {
+    this.haptic.vibrateLight();
+    this.soloPractice.emit();
+    this.isTemporarilyDismissed.set(true);
+  }
+
+  handleWaitOpponent() {
+    this.haptic.vibrateLight();
+    this.waitOpponent.emit();
+    this.isTemporarilyDismissed.set(true);
   }
 
   handleRematch() {

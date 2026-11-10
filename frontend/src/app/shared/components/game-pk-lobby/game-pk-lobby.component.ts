@@ -189,7 +189,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single));
+  allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single && r.status !== 'finished'));
   myRooms    = computed(() => this.allRooms().filter((r: any) => this.isMyRoom(r)));
   otherRooms = computed(() => {
     const others = this.allRooms().filter((r: any) => !this.isMyRoom(r));

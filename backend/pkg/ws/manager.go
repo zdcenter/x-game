@@ -635,6 +635,7 @@ func (r *Room) RemoveClient(client *Client) {
 					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
+					room.checkWalkoverVictoryLocked()
 				}
 			}(roomID, clientID)
 		}
@@ -825,6 +826,52 @@ func (r *Room) transferHostToLocked(oldHostID, newHostID string) {
 	}
 	r.BroadcastStateLocked()
 	go Lobby.BroadcastLobbyUpdate()
+}
+
+// checkWalkoverVictoryLocked checks if only 1 active contestant remains in an ongoing game.
+// If so, awards walkover victory to the sole remaining contestant and finalizes the game.
+func (r *Room) checkWalkoverVictoryLocked() {
+	if r.Engine == nil || r.Engine.GetStatus() != engine.StatePlaying {
+		return
+	}
+
+	activeContestants := make([]string, 0)
+	for pid, c := range r.Clients {
+		if !c.IsSpectator {
+			activeContestants = append(activeContestants, pid)
+		}
+	}
+
+	if len(activeContestants) == 1 {
+		winnerID := activeContestants[0]
+		log.Printf("Room %s: walkover victory awarded to %s (all other opponents left)", r.ID, winnerID)
+
+		// Terminate engine with game_over / forfeit and ensure StateFinished
+		r.Engine.HandleAction(winnerID, "game_over", []byte(`{"action":"game_over"}`))
+		r.Engine.ForceFinish()
+
+		// Broadcast walkover victory event to clients
+		walkoverMsg := []byte(fmt.Sprintf(`{"type": "%s", "winnerId": "%s", "reason": "all_opponents_left"}`, domain.EventWalkoverVictory, winnerID))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, walkoverMsg)
+		}
+
+		r.BroadcastStateLocked()
+		go Lobby.BroadcastLobbyUpdate()
+	} else if len(activeContestants) == 0 {
+		roomID := r.ID
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
+		go Lobby.BroadcastLobbyUpdate()
+
+		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, msg)
+			c.Close()
+		}
+		r.Clients = make(map[string]*Client)
+	}
 }
 
 func (r *Room) HandleMessage(clientID string, payload []byte) {
@@ -1073,6 +1120,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
+					room.checkWalkoverVictoryLocked()
 				}
 			}(r.ID, clientID)
 			return
@@ -1110,6 +1158,10 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "%s"}`, domain.EventPlayerLeft, clientID, reason))
 		for _, c := range r.Clients {
 			c.WriteMessage(websocket.TextMessage, leftMsg)
+		}
+
+		if gameStatus == engine.StatePlaying {
+			r.checkWalkoverVictoryLocked()
 		}
 
 		activeCount := 0

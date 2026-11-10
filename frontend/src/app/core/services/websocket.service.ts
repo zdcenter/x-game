@@ -130,6 +130,7 @@ export class WebSocketService {
   readonly playerDisconnectedEvent = signal<{playerId: string, gracePeriod: number} | null>(null);
   readonly playerReconnectedEvent = signal<string | null>(null);
   readonly playerLeftEvent = signal<{playerId: string, reason: string} | null>(null);
+  readonly walkoverVictoryEvent = signal<{winnerId: string, reason: string} | null>(null);
 
   constructor() {
     if (isBrowser()) {
@@ -380,6 +381,9 @@ export class WebSocketService {
         if (this.playerDisconnectedEvent()?.playerId === msg.playerId) {
           this.playerDisconnectedEvent.set(null);
         }
+      } else if (msg.type === S2CEvent.WalkoverVictory) {
+        this.walkoverVictoryEvent.set({ winnerId: msg.winnerId, reason: msg.reason || 'all_opponents_left' });
+        this.playerDisconnectedEvent.set(null);
       } else if (msg.type === S2CEvent.StartRejected) {
         // Host tried to start but was rejected (player not ready / not enough players)
         const reason = msg.reason;

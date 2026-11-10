@@ -2168,5 +2168,10 @@
   "game.pk_opponent_reconnected_toast": "상대방【{{ player }}】이(가) 다시 연결되었습니다! 대결을 계속합니다!",
   "game.pk_opponent_forfeited_toast": "상대방【{{ player }}】이(가) 기권하고 나갔습니다. 승리를 축하합니다!",
   "game.pk_player_left_toast": "플레이어【{{ player }}】이(가) 방을 나갔습니다",
-  "game.pk_host_changed_toast": "방장이 변경되었습니다: 【{{ newHost }}】이(가) 새 방장입니다"
+  "game.pk_host_changed_toast": "방장이 변경되었습니다: 【{{ newHost }}】이(가) 새 방장입니다",
+  "game.walkover_win_title": "부전승 승리!",
+  "game.walkover_win_subtitle": "모든 상대가 퇴장했습니다. 이번 대결에서 승리하셨습니다!",
+  "game.walkover_solo_practice": "솔로 연습으로 계속하기",
+  "game.walkover_wait_new_opponent": "새로운 상대 대기",
+  "game.walkover_toast": "모든 상대가 퇴장하여 승리하셨습니다!"
 }

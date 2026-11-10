@@ -222,6 +222,19 @@ export class UiOverlayComponent implements OnDestroy {
         }
       }
     });
+
+    // 监听不战而胜事件
+    effect(() => {
+      const walkover = this.wsService.walkoverVictoryEvent();
+      if (walkover) {
+        this.clearOpponentCountdown();
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        if (!walkover.winnerId || walkover.winnerId.toLowerCase().trim() === myName) {
+          const toastMsg = this.i18n.t('game.walkover_toast')() || '对手已全部退出，您赢得了本场胜利！';
+          this.toastService.success(toastMsg);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {

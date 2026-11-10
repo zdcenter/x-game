@@ -148,6 +148,17 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
+    // 监听不战而胜事件（对手全部认输或退出房间）
+    effect(() => {
+      const evt = this.ws.walkoverVictoryEvent();
+      if (evt) {
+        const myId = untracked(() => this.playerId());
+        if (!evt.winnerId || evt.winnerId === myId) {
+          untracked(() => this.isWalkoverVictory.set(true));
+        }
+      }
+    });
+
     // 观战模式智能导播自动焦点跟随：优先跟随房主或领先玩家
     effect(() => {
       if (this.isSpectator()) {
@@ -198,6 +209,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   readonly roomId = signal<string>('');
+  readonly isWalkoverVictory = signal<boolean>(false);
   protected readonly _isSpectator = signal<boolean>(false);
   readonly isSpectator: Signal<boolean> = computed(() => {
     if (this._isSpectator()) return true;
@@ -504,6 +516,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   leaveRoom(forfeit: boolean = false) {
+    this.isWalkoverVictory.set(false);
     this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {
       this.clearSinglePlayerSave();
@@ -583,6 +596,30 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.leaveRoom(true);
   }
 
+  /**
+   * 不战而胜后：转为单机离线练习模式，继续解完当前棋盘
+   */
+  continueAsSoloPractice() {
+    this.currentRoomMode.set(GameMode.Single);
+    this.roomId.set('');
+    this.isWalkoverVictory.set(false);
+    this.ws.disconnect();
+    this.notificationService?.success(
+      this.i18nBase?.t('game.walkover_solo_practice')() || '已转为单人练习模式，继续挑战吧！'
+    );
+  }
+
+  /**
+   * 不战而胜后：重置房间为等候状态，等待下一位挑战者
+   */
+  resetRoomToWaiting() {
+    this.isWalkoverVictory.set(false);
+    this.ws.sendMessage({ action: 'restart' });
+    this.notificationService?.info(
+      this.i18nBase?.t('game.walkover_wait_new_opponent')() || '房间已重置，等待新对手加入...'
+    );
+  }
+
   startGame() {
     this.resetLocalGameState();
     if (this.currentRoomMode() === GameMode.Single) {
@@ -640,6 +677,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
    * 彻底杜绝跨局幽灵状态（如乐观插旗、选中项、临时动画触发器等）残留。
    */
   resetLocalGameState(): void {
+    this.isWalkoverVictory.set(false);
     this.hintsUsed.set(0);
     this.onResetLocalGameState();
   }

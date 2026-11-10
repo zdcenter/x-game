@@ -69,6 +69,7 @@ export const appConfig: ApplicationConfig = {
         fallbackLang: 'zh',
         missingHandler: {
           useFallbackTranslation: true,
+          logMissingKey: false,
         },
         reRenderOnLangChange: true,
         prodMode: !isDevMode(),

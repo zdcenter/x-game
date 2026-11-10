@@ -47,6 +47,9 @@ export interface GameStoreInterface {
   readonly isVictory: Signal<boolean>;
   readonly isDefeat: Signal<boolean>;
 
+  /** 是否是不战而胜（其他对手全部退出） */
+  readonly isWalkoverVictory?: Signal<boolean>;
+
   // ===== 大厅/等待房间需要的数据 =====
 
   /**
@@ -101,6 +104,12 @@ export interface GameStoreInterface {
 
   /** 主动认输（在进行中对决向服务端发送 forfeit） */
   forfeitMatch?(): void;
+
+  /** 不战而胜后：转为单人练习继续挑战 */
+  continueAsSoloPractice?(): void;
+
+  /** 不战而胜后：重置房间等候新对手 */
+  resetRoomToWaiting?(): void;
 
   // ===== 对战操作方法 =====
 

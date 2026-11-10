@@ -2305,5 +2305,10 @@
   "game.pk_opponent_reconnected_toast": "Opponent 【{{ player }}】 reconnected! Battle continues!",
   "game.pk_opponent_forfeited_toast": "Opponent 【{{ player }}】 forfeited! Congratulations, you win!",
   "game.pk_player_left_toast": "Player 【{{ player }}】 left the room",
-  "game.pk_host_changed_toast": "Host transferred: 【{{ newHost }}】 is now host"
+  "game.pk_host_changed_toast": "Host transferred: 【{{ newHost }}】 is now host",
+  "game.walkover_win_title": "Victory by Walkover!",
+  "game.walkover_win_subtitle": "All opponents have left the match. Congratulations on your victory!",
+  "game.walkover_solo_practice": "Continue as Solo Practice",
+  "game.walkover_wait_new_opponent": "Wait for Opponents",
+  "game.walkover_toast": "All opponents have left. You won the match!"
 }
