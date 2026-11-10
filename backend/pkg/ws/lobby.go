@@ -99,20 +99,36 @@ func (l *GlobalLobby) RemovePlayer(playerID string) {
 	}
 }
 
-// UpdatePlayerStatus updates a player's status
-func (l *GlobalLobby) UpdatePlayerStatus(playerID string, status string) {
+// UpdatePlayerPresence updates a player's real-time presence info across lobby
+func (l *GlobalLobby) UpdatePlayerPresence(playerID string, status string, game string, mode string, diff string, opponent string, roomID string) {
 	l.mu.Lock()
 	var actualPlayerID string
-	if p, exists := l.Players[playerID]; exists {
-		p.Status = status
-		actualPlayerID = p.PlayerID
+	updated := false
+	for _, p := range l.Players {
+		if p.PlayerID == playerID || p.Username == playerID {
+			p.Status = status
+			p.Game = game
+			p.Mode = mode
+			p.Diff = diff
+			p.Opponent = opponent
+			p.RoomID = roomID
+			actualPlayerID = p.PlayerID
+			updated = true
+		}
 	}
 	l.mu.Unlock()
-	l.BroadcastLobbyUpdate()
-	
-	if actualPlayerID != "" {
-		l.NotifyFriendsOfStatusChange(actualPlayerID, status)
+
+	if updated {
+		go l.BroadcastLobbyUpdate()
+		if actualPlayerID != "" {
+			go l.NotifyFriendsOfStatusChange(actualPlayerID, status)
+		}
 	}
+}
+
+// UpdatePlayerStatus updates a player's status
+func (l *GlobalLobby) UpdatePlayerStatus(playerID string, status string) {
+	l.UpdatePlayerPresence(playerID, status, "", "", "", "", "")
 }
 
 // NotifyFriendsOfStatusChange sends a targeted status update to online friends

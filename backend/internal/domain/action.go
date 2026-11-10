@@ -23,6 +23,12 @@ const (
 	ActionChangeGame  C2SAction = "change_game"
 	// 房主强制解散当前房间
 	ActionDismissRoom C2SAction = "dismiss_room"
+	// 房主手动移交房主
+	ActionTransferHost C2SAction = "transfer_host"
+	// 房主调整目标局数 (BO1/BO3/BO5)
+	ActionChangeTarget C2SAction = "change_target"
+	// 房主设置或清空房间密码
+	ActionSetPassword C2SAction = "set_password"
 	// 对局结束后请求再来一局
 	ActionRestartGame C2SAction = "restart_game"
 
@@ -79,6 +85,10 @@ const (
 	EventChat            S2CEvent = "chat"
 	// 玩家离开
 	EventPlayerLeft      S2CEvent = "player_left"
+	// 对战选手临时掉线
+	EventPlayerDisconnected S2CEvent = "player_disconnected"
+	// 对战选手恢复连接
+	EventPlayerReconnected  S2CEvent = "player_reconnected"
 
 	// ===== 社交事件 =====
 	// 好友状态变更

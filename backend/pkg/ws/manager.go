@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -509,6 +510,35 @@ func (r *Room) AddClient(client *Client, password string) error {
 		r.Engine.AddPlayer(client.ID)
 	}
 
+	// If returning contestant reconnected, broadcast reconnected notification to room
+	if isReturningContestant {
+		recMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s"}`, domain.EventPlayerReconnected, client.ID))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, recMsg)
+		}
+	}
+
+	// Update lobby presence
+	opponent := ""
+	for pid, c := range r.Clients {
+		if !c.IsSpectator && pid != client.ID {
+			opponent = pid
+			break
+		}
+	}
+	if client.IsSpectator {
+		go Lobby.UpdatePlayerPresence(client.ID, "spectating", string(r.Game), string(r.Mode), string(r.Difficulty), opponent, r.ID)
+	} else {
+		status := "pk"
+		if st == engine.StateWaiting {
+			status = "waiting"
+		}
+		go Lobby.UpdatePlayerPresence(client.ID, status, string(r.Game), string(r.Mode), string(r.Difficulty), opponent, r.ID)
+		if opponent != "" {
+			go Lobby.UpdatePlayerPresence(opponent, status, string(r.Game), string(r.Mode), string(r.Difficulty), client.ID, r.ID)
+		}
+	}
+
 	go r.BroadcastState()
 	go Lobby.BroadcastLobbyUpdate()
 	return nil
@@ -545,21 +575,65 @@ func (r *Room) RemoveClient(client *Client) {
 	clientID := client.ID
 	r.mu.Unlock()
 
-	if isHostLeaving && gameStatus == engine.StatePlaying {
-		// Game in progress: give host 30 seconds to reconnect, then transfer or delete
-		log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", clientID, roomID)
-		go func(rID string, hID string) {
-			time.Sleep(30 * time.Second)
+	// Update lobby presence to idle
+	go Lobby.UpdatePlayerPresence(clientID, "idle", "", "", "", "", "")
 
-			mu.Lock()
-			room, exists := Rooms[rID]
-			mu.Unlock()
+	// In-game disconnect broadcast & timeout handling
+	if gameStatus == engine.StatePlaying && !client.IsSpectator {
+		disMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "gracePeriod": 30}`, domain.EventPlayerDisconnected, clientID))
+		r.mu.Lock()
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, disMsg)
+		}
+		r.mu.Unlock()
 
-			if !exists {
-				return
-			}
-			room.transferHost(hID)
-		}(roomID, clientID)
+		if isHostLeaving {
+			// Game in progress: give host 30 seconds to reconnect, then transfer or delete
+			log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", clientID, roomID)
+			go func(rID string, hID string) {
+				time.Sleep(30 * time.Second)
+
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+
+				if !exists {
+					return
+				}
+				room.transferHost(hID)
+			}(roomID, clientID)
+		} else {
+			// Opponent disconnected from active game: grant 30s grace period. If not reconnected, forfeit!
+			log.Printf("Contestant %s disconnected from active game in room %s, starting 30s grace period before forfeit", clientID, roomID)
+			go func(rID string, pID string) {
+				time.Sleep(30 * time.Second)
+
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+
+				if !exists {
+					return
+				}
+
+				room.mu.Lock()
+				defer room.mu.Unlock()
+
+				// If contestant reconnected within 30s, do not forfeit
+				if c, reconnected := room.Clients[pID]; reconnected && !c.IsSpectator {
+					return
+				}
+
+				// Player did not return: forfeit!
+				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
+					log.Printf("Contestant %s forfeited by disconnect timeout in room %s", pID, rID)
+					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
+					delete(room.Contestants, pID)
+					room.BroadcastStateLocked()
+					go Lobby.BroadcastLobbyUpdate()
+				}
+			}(roomID, clientID)
+		}
 	} else if isEmpty && !isSwitchingGame {
 		// Room temporarily has no active contestants (e.g. mobile screen lock or network switch):
 		// Grant 25s grace period for client reconnection before destroying the room
@@ -647,6 +721,20 @@ func (r *Room) RemoveClient(client *Client) {
 				}
 			}
 		}(roomID, r.GameChangedAt)
+	} else if isHostLeaving && gameStatus == engine.StateWaiting && !isSwitchingGame {
+		// Host disconnected from waiting room: give 15s grace period before transferring host (F5 refresh protection)
+		go func(rID string, hID string) {
+			time.Sleep(15 * time.Second)
+
+			mu.Lock()
+			room, exists := Rooms[rID]
+			mu.Unlock()
+
+			if !exists {
+				return
+			}
+			room.transferHost(hID)
+		}(roomID, clientID)
 	} else if isHostLeaving {
 		// Not in active game: transfer host immediately
 		r.transferHost(client.ID)
@@ -712,6 +800,22 @@ func (r *Room) transferHost(oldHostID string) {
 	r.mu.Unlock()
 
 	r.BroadcastState()
+	go Lobby.BroadcastLobbyUpdate()
+}
+
+// transferHostToLocked manually transfers host to a target connected contestant (called with r.mu held)
+func (r *Room) transferHostToLocked(oldHostID, newHostID string) {
+	targetClient, exists := r.Clients[newHostID]
+	if !exists || targetClient.IsSpectator {
+		return
+	}
+	r.Host = newHostID
+	log.Printf("Room %s: host transferred manually from %s to %s", r.ID, oldHostID, newHostID)
+	msg := []byte(fmt.Sprintf(`{"type": "%s", "newHost": "%s", "oldHost": "%s"}`, domain.EventHostChanged, newHostID, oldHostID))
+	for _, c := range r.Clients {
+		c.WriteMessage(websocket.TextMessage, msg)
+	}
+	r.BroadcastStateLocked()
 	go Lobby.BroadcastLobbyUpdate()
 }
 
@@ -860,6 +964,43 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 	if action == string(domain.ActionDismissRoom) {
 		if clientID == r.Host {
 			go DismissRoom(r.ID, clientID)
+		}
+		return
+	}
+
+	if action == string(domain.ActionTransferHost) {
+		if clientID == r.Host {
+			if targetID, ok := baseMsg["targetId"].(string); ok && targetID != "" && targetID != r.Host {
+				r.transferHostToLocked(clientID, targetID)
+			}
+		}
+		return
+	}
+
+	if action == string(domain.ActionChangeTarget) {
+		if clientID == r.Host && r.Engine != nil && r.Engine.GetStatus() == engine.StateWaiting {
+			if targetVal, ok := baseMsg["target"].(float64); ok && int(targetVal) > 0 {
+				r.Target = int(targetVal)
+				r.Engine.InitGame(getGameOptions(string(r.Game), string(r.Mode), string(r.Difficulty), r.Target))
+				for id, client := range r.Clients {
+					if !client.IsSpectator {
+						r.Engine.AddPlayer(id)
+					}
+				}
+				r.BroadcastStateLocked()
+				go Lobby.BroadcastLobbyUpdate()
+			}
+		}
+		return
+	}
+
+	if action == string(domain.ActionSetPassword) {
+		if clientID == r.Host && r.Engine != nil && r.Engine.GetStatus() == engine.StateWaiting {
+			if pw, ok := baseMsg["password"].(string); ok {
+				r.Password = strings.TrimSpace(pw)
+				r.BroadcastStateLocked()
+				go Lobby.BroadcastLobbyUpdate()
+			}
 		}
 		return
 	}
@@ -1164,6 +1305,8 @@ func (r *Room) BroadcastStateLocked() {
 		"difficulty":   r.Difficulty,
 		"game":         r.Game,
 		"mode":         r.Mode,
+		"target":       r.Target,
+		"hasPassword":  r.Password != "",
 	})
 	if err != nil {
 		log.Printf("Failed to marshal state: %v", err)

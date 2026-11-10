@@ -76,6 +76,48 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
   @Input() spectatorCount: number = 0;
   target = input<number>(1);
 
+  readonly effectiveTarget = computed(() => {
+    const wsTarget = this.ws.gameState()?.target;
+    if (wsTarget && typeof wsTarget === 'number') {
+      return wsTarget;
+    }
+    return this.target();
+  });
+
+  readonly hasPassword = computed(() => {
+    return !!this.ws.gameState()?.hasPassword;
+  });
+
+  changeTargetRounds(rounds: number) {
+    if (this.currentUserId !== this.hostId) return;
+    this.audioService.playClick();
+    this.ws.changeTarget(rounds);
+    const boName = rounds === 1 ? 'BO1' : rounds === 2 ? 'BO3' : rounds === 3 ? 'BO5' : `BO${rounds * 2 - 1}`;
+    this.toast.show(`赛制已调整为: ${boName} ✓`, 'info');
+  }
+
+  transferHost(targetId: string) {
+    if (this.currentUserId !== this.hostId || targetId === this.currentUserId) return;
+    this.audioService.playClick();
+    this.ws.transferHost(targetId);
+    this.toast.show(`已将房主权限移交给: ${targetId}`, 'info');
+  }
+
+  promptPassword() {
+    if (this.currentUserId !== this.hostId) return;
+    const tip = this.hasPassword() ? '当前房间已设密码。输入新密码，或留空清除密码：' : '请输入房间密码（留空则为公开房间）：';
+    const pw = window.prompt(tip, '');
+    if (pw !== null) {
+      const cleanPw = pw.trim();
+      this.ws.setRoomPassword(cleanPw);
+      if (cleanPw) {
+        this.toast.show('房间密码已更新 🔒', 'success');
+      } else {
+        this.toast.show('已清除房间密码，开放公开参战 🔓', 'info');
+      }
+    }
+  }
+
   @Output() leave = new EventEmitter<void>();
   @Output() start = new EventEmitter<void>();
   @Output() changeSettings = new EventEmitter<void>();

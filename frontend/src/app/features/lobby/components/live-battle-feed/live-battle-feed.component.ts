@@ -480,11 +480,18 @@ import { GameMode } from '../../../../core/models/game.model';
           <span>{{ i18n.t('lobby.member_only_pk_tip')() || '仅双方均为会员时收录战报' }}</span>
         </span>
 
-        <button (click)="goToPkArena()"
-                class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-xs cursor-pointer shrink-0">
-          <span>⚔️</span>
-          <span>{{ i18n.t('lobby.start_pk_btn')() || '发起对决' }}</span>
-        </button>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button (click)="quickMatch()"
+                  class="px-2.5 py-1 rounded-lg bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] border border-amber-500/40 text-amber-500 font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-xs cursor-pointer">
+            <span>⚡</span>
+            <span>快速匹配</span>
+          </button>
+          <button (click)="goToPkArena()"
+                  class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs flex items-center gap-1 transition-all active:scale-95 shadow-xs cursor-pointer">
+            <span>⚔️</span>
+            <span>{{ i18n.t('lobby.start_pk_btn')() || '发起对决' }}</span>
+          </button>
+        </div>
       </div>
 
     </div>
@@ -789,6 +796,33 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
       return `${Math.floor(diffHours / 24)}天前`;
     } catch {
       return '';
+    }
+  }
+
+  quickMatch(): void {
+    const curUser = this.currentUserId();
+    const rooms = this.activeRooms() || [];
+    const openRoom = rooms.find((r: any) => 
+      r.status === 'waiting' && 
+      !r.hasPassword && 
+      (r.players || 1) < this.gameRegistry.getMaxPlayers(r.game || 'minesweeper') &&
+      r.host !== curUser
+    );
+
+    if (openRoom) {
+      this.crossGameJoin.setPendingJoin({
+        game: openRoom.game,
+        roomId: openRoom.id,
+        mode: openRoom.mode,
+        difficulty: openRoom.difficulty,
+        host: openRoom.host,
+        action: 'join',
+        spectate: false
+      });
+      const lang = this.i18n.currentLang() || 'zh';
+      this.router.navigate([`/${lang}/games/${openRoom.game}`]);
+    } else {
+      this.goToPkArena();
     }
   }
 

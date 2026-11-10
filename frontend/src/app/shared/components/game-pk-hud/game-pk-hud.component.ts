@@ -1,7 +1,9 @@
-import { Component, Input, Output, EventEmitter, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject, effect, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
+import { WebSocketService } from '../../../core/services/websocket.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { GameMode, GameStatus, GameModeType, GameStatusType } from '../../../core/models/game.model';
 import { PkMetric, PkPlayerStats } from './game-pk-hud.model';
 
@@ -16,10 +18,17 @@ import { PkMetric, PkPlayerStats } from './game-pk-hud.model';
     'class': 'w-full block select-none pointer-events-auto'
   }
 })
-export class GamePkHudComponent {
+export class GamePkHudComponent implements OnDestroy {
   readonly i18n = inject(I18nService);
+  private readonly wsService = inject(WebSocketService);
+  private readonly toastService = inject(ToastService);
   readonly GameMode = GameMode;
   readonly GameStatus = GameStatus;
+
+  // Disconnection perception & countdown state
+  private countdownTimer: any = null;
+  readonly disconnectedPlayerId = signal<string | null>(null);
+  readonly disconnectRemainingSeconds = signal<number>(30);
 
   private readonly defaultPlayer: PkPlayerStats = {
     id: '',
@@ -85,6 +94,59 @@ export class GamePkHudComponent {
   });
 
   private readonly gameSwitchService = inject(GameSwitchService);
+
+  constructor() {
+    effect(() => {
+      const dis = this.wsService.playerDisconnectedEvent();
+      if (dis) {
+        this.disconnectedPlayerId.set(dis.playerId);
+        this.disconnectRemainingSeconds.set(dis.gracePeriod || 30);
+        this.startCountdown();
+      } else {
+        this.clearCountdown();
+      }
+    });
+
+    effect(() => {
+      const rec = this.wsService.playerReconnectedEvent();
+      if (rec) {
+        if (this.disconnectedPlayerId() === rec) {
+          this.toastService.show(this.i18n.t('game.pk.opponent_reconnected')() || `玩家 ${rec} 已恢复连接，战斗继续！`, 'info');
+          this.clearCountdown();
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.clearCountdown();
+  }
+
+  private startCountdown(): void {
+    if (this.countdownTimer) clearInterval(this.countdownTimer);
+    this.countdownTimer = setInterval(() => {
+      const cur = this.disconnectRemainingSeconds();
+      if (cur <= 1) {
+        this.clearCountdown();
+      } else {
+        this.disconnectRemainingSeconds.set(cur - 1);
+      }
+    }, 1000);
+  }
+
+  private clearCountdown(): void {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
+    this.disconnectedPlayerId.set(null);
+  }
+
+  isPlayerDisconnected(id?: string): boolean {
+    if (!id) return false;
+    const dis = this.disconnectedPlayerId();
+    return !!dis && (dis === id || dis.toLowerCase() === id.toLowerCase());
+  }
 
   openSwitchGame(event?: Event) {
     if (event) event.stopPropagation();

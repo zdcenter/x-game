@@ -183,6 +183,12 @@
               <!-- Name & Avatar -->
               <div class="flex items-center gap-1.5 min-w-0 justify-end">
                 <div class="flex items-center gap-1.5 min-w-0">
+                  @if (isPlayerDisconnected(opp.id)) {
+                    <span class="badge-safe bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/50 shrink-0 animate-pulse font-mono flex items-center gap-1 shadow-xs">
+                      <span>⚠️</span>
+                      <span>{{ i18n.t('game.pk.reconnecting')() || '重连中' }} {{ disconnectRemainingSeconds() }}s</span>
+                    </span>
+                  }
                   @if (opp.isFinished) {
                     <span class="badge-safe bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 shrink-0 animate-pulse">
                       🏁
@@ -212,7 +218,10 @@
                        [class.ring-4]="isPlayerFocused(opp.id)"
                        [class.ring-amber-400]="isPlayerFocused(opp.id)"
                        [class.scale-110]="isPlayerFocused(opp.id)"
-                       [class.shadow-[0_0_12px_rgba(245,158,11,0.6)]]="isPlayerFocused(opp.id)">
+                       [class.shadow-[0_0_12px_rgba(245,158,11,0.6)]]="isPlayerFocused(opp.id)"
+                       [class.ring-2]="isPlayerDisconnected(opp.id)"
+                       [class.ring-rose-500]="isPlayerDisconnected(opp.id)"
+                       [class.animate-pulse]="isPlayerDisconnected(opp.id)">
                     {{ avatarChar(opp.nickname || opp.id) }}
                   </div>
                   @if (isPlayerFocused(opp.id)) {
@@ -318,6 +327,11 @@
               </span>
               <div class="flex flex-col min-w-0 items-end">
                 <div class="flex items-center gap-1">
+                  @if (isPlayerDisconnected(opp.id)) {
+                    <span class="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 font-mono animate-pulse">
+                      ⚠️ {{ disconnectRemainingSeconds() }}s
+                    </span>
+                  }
                   @if (isPlayerFocused(opp.id)) {
                     <span class="badge-safe bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs border border-amber-300">🎯导播</span>
                   }
@@ -328,8 +342,10 @@
               </div>
               <div class="relative shrink-0">
                 <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs text-white bg-gradient-to-br from-rose-500 to-amber-600 transition-all"
-                     [class.ring-2]="isPlayerFocused(opp.id)"
-                     [class.ring-amber-400]="isPlayerFocused(opp.id)">
+                     [class.ring-2]="isPlayerFocused(opp.id) || isPlayerDisconnected(opp.id)"
+                     [class.ring-amber-400]="isPlayerFocused(opp.id)"
+                     [class.ring-rose-500]="isPlayerDisconnected(opp.id)"
+                     [class.animate-pulse]="isPlayerDisconnected(opp.id)">
                   {{ avatarChar(opp.nickname || opp.id) }}
                 </div>
                 @if (isPlayerFocused(opp.id)) {
@@ -404,6 +420,9 @@
             <div class="flex items-center justify-between gap-1">
               <span class="text-xs sm:text-sm font-bold truncate text-[var(--color-text-main)]" [title]="player.nickname || player.id">
                 {{ player.nickname || player.id }}
+                @if (isPlayerDisconnected(player.id)) {
+                  <span class="text-[10px] text-amber-500 font-mono animate-pulse ml-1">⚠️ {{ disconnectRemainingSeconds() }}s</span>
+                }
                 @if (isSpectator && player.id === focusedPlayerId) {
                   <span class="text-xs text-amber-500 font-bold ml-1">👁️ {{ i18n.t('game.director_view')() || '导播' }}</span>
                 } @else if (!isSpectator && player.isMe) {

@@ -126,6 +126,10 @@ export class WebSocketService {
   // Triggered when host changes
   readonly hostChangedEvent = signal<{newHost: string, oldHost: string} | null>(null);
 
+  // Triggered when an in-game opponent temporarily disconnects / reconnects
+  readonly playerDisconnectedEvent = signal<{playerId: string, gracePeriod: number} | null>(null);
+  readonly playerReconnectedEvent = signal<string | null>(null);
+
   constructor() {
     if (isBrowser()) {
       document.addEventListener('visibilitychange', () => {
@@ -289,6 +293,12 @@ export class WebSocketService {
           msg.state.game = msg.game;
           this.activeGameId.set(msg.game);
         }
+        if (msg.target !== undefined) {
+          msg.state.target = msg.target;
+        }
+        if (msg.hasPassword !== undefined) {
+          msg.state.hasPassword = msg.hasPassword;
+        }
         this.gameState.set(msg.state);
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
         this.gameDisconnectIntentional = true;
@@ -359,6 +369,11 @@ export class WebSocketService {
         this.emojiReceivedEvent.set(msg.payload);
       } else if (msg.type === S2CEvent.ChatBroadcast) {
         this.roomChatReceivedEvent.set(msg.payload);
+      } else if (msg.type === S2CEvent.PlayerDisconnected) {
+        this.playerDisconnectedEvent.set({ playerId: msg.playerId, gracePeriod: msg.gracePeriod || 30 });
+      } else if (msg.type === S2CEvent.PlayerReconnected) {
+        this.playerReconnectedEvent.set(msg.playerId);
+        this.playerDisconnectedEvent.set(null);
       } else if (msg.type === S2CEvent.StartRejected) {
         // Host tried to start but was rejected (player not ready / not enough players)
         const reason = msg.reason;
@@ -571,6 +586,18 @@ export class WebSocketService {
     this.send({ action: C2SAction.Chat, payload: { text: text } });
   }
 
+  changeTarget(target: number) {
+    this.send({ action: C2SAction.ChangeTarget, target } as any);
+  }
+
+  transferHost(targetId: string) {
+    this.send({ action: C2SAction.TransferHost, targetId } as any);
+  }
+
+  setRoomPassword(password: string) {
+    this.send({ action: C2SAction.SetPassword, password } as any);
+  }
+
   sendLobby(action: any) {
     if (this.lobbySocket && this.isLobbyConnected()) {
       this.lobbySocket.send(JSON.stringify(action));
@@ -613,6 +640,8 @@ export class WebSocketService {
     this.currentMode.set('');
     this.currentDifficulty.set('');
     this.isCurrentSpectator.set(false);
+    this.playerDisconnectedEvent.set(null);
+    this.playerReconnectedEvent.set(null);
     this.lastGameConnectConfig = null;
     this.gameState.set(null);
   }

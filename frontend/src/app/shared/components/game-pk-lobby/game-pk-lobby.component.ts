@@ -485,11 +485,32 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   onQuickMatch() {
-    const gameId = this.createGameId() || this.gameId;
-    const waiting = this.otherRooms().find((r: any) => r.game === gameId && r.status === GameStatus.Waiting);
-    if (waiting) {
-      this.onJoinRoom(waiting.id, waiting.game, waiting.mode, waiting.difficulty, waiting.host, waiting.hasPassword);
+    const targetGame = this.createGameId() || this.gameId;
+
+    // First priority: Same game, waiting, no password, seats available
+    let match = this.otherRooms().find((r: any) => 
+      (!targetGame || r.game === targetGame) &&
+      r.status === GameStatus.Waiting &&
+      !r.hasPassword &&
+      (r.player_count ?? r.players?.length ?? 1) < this.getMaxPlayers(r.game || 'minesweeper')
+    );
+
+    // Second priority: Any game, waiting, no password, seats available
+    if (!match) {
+      match = this.otherRooms().find((r: any) => 
+        r.status === GameStatus.Waiting &&
+        !r.hasPassword &&
+        (r.player_count ?? r.players?.length ?? 1) < this.getMaxPlayers(r.game || 'minesweeper')
+      );
+    }
+
+    if (match) {
+      this.toast.show(`⚡ 匹配成功！正在加入【${this.gameLabel(match.game)}】竞技擂台...`, 'success');
+      this.onJoinRoom(match.id, match.game, match.mode, match.difficulty, match.host, false, match.bountyCoins, false);
     } else {
+      const defaultGame = targetGame || this.allGames()[0]?.id || 'minesweeper';
+      this.selectCreateGame(defaultGame);
+      this.toast.show(`⚡ 未找到空闲房间，已为你开设【${this.gameLabel(defaultGame)}】房间等待挑战者！`, 'info');
       this.onConfirmCreate();
     }
   }
@@ -500,6 +521,12 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     if (player.status === 'pk') {
       const tpl = this.t('game.player_status_pk') || '正在与【{opponent}】激战 {game}';
       return tpl.replace('{opponent}', player.opponent || '对手').replace('{game}', gameName || 'PK');
+    }
+    if (player.status === 'waiting') {
+      return `【${gameName || '对战'}】房间等待对手参战 ⏳`;
+    }
+    if (player.status === 'spectating') {
+      return `正在观战【${gameName || '对局'}】精彩对决 👁️`;
     }
     if (player.status === 'playing') {
       const tpl = this.t('game.player_status_playing') || '正在挑战 {game} {diff}';

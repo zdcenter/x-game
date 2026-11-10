@@ -81,3 +81,40 @@ func TestContestantReconnectRestoration(t *testing.T) {
 		t.Fatalf("expected host to remain 'host-player', got %s", room.Host)
 	}
 }
+
+func TestRoomManagementActions(t *testing.T) {
+	roomID := "test-mgmt-room-1"
+	room, err := CreateRoom(roomID, "tilematch", "pk_speed", "easy", "host-1", "", 1, 0)
+	if err != nil {
+		t.Fatalf("failed to create room: %v", err)
+	}
+	defer func() {
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
+	}()
+
+	hostClient := &Client{ID: "host-1"}
+	peerClient := &Client{ID: "player-2"}
+	_ = room.AddClient(hostClient, "")
+	_ = room.AddClient(peerClient, "")
+
+	// 1. Host changes target rounds
+	room.HandleMessage("host-1", []byte(`{"action":"change_target","target":3}`))
+	if room.Target != 3 {
+		t.Fatalf("expected target to be 3, got %d", room.Target)
+	}
+
+	// 2. Host sets room password
+	room.HandleMessage("host-1", []byte(`{"action":"set_password","password":"8888"}`))
+	if room.Password != "8888" {
+		t.Fatalf("expected password to be '8888', got %q", room.Password)
+	}
+
+	// 3. Host transfers host to peer
+	room.HandleMessage("host-1", []byte(`{"action":"transfer_host","targetId":"player-2"}`))
+	if room.Host != "player-2" {
+		t.Fatalf("expected host to be 'player-2', got %s", room.Host)
+	}
+}
+

@@ -51,6 +51,12 @@ export enum C2SAction {
   ChangeGame = 'change_game',
   /** 房主强制解散当前房间 */
   DismissRoom = 'dismiss_room',
+  /** 房主手动移交房主 */
+  TransferHost = 'transfer_host',
+  /** 房主调整目标局数 (BO1/BO3/BO5) */
+  ChangeTarget = 'change_target',
+  /** 房主设置或清空房间密码 */
+  SetPassword = 'set_password',
   /** 对局结束后请求再来一局 */
   RestartGame = 'restart_game',
 
@@ -116,6 +122,10 @@ export enum S2CEvent {
   EmojiBroadcast = 'emoji',
   /** 聊天消息广播 */
   ChatBroadcast = 'chat',
+  /** 对战选手临时掉线 */
+  PlayerDisconnected = 'player_disconnected',
+  /** 对战选手恢复连接 */
+  PlayerReconnected = 'player_reconnected',
 
   // ===== 系统级事件 =====
   /** 服务器返回报错信息 (例如非法移动、权限不足) */
