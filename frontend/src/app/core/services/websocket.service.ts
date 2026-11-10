@@ -78,6 +78,7 @@ export class WebSocketService {
 
   readonly isConnected = signal(false);
   readonly isLobbyConnected = signal(false);
+  readonly isReconnecting = signal(false);
   
   // Current active room tracking signals
   readonly activeGameId = signal<string>('');
@@ -250,6 +251,10 @@ export class WebSocketService {
     this.socket.onopen = () => {
       this.isConnected.set(true);
       this.gameReconnectAttempts = 0;
+      if (this.isReconnecting()) {
+        this.isReconnecting.set(false);
+        this.toastService.show(this.i18n.t('game.reconnect_success')() || '对战网络已恢复！', 'success');
+      }
       console.log('Game WS Connected');
       this.startGameHeartbeat();
     };
@@ -383,6 +388,9 @@ export class WebSocketService {
       
       // Unexpected disconnect: reconnect with exponential backoff + random jitter
       this.unexpectedDisconnectEvent.update(v => v + 1);
+      if (this.currentRoomId() && !this.gameDisconnectIntentional) {
+        this.isReconnecting.set(true);
+      }
       const jitter = Math.random() * 800;
       const delay = Math.min(1000 * Math.pow(1.8, this.gameReconnectAttempts) + jitter, 25000);
       this.gameReconnectAttempts++;
@@ -598,6 +606,7 @@ export class WebSocketService {
       this.socket = null;
     }
     this.isConnected.set(false);
+    this.isReconnecting.set(false);
     this.currentGameId = null;
     this.activeGameId.set('');
     this.currentRoomId.set('');

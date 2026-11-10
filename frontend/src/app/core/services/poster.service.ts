@@ -215,7 +215,7 @@ export class PosterService {
     // App Subtitle Tagline
     ctx.font = '500 16px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = 'rgba(226, 232, 240, 0.7)';
-    const tagline = this.i18n.t('poster.tagline')() || 'X-GAME · 益智竞技全端自适应';
+    const tagline = this.i18n.t('poster.tagline')() || 'puzzlepk.com · 全网专业在线逻辑益智平台';
     ctx.fillText(tagline, cx, 260);
   }
 
@@ -415,7 +415,7 @@ export class PosterService {
     ctx.font = '13px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
     ctx.fillText('⚡ 纯前端极速对战 · 零服务器延迟', infoX, footerY + 158);
-    ctx.fillText('🎮 x-game.online / 益智竞技网', infoX, footerY + 182);
+    ctx.fillText('🎮 puzzlepk.com · 益智游戏PK网', infoX, footerY + 182);
   }
 
   private drawRoundedRect(

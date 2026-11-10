@@ -8,6 +8,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { TentsCellState } from './store/tents-engine';
 
 @Component({
@@ -82,10 +83,16 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
   override ngOnInit(): void {
     super.ngOnInit();
     if (this.store.currentRoomMode() === GameMode.Single) {
-      // 自动恢复玩家上次保存的等级/难度（无记录时默认为 easy）
-      const diff = this.store.restoreSavedDifficulty('easy');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const diff = requestedDiff || this.store.restoreSavedDifficulty('easy');
+      if (requestedDiff) {
+        setSavedDifficulty('tents', requestedDiff);
+      }
       this.store.startLocalGame(diff, 0);
-      this.checkAndPromptResumeSession('tents');
+      if (!requestedDiff) {
+        this.checkAndPromptResumeSession('tents');
+      }
     }
   }
 

@@ -287,8 +287,14 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
   override ngOnInit(): void {
     super.ngOnInit();
     if (this.store.currentRoomMode() === GameMode.Single) {
-      this.store.startLocalGame(this.store.currentLevel());
-      this.checkAndPromptResumeSession('tilematch');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      if (requestedDiff) {
+        this.store.startLocalGame(requestedDiff);
+      } else {
+        this.store.startLocalGame(this.store.currentLevel());
+        this.checkAndPromptResumeSession('tilematch');
+      }
     }
   }
 

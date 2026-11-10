@@ -1,5 +1,6 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, ViewChild, HostListener } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -209,7 +210,13 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
       }
     } else {
       // Create a single-player room without auto-starting
-      this.onJoinSinglePlayer(GameDifficulty.Medium);
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const targetDiff = requestedDiff || getSavedDifficulty('drop2048', GameDifficulty.Medium);
+      if (requestedDiff) {
+        setSavedDifficulty('drop2048', requestedDiff);
+      }
+      this.onJoinSinglePlayer(targetDiff);
     }
   }
 

@@ -1,5 +1,6 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 import { Component, HostListener, OnDestroy, OnInit, inject, effect, computed, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
@@ -252,7 +253,13 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
         this.handleJoinRoom(pending);
       }
     } else {
-      this.store.joinRoom('', GameMode.Single, GameDifficulty.Medium, '');
+      const qp = this._baseRoute.snapshot.queryParamMap;
+      const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      const targetDiff = requestedDiff || getSavedDifficulty('tetris', GameDifficulty.Medium);
+      if (requestedDiff) {
+        setSavedDifficulty('tetris', requestedDiff);
+      }
+      this.store.joinRoom('', GameMode.Single, targetDiff, '');
     }
   }
 

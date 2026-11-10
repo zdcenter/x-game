@@ -476,12 +476,6 @@ func (r *Room) RemoveClient(client *Client) {
 	// Only remove if this exact client connection is still the active one
 	if existing, ok := r.Clients[client.ID]; ok && existing == client {
 		delete(r.Clients, client.ID)
-
-		// If game hasn't started and client wasn't spectator, completely remove them so the slot frees up
-		// BUT do NOT remove from engine if the room is currently transitioning between games
-		if !client.IsSpectator && r.Engine.GetStatus() == engine.StateWaiting && !isSwitchingGame {
-			r.Engine.RemovePlayer(client.ID)
-		}
 	} else {
 		// This was an old connection closing after a new one already took its place
 		r.mu.Unlock()
@@ -502,11 +496,12 @@ func (r *Room) RemoveClient(client *Client) {
 	client.IsReady = false
 
 	roomID := r.ID
+	clientID := client.ID
 	r.mu.Unlock()
 
 	if isHostLeaving && gameStatus == engine.StatePlaying {
 		// Game in progress: give host 30 seconds to reconnect, then transfer or delete
-		log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", client.ID, roomID)
+		log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", clientID, roomID)
 		go func(rID string, hID string) {
 			time.Sleep(30 * time.Second)
 
@@ -518,23 +513,66 @@ func (r *Room) RemoveClient(client *Client) {
 				return
 			}
 			room.transferHost(hID)
-		}(roomID, client.ID)
+		}(roomID, clientID)
 	} else if isEmpty && !isSwitchingGame {
-		// Room has no active contestants: destroy immediately and notify remaining spectators
-		mu.Lock()
-		delete(Rooms, roomID)
-		mu.Unlock()
-		go Lobby.BroadcastLobbyUpdate()
+		// Room temporarily has no active contestants (e.g. mobile screen lock or network switch):
+		// Grant 25s grace period for client reconnection before destroying the room
+		go func(rID string) {
+			time.Sleep(25 * time.Second)
+			mu.Lock()
+			room, exists := Rooms[rID]
+			mu.Unlock()
+			if !exists {
+				return
+			}
 
-		r.mu.Lock()
-		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
-		for _, c := range r.Clients {
-			c.WriteMessage(websocket.TextMessage, msg)
-			c.Close()
-		}
-		r.Clients = make(map[string]*Client)
-		r.mu.Unlock()
+			room.mu.Lock()
+			defer room.mu.Unlock()
+
+			hasContestant := false
+			for _, c := range room.Clients {
+				if !c.IsSpectator {
+					hasContestant = true
+					break
+				}
+			}
+			if !hasContestant {
+				mu.Lock()
+				delete(Rooms, rID)
+				mu.Unlock()
+				go Lobby.BroadcastLobbyUpdate()
+
+				msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+				for _, c := range room.Clients {
+					c.WriteMessage(websocket.TextMessage, msg)
+					c.Close()
+				}
+				room.Clients = make(map[string]*Client)
+			}
+		}(roomID)
 		return
+	} else if !client.IsSpectator && gameStatus == engine.StateWaiting && !isSwitchingGame {
+		// In waiting room, give 25s grace period before freeing up the player slot
+		go func(rID string, pID string) {
+			time.Sleep(25 * time.Second)
+			mu.Lock()
+			room, exists := Rooms[rID]
+			mu.Unlock()
+			if !exists {
+				return
+			}
+
+			room.mu.Lock()
+			defer room.mu.Unlock()
+
+			if _, reconnected := room.Clients[pID]; !reconnected {
+				if room.Engine != nil && room.Engine.GetStatus() == engine.StateWaiting {
+					room.Engine.RemovePlayer(pID)
+					room.BroadcastStateLocked()
+					go Lobby.BroadcastLobbyUpdate()
+				}
+			}
+		}(roomID, clientID)
 	} else if isEmpty && isSwitchingGame {
 		// All contestants temporarily disconnected to load the new game page.
 		// Start a 30s grace timer to clean up only if nobody reconnects.

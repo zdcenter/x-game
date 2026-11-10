@@ -80,6 +80,14 @@ import { JuiceService } from '../../../core/services/juice.service';
     <app-offline-banner></app-offline-banner>
   }
 
+  <!-- Real-time PK Battle Reconnecting Pill -->
+  @if (wsService.isReconnecting() && effectiveRoomId()) {
+    <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs sm:text-sm shadow-2xl backdrop-blur-md animate-bounce pointer-events-auto border border-amber-300/40">
+      <span class="animate-spin text-sm">🔄</span>
+      <span>{{ i18n.t('game.reconnecting_notice')() || '网络波动，正在恢复对决连接...' }}</span>
+    </div>
+  }
+
   <!-- Rules Modal -->
   <app-game-rules-modal [gameId]="gameId" [isOpen]="showRules" (closed)="rulesClosed.emit()"></app-game-rules-modal>
 

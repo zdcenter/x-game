@@ -1,9 +1,10 @@
-import { Component, Input, Output, EventEmitter, inject, signal, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { PosterService } from '../../../core/services/poster.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { HapticService } from '../../../core/services/haptic.service';
+import { isBrowser } from '../../../core/utils/browser.util';
 
 @Component({
   selector: 'app-poster-modal',
@@ -52,10 +53,19 @@ import { HapticService } from '../../../core/services/haptic.service';
         </p>
 
         <!-- Action Buttons -->
-        <div class="w-full grid grid-cols-2 gap-2 sm:gap-3">
+        <div class="w-full flex items-center gap-2 sm:gap-3">
+          @if (canShare()) {
+            <button (click)="shareImage()"
+                    [disabled]="!imageUrl() || isGenerating()"
+                    class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap">
+              <span>📤</span>
+              <span>{{ i18n.t('share.share_image')() || '分享海报' }}</span>
+            </button>
+          }
+
           <button (click)="copyImage()"
                   [disabled]="!imageUrl() || isGenerating()"
-                  class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-amber-500/50 hover:bg-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                  class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-[var(--color-bg-main)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-amber-500/50 hover:bg-amber-500/10 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap">
             @if (copied()) {
               <span class="text-emerald-400">✓</span>
               <span class="text-emerald-400">{{ i18n.t('poster.copy_success')() }}</span>
@@ -67,7 +77,7 @@ import { HapticService } from '../../../core/services/haptic.service';
 
           <button (click)="downloadImage()"
                   [disabled]="!imageUrl() || isGenerating()"
-                  class="py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+                  class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap">
             <span>💾</span>
             <span>{{ i18n.t('poster.download')() }}</span>
           </button>
@@ -106,6 +116,31 @@ export class PosterModalComponent {
   @Output() close = new EventEmitter<void>();
 
   copied = signal<boolean>(false);
+
+  readonly canShare = computed(() => {
+    return isBrowser() && typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  });
+
+  async shareImage() {
+    const url = this.imageUrl();
+    if (!url) return;
+    this.haptic.vibrateLight();
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const file = new File([blob], this.filename, { type: 'image/png' });
+      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: this.i18n.t('poster.modal_title')() || '战绩海报',
+        });
+        return;
+      }
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return;
+    }
+    this.downloadImage();
+  }
 
   @HostListener('window:keydown.escape')
   onEscape() {
