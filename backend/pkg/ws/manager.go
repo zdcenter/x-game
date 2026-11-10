@@ -57,6 +57,8 @@ type Room struct {
 	Engine        engine.GameEngine
 	KickedPlayers map[string]time.Time // playerID -> kick timestamp for cooldown
 	Contestants   map[string]bool      // playerID -> true for all registered contestants (persists across disconnects)
+	Winner        string               // Sole winner (walkover or decided by room)
+	Winners       []string             // Array of winners for current round
 	mu            sync.Mutex
 }
 
@@ -635,7 +637,7 @@ func (r *Room) RemoveClient(client *Client) {
 					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
-					room.checkWalkoverVictoryLocked()
+					room.checkWalkoverVictoryLocked(true)
 				}
 			}(roomID, clientID)
 		}
@@ -830,8 +832,15 @@ func (r *Room) transferHostToLocked(oldHostID, newHostID string) {
 
 // checkWalkoverVictoryLocked checks if only 1 active contestant remains in an ongoing game.
 // If so, awards walkover victory to the sole remaining contestant and finalizes the game.
-func (r *Room) checkWalkoverVictoryLocked() {
-	if r.Engine == nil || r.Engine.GetStatus() != engine.StatePlaying {
+func (r *Room) checkWalkoverVictoryLocked(allowIfFinished bool) {
+	if r.Engine == nil {
+		return
+	}
+	currentStatus := r.Engine.GetStatus()
+	if !allowIfFinished && currentStatus != engine.StatePlaying {
+		return
+	}
+	if currentStatus == engine.StateWaiting || currentStatus == engine.StateStarting {
 		return
 	}
 
@@ -844,7 +853,10 @@ func (r *Room) checkWalkoverVictoryLocked() {
 
 	if len(activeContestants) == 1 {
 		winnerID := activeContestants[0]
-		log.Printf("Room %s: walkover victory awarded to %s (all other opponents left)", r.ID, winnerID)
+		log.Printf("Room %s: walkover victory awarded to %s (all other opponents left or forfeited)", r.ID, winnerID)
+
+		r.Winner = winnerID
+		r.Winners = []string{winnerID}
 
 		// Terminate engine with game_over / forfeit and ensure StateFinished
 		r.Engine.HandleAction(winnerID, "game_over", []byte(`{"action":"game_over"}`))
@@ -992,6 +1004,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 	if action == string(domain.ActionRestartGame) {
 		log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
+		r.Winner = ""
+		r.Winners = nil
 		r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
 
 		activePlayers := 0
@@ -1013,6 +1027,37 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			}
 		}
 		r.BroadcastStateLocked()
+		return
+	}
+
+	if action == string(domain.ActionForfeit) || action == "forfeit" {
+		log.Printf("Contestant %s explicitly forfeited in room %s", clientID, r.ID)
+		wasPlaying := r.Engine != nil && r.Engine.GetStatus() == engine.StatePlaying
+
+		// 1. Pass forfeit to engine
+		if r.Engine != nil {
+			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), payload)
+		}
+
+		// 2. Broadcast forfeit event to all clients in the room
+		forfeitMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "forfeit"}`, domain.EventPlayerLeft, clientID))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, forfeitMsg)
+		}
+
+		// 3. Mark client as spectator and remove from active contestants
+		delete(r.Contestants, clientID)
+		if c, exists := r.Clients[clientID]; exists {
+			c.IsSpectator = true
+		}
+
+		// 4. Award walkover victory if match was in progress
+		if wasPlaying {
+			r.checkWalkoverVictoryLocked(true)
+		}
+
+		r.BroadcastStateLocked()
+		go Lobby.BroadcastLobbyUpdate()
 		return
 	}
 
@@ -1120,7 +1165,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					}
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
-					room.checkWalkoverVictoryLocked()
+					room.checkWalkoverVictoryLocked(true)
 				}
 			}(r.ID, clientID)
 			return
@@ -1161,7 +1206,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 
 		if gameStatus == engine.StatePlaying {
-			r.checkWalkoverVictoryLocked()
+			r.checkWalkoverVictoryLocked(true)
 		}
 
 		activeCount := 0
@@ -1407,24 +1452,28 @@ func (r *Room) BroadcastState() {
 func (r *Room) BroadcastStateLocked() {
 	state := r.Engine.GetState()
 
-	// Generic extraction of engine players map (supporting map[string]struct, map[string]*Player, struct, etc.)
-	enginePlayers := make(map[string]map[string]interface{})
+	stateMap := make(map[string]interface{})
 	if state != nil {
 		if stMap, ok := state.(map[string]interface{}); ok {
-			if rawP, ok := stMap["players"]; ok && rawP != nil {
-				if b, err := json.Marshal(rawP); err == nil {
-					_ = json.Unmarshal(b, &enginePlayers)
-				}
+			for k, v := range stMap {
+				stateMap[k] = v
 			}
 		} else if b, err := json.Marshal(state); err == nil {
-			var stMap map[string]interface{}
-			if err := json.Unmarshal(b, &stMap); err == nil {
-				if rawP, ok := stMap["players"]; ok && rawP != nil {
-					if bP, err := json.Marshal(rawP); err == nil {
-						_ = json.Unmarshal(bP, &enginePlayers)
-					}
-				}
-			}
+			_ = json.Unmarshal(b, &stateMap)
+		}
+	}
+
+	if len(r.Winners) > 0 {
+		stateMap["winners"] = r.Winners
+		stateMap["winner"] = r.Winner
+		stateMap["status"] = "finished"
+	}
+
+	// Generic extraction of engine players map (supporting map[string]struct, map[string]*Player, struct, etc.)
+	enginePlayers := make(map[string]map[string]interface{})
+	if rawP, ok := stateMap["players"]; ok && rawP != nil {
+		if b, err := json.Marshal(rawP); err == nil {
+			_ = json.Unmarshal(b, &enginePlayers)
 		}
 	}
 
@@ -1452,9 +1501,9 @@ func (r *Room) BroadcastStateLocked() {
 		playersList = append(playersList, pData)
 	}
 
-	data, err := json.Marshal(map[string]interface{}{
+	payloadMap := map[string]interface{}{
 		"type":         string(domain.EventGameState),
-		"state":        state,
+		"state":        stateMap,
 		"host":         r.Host,
 		"readyPlayers": readyPlayers,
 		"players":      playersList,
@@ -1465,7 +1514,14 @@ func (r *Room) BroadcastStateLocked() {
 		"mode":         r.Mode,
 		"target":       r.Target,
 		"hasPassword":  r.Password != "",
-	})
+	}
+	if len(r.Winners) > 0 {
+		payloadMap["winners"] = r.Winners
+		payloadMap["winner"] = r.Winner
+		payloadMap["status"] = "finished"
+	}
+
+	data, err := json.Marshal(payloadMap)
 	if err != nil {
 		log.Printf("Failed to marshal state: %v", err)
 		return

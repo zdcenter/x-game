@@ -163,6 +163,25 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
+    // 闭环保障：监听玩家退出或认输事件，若当前对局中仅剩自己一人，自动判定不战而胜！
+    effect(() => {
+      const left = this.ws.playerLeftEvent();
+      if (left) {
+        const mode = untracked(() => this.currentRoomMode());
+        const isPlaying = untracked(() => this.isPlaying() || this.status() === GameStatus.Playing);
+        if (mode !== GameMode.Single && isPlaying) {
+          const myId = untracked(() => this.playerId());
+          if (left.playerId !== myId) {
+            const players = untracked(() => this.roomPlayers());
+            const remainingContestants = players.filter(p => !p.isSpectator && (p.id || p.userId) !== left.playerId);
+            if (remainingContestants.length <= 1) {
+              untracked(() => this.isWalkoverVictory.set(true));
+            }
+          }
+        }
+      }
+    });
+
     // 观战模式智能导播自动焦点跟随：优先跟随房主或领先玩家
     effect(() => {
       if (this.isSpectator()) {
@@ -400,6 +419,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
     if (this.currentRoomMode() === GameMode.Single) {
       return this.singlePlayerStatus();
     }
+    if (this.isWalkoverVictory()) {
+      return GameStatus.Finished;
+    }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let s = st.status;
@@ -422,6 +444,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
    * - false: 失败/惜败/死局
    */
   readonly isVictory = computed<boolean>(() => {
+    // 0. 若触发不战而胜（对手全部认输或退出房间），当前存活玩家直接获胜！
+    if (this.isWalkoverVictory()) return true;
+
     // 1. 若有明确的 winners 数组（联机对战或重写了 singlePlayerWinners 的单机游戏）
     const w = this.winners();
     if (w && w.length > 0) {

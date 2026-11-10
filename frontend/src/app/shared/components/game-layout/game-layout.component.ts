@@ -1132,7 +1132,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   });
 
   readonly isAutoResultVisible = computed(() => {
-    if (!this.store || !this.autoManageOverlays || this.effectiveStatus() !== GameStatus.Finished) {
+    if (!this.store || !this.autoManageOverlays) {
+      return false;
+    }
+    // 不战而胜（对手全部认输或退出房间）直接无条件呈现胜利结算弹窗！
+    if (this.store.isWalkoverVictory?.()) {
+      return true;
+    }
+    if (this.effectiveStatus() !== GameStatus.Finished) {
       return false;
     }
     if (this.effectiveRoomMode() === GameMode.Single) {
