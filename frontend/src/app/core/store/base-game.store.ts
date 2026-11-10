@@ -40,8 +40,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   protected readonly liveActivity = inject(LiveActivityService);
   protected readonly crossGameJoin = inject(CrossGameJoinService);
   protected readonly localAchievementService = inject(LocalAchievementService);
-  protected readonly toast = inject(ToastService);
-  protected readonly i18n = inject(I18nService);
+  protected readonly baseToast = inject(ToastService);
+  protected readonly baseI18n = inject(I18nService);
 
   // Last stat submission result — cleared on new game start
   readonly lastStatResult = signal<SubmitStatResponse | null>(null);
@@ -608,8 +608,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.roomId.set('');
     this.isWalkoverVictory.set(false);
     this.ws.disconnect();
-    this.toast.success(
-      this.i18n.t('game.walkover_solo_practice')() || '已转为单人练习模式，继续挑战吧！'
+    this.baseToast.success(
+      this.baseI18n.t('game.walkover_solo_practice')() || '已转为单人练习模式，继续挑战吧！'
     );
   }
 
@@ -619,8 +619,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   resetRoomToWaiting() {
     this.isWalkoverVictory.set(false);
     this.restartGame();
-    this.toast.info(
-      this.i18n.t('game.walkover_wait_new_opponent')() || '房间已重置，等待新对手加入...'
+    this.baseToast.info(
+      this.baseI18n.t('game.walkover_wait_new_opponent')() || '房间已重置，等待新对手加入...'
     );
   }
 
