@@ -2304,6 +2304,8 @@
   "game.pk_opponent_disconnected_toast": "对手【{{ player }}】暂时断开连接，系统为其保留 {{ seconds }} 秒席位，请稍候...",
   "game.pk_opponent_reconnected_toast": "对手【{{ player }}】已恢复连接，战斗继续！",
   "game.pk_opponent_forfeited_toast": "对手【{{ player }}】已认输离开，恭喜您获得对决胜利！",
+  "game.pk_player_forfeited_continuing_toast": "玩家【{{ player }}】已认输退出，当前剩余 {{ count }} 人继续对决！",
+  "game.pk_player_left_continuing_toast": "玩家【{{ player }}】已退出房间，当前剩余 {{ count }} 人继续对决！",
   "game.pk_player_left_toast": "玩家【{{ player }}】退出了房间",
   "game.pk_host_changed_toast": "房主已转移：【{{ newHost }}】成为新房主",
   "game.walkover_win_title": "不战而胜！",

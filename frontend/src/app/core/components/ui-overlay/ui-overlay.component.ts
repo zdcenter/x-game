@@ -197,14 +197,36 @@ export class UiOverlayComponent implements OnDestroy {
         const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
         if (left.playerId.toLowerCase().trim() !== myName) {
           this.clearOpponentCountdown();
-          if (left.reason === 'forfeit' || left.reason === 'timeout') {
-            const toastMsg = this.i18n.t('game.pk_opponent_forfeited_toast', { player: left.playerId })()
-              || `对手【${left.playerId}】已认输离开，恭喜您获得对决胜利！`;
-            this.toastService.success(toastMsg);
+          const raw = this.wsService.gameState();
+          const players: any[] = raw?.players || [];
+          const remainingContestants = players.filter(
+            (p: any) => !p.isSpectator && (p.id || p.userId || p.username || '').toLowerCase().trim() !== left.playerId.toLowerCase().trim()
+          );
+
+          // 核心多人判定：如果当前对局剩余存活参赛者 > 1（例如 3 人 PK 中仅 1 人认输退出，场上还有 2 人），
+          // 绝对不能给其他玩家报获胜，对决必须正常继续，只给出战局状态通报！
+          if (players.length > 0 && remainingContestants.length > 1) {
+            const count = remainingContestants.length;
+            if (left.reason === 'forfeit' || left.reason === 'timeout') {
+              const toastMsg = this.i18n.t('game.pk_player_forfeited_continuing_toast', { player: left.playerId, count })()
+                || `玩家【${left.playerId}】已认输退出，当前剩余 ${count} 人继续对决！`;
+              this.toastService.info(toastMsg);
+            } else {
+              const toastMsg = this.i18n.t('game.pk_player_left_continuing_toast', { player: left.playerId, count })()
+                || `玩家【${left.playerId}】退出了房间，当前剩余 ${count} 人继续对决！`;
+              this.toastService.info(toastMsg);
+            }
           } else {
-            const toastMsg = this.i18n.t('game.pk_player_left_toast', { player: left.playerId })()
-              || `玩家【${left.playerId}】退出了房间`;
-            this.toastService.info(toastMsg);
+            // 仅剩最后 1 名对手退出，或者 1v1 单挑结束
+            if (left.reason === 'forfeit' || left.reason === 'timeout') {
+              const toastMsg = this.i18n.t('game.pk_opponent_forfeited_toast', { player: left.playerId })()
+                || `对手【${left.playerId}】已认输离开，恭喜您获得对决胜利！`;
+              this.toastService.success(toastMsg);
+            } else {
+              const toastMsg = this.i18n.t('game.pk_player_left_toast', { player: left.playerId })()
+                || `玩家【${left.playerId}】退出了房间`;
+              this.toastService.info(toastMsg);
+            }
           }
         }
       }
