@@ -139,11 +139,8 @@ func (e *WatersortEngine) InitGame(options interface{}) error {
 		e.state.Winners = []string{}
 		e.startTime = time.Now()
 	} else {
-		e.TriggerCountdown(func() {
-			e.state.Status = "playing"
-			e.state.Winners = []string{}
-			e.startTime = time.Now()
-		})
+		e.State = engine.StateWaiting
+		e.state.Status = "waiting"
 	}
 
 	return nil
@@ -215,6 +212,19 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		return e.State, nil
 	}
 
+	if action == string(domain.ActionForfeit) {
+		delete(e.state.Players, playerID)
+		if len(e.state.Players) <= 1 {
+			e.state.Status = "finished"
+			e.State = engine.StateFinished
+			for id := range e.state.Players {
+				e.state.Winners = []string{id}
+				break
+			}
+		}
+		return e.State, nil
+	}
+
 	if e.State != engine.StatePlaying {
 		return e.State, nil
 	}
@@ -229,14 +239,6 @@ func (e *WatersortEngine) HandleAction(playerID string, action string, payload [
 		}
 	} else if action == "restart" {
 		e.handleRestart(playerID)
-	} else if action == string(domain.ActionForfeit) {
-		e.state.Status = "finished"
-		e.State = engine.StateFinished
-		for id := range e.state.Players {
-			if id != playerID {
-				e.state.Winners = append(e.state.Winners, id)
-			}
-		}
 	}
 
 	return e.State, nil

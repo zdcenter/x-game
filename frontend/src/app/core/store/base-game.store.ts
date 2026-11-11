@@ -158,11 +158,18 @@ export abstract class BaseGameStore implements GameStoreInterface {
       if (evt) {
         const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
         const winnerId = (evt.winnerId || '').trim().toLowerCase();
-        // 只要不是观战者，且（未指定 winnerId、winnerId 匹配自己、或房间内活跃参赛者仅剩自己），均确立不战而胜
-        if (!untracked(() => this.isSpectator())) {
+        // 若 winnerId 匹配自己，或未指定 winnerId，或房间内活跃参赛者仅剩自己，确立不战而胜
+        if (winnerId && winnerId === myId) {
+          untracked(() => {
+            this._isSpectator.set(false);
+            this.isWalkoverVictory.set(true);
+          });
+        } else if (!winnerId && !untracked(() => this.isSpectator())) {
+          untracked(() => this.isWalkoverVictory.set(true));
+        } else if (!untracked(() => this.isSpectator())) {
           const players = untracked(() => this.roomPlayers());
           const activeContestants = players.filter(p => !p.isSpectator);
-          if (!winnerId || winnerId === myId || activeContestants.length <= 1) {
+          if (activeContestants.length <= 1) {
             untracked(() => this.isWalkoverVictory.set(true));
           }
         }
@@ -174,7 +181,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
       const left = this.ws.playerLeftEvent();
       if (left) {
         const mode = untracked(() => this.currentRoomMode());
-        if (mode !== GameMode.Single && !untracked(() => this.isSpectator())) {
+        if (mode !== GameMode.Single) {
           const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
           const leftId = (left.playerId || '').trim().toLowerCase();
           if (leftId !== myId) {
@@ -185,25 +192,33 @@ export abstract class BaseGameStore implements GameStoreInterface {
               return pid !== leftId;
             });
             if (remainingContestants.length <= 1) {
-              untracked(() => this.isWalkoverVictory.set(true));
+              untracked(() => {
+                this._isSpectator.set(false);
+                this.isWalkoverVictory.set(true);
+              });
             }
           }
         }
       }
     });
 
-    // 终极保底：联机对战中，若状态已 Finished 且活跃参赛选手仅剩 <= 1 人，非观战玩家直接确立不战而胜
+    // 终极保底：联机对战中，若状态已 Finished 且活跃参赛选手仅剩 <= 1 人，直接确立不战而胜
     effect(() => {
       const mode = this.currentRoomMode();
-      if (mode !== GameMode.Single && !this.isSpectator()) {
+      if (mode !== GameMode.Single) {
         const st = this.status();
         const raw = this.rawState() as any;
         const isFin = st === GameStatus.Finished || raw?.status === 'finished' || raw?.status === 3;
         if (isFin) {
           const players = this.roomPlayers();
           const activeContestants = players.filter(p => !p.isSpectator);
-          if (activeContestants.length <= 1) {
-            untracked(() => this.isWalkoverVictory.set(true));
+          const myId = (this.playerId() || '').trim().toLowerCase();
+          const winners = this.winners().map((w: string) => (w || '').trim().toLowerCase());
+          if (activeContestants.length <= 1 || (winners.length > 0 && winners.includes(myId))) {
+            untracked(() => {
+              this._isSpectator.set(false);
+              this.isWalkoverVictory.set(true);
+            });
           }
         }
       }
@@ -262,13 +277,16 @@ export abstract class BaseGameStore implements GameStoreInterface {
   readonly isWalkoverVictory = signal<boolean>(false);
   protected readonly _isSpectator = signal<boolean>(false);
   readonly isSpectator: Signal<boolean> = computed(() => {
+    if (this.isWalkoverVictory()) return false;
     if (this._isSpectator()) return true;
     const st = this.rawState() as any;
     if (st && this.currentRoomMode() !== GameMode.Single) {
-      if (Array.isArray(st.spectators) && st.spectators.includes(this.playerId())) {
+      const myId = (this.playerId() || '').trim().toLowerCase();
+      if (!myId) return false;
+      if (Array.isArray(st.spectators) && st.spectators.some((s: string) => (s || '').trim().toLowerCase() === myId)) {
         return true;
       }
-      if (Array.isArray(st.players) && st.players.length > 0 && !st.players.some((p: any) => (p.id || p.userId) === this.playerId())) {
+      if (Array.isArray(st.players) && st.players.length > 0 && !st.players.some((p: any) => ((p.id || p.userId || p.username || '') as string).trim().toLowerCase() === myId)) {
         return true;
       }
     }
@@ -439,7 +457,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
     if (this.currentRoomMode() === GameMode.Single) {
       return this.singlePlayerWinners();
     }
-    return (this.rawState() as any)?.winners || [];
+    const st = this.rawState() as any;
+    if (!st) return [];
+    if (Array.isArray(st.winners) && st.winners.length > 0) return st.winners;
+    if (Array.isArray(st.state?.winners) && st.state.winners.length > 0) return st.state.winners;
+    if (st.winner) return [st.winner];
+    if (st.state?.winner) return [st.state.winner];
+    return [];
   });
 
   readonly status = computed<GameStatusType | string>(() => {
@@ -451,10 +475,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
-    let s = st.status;
+    let s = st.status ?? st.state?.status;
     if (typeof s === 'number') {
       const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
       return statusMap[s] || 'waiting';
+    }
+    if (s === 'finished' || (Array.isArray(st.winners) && st.winners.length > 0) || st.winner) {
+      return GameStatus.Finished;
     }
     return s || 'waiting';
   });

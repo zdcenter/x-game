@@ -198,7 +198,14 @@ export class UiOverlayComponent implements OnDestroy {
         if (left.playerId.toLowerCase().trim() !== myName) {
           this.clearOpponentCountdown();
           const raw = this.wsService.gameState();
-          const players: any[] = raw?.players || [];
+          let players: any[] = [];
+          if (Array.isArray(raw?.roomPlayers)) {
+            players = raw.roomPlayers;
+          } else if (Array.isArray(raw?.players)) {
+            players = raw.players;
+          } else if (raw?.players && typeof raw.players === 'object') {
+            players = Object.keys(raw.players).map(k => ({ id: k, ...(typeof raw.players[k] === 'object' ? raw.players[k] : {}) }));
+          }
           const remainingContestants = players.filter(
             (p: any) => !p.isSpectator && (p.id || p.userId || p.username || '').toLowerCase().trim() !== left.playerId.toLowerCase().trim()
           );

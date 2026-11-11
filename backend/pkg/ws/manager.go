@@ -1616,11 +1616,16 @@ func (r *Room) BroadcastStateLocked() {
 		"target":       r.Target,
 		"hasPassword":  r.Password != "",
 	}
+	currentStatus := "waiting"
+	if r.Engine != nil {
+		currentStatus = string(r.Engine.GetStatus())
+	}
 	if len(r.Winners) > 0 {
+		currentStatus = "finished"
 		payloadMap["winners"] = r.Winners
 		payloadMap["winner"] = r.Winner
-		payloadMap["status"] = "finished"
 	}
+	payloadMap["status"] = currentStatus
 
 	data, err := json.Marshal(payloadMap)
 	if err != nil {

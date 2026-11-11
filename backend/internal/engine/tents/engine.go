@@ -164,14 +164,16 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 				}
 			}
 		case "forfeit":
-			for id := range e.Players {
-				if id != playerID {
+			delete(e.Players, playerID)
+			delete(e.Wins, playerID)
+			if len(e.Players) <= 1 {
+				e.State = engine.StateFinished
+				for id := range e.Players {
 					e.Winners = []string{id}
 					e.Wins[id]++
 					break
 				}
 			}
-			e.State = engine.StateFinished
 		}
 	}
 
