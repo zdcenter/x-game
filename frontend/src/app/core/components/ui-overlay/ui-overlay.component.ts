@@ -105,16 +105,21 @@ import { GameRegistryService } from '../../services/game-registry.service';
     <!-- Confirm Dialog -->
     @if (toastService.currentConfirm(); as dialog) {
       <div class="fixed inset-0 z-[9999] bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform animate-scale-in text-[var(--color-text-main)]">
+        <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md overflow-hidden transform animate-scale-in text-[var(--color-text-main)]">
           <div class="p-6">
             <h3 class="text-lg font-bold mb-2">{{ dialog.title }}</h3>
             <p class="opacity-70 text-sm leading-relaxed mb-6">{{ dialog.message }}</p>
-            <div class="flex gap-3">
-              <button (click)="cancelConfirm(dialog)" class="flex-1 py-2.5 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors">
+            <div class="flex flex-col sm:flex-row gap-2.5">
+              <button (click)="cancelConfirm(dialog)" class="flex-1 py-2.5 px-3 rounded-xl font-bold bg-[var(--color-bg-card)] opacity-80 hover:opacity-100 border border-[var(--color-border-card)] transition-colors text-sm">
                 {{ dialog.cancelText || 'Cancel' }}
               </button>
+              @if (dialog.secondaryText) {
+                <button (click)="secondaryConfirm(dialog)" class="flex-1 py-2.5 px-3 rounded-xl font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border border-amber-500/30 transition-colors text-sm">
+                  {{ dialog.secondaryText }}
+                </button>
+              }
               <button (click)="acceptConfirm(dialog)" 
-                      class="flex-1 py-2.5 rounded-xl font-bold transition-colors shadow-lg"
+                      class="flex-1 py-2.5 px-3 rounded-xl font-bold transition-colors shadow-lg text-sm"
                       [class.bg-red-500]="dialog.confirmStyle !== 'primary'"
                       [class.text-white]="dialog.confirmStyle !== 'primary'"
                       [class.hover:bg-red-400]="dialog.confirmStyle !== 'primary'"
@@ -398,6 +403,13 @@ export class UiOverlayComponent implements OnDestroy {
 
   acceptConfirm(dialog: any) {
     dialog.onConfirm();
+    this.toastService.closeConfirm();
+  }
+
+  secondaryConfirm(dialog: any) {
+    if (dialog.onSecondary) {
+      dialog.onSecondary();
+    }
     this.toastService.closeConfirm();
   }
 

@@ -2160,6 +2160,7 @@
   "game.pk_leaving_msg": "¡El duelo sigue en curso! Puedes elegir \"Salir temporalmente\" para reservar tu asiento durante 30s y volver en cualquier momento. \"Rendirse y salir\" otorgará la victoria a tu oponente.",
   "game.pk_temporary_leave": "Salir temporalmente (30s)",
   "game.pk_forfeit_leave": "Rendirse y salir",
+  "game.pk_continue_battle": "Continuar batalla",
   "game.reconnect_match": "Volver a la partida",
   "lobby.reconnect_match_btn": "Volver a la partida",
   "game.pk_opponent_disconnected_title": "Oponente temporalmente desconectado",

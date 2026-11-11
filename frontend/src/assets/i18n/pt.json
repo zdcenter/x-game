@@ -2160,6 +2160,7 @@
   "game.pk_leaving_msg": "A batalha ainda está em andamento! Escolha \"Sair temporariamente\" para guardar seu lugar por 30s e voltar a qualquer momento. \"Desistir e sair\" concederá a vitória ao oponente.",
   "game.pk_temporary_leave": "Sair temporariamente (30s)",
   "game.pk_forfeit_leave": "Desistir e sair",
+  "game.pk_continue_battle": "Continuar batalha",
   "game.reconnect_match": "Volver à partida",
   "lobby.reconnect_match_btn": "Volver à partida",
   "game.pk_opponent_disconnected_title": "Oponente temporariamente desconectado",

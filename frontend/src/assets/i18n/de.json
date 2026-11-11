@@ -2160,6 +2160,7 @@
   "game.pk_leaving_msg": "Das Match läuft noch! Wählen Sie \"Kurz zur Lobby\", um Ihren Platz 30s lang zu reservieren und jederzeit zurückzukehren. \"Aufgeben & Verlassen\" erklärt den Gegner zum Sieger.",
   "game.pk_temporary_leave": "Kurz zur Lobby (30s)",
   "game.pk_forfeit_leave": "Aufgeben & Verlassen",
+  "game.pk_continue_battle": "Weiterspielen",
   "game.reconnect_match": "Zurück zum Spiel",
   "lobby.reconnect_match_btn": "Zurück zum Spiel",
   "game.pk_opponent_disconnected_title": "Gegner vorübergehend getrennt",

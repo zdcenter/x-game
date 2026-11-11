@@ -2160,6 +2160,7 @@
   "game.pk_leaving_msg": "対戦はまだ続いています！「ロビーへ一時退席」を選ぶと30秒間席が保持され、いつでも対局に復帰できます。「降伏して退出」を選ぶと相手の不战勝となります。",
   "game.pk_temporary_leave": "一時退席 (席を30秒保持)",
   "game.pk_forfeit_leave": "降伏して退出",
+  "game.pk_continue_battle": "対戦を続ける",
   "game.reconnect_match": "対局に戻る",
   "lobby.reconnect_match_btn": "対局に戻る",
   "game.pk_opponent_disconnected_title": "対戦相手が一時切断されました",

@@ -14,6 +14,9 @@ export interface ConfirmDialog {
   confirmStyle?: 'danger' | 'primary';
   onConfirm: () => void;
   onCancel?: () => void;
+  secondaryText?: string;
+  secondaryStyle?: 'default' | 'primary' | 'warning';
+  onSecondary?: () => void;
 }
 
 export interface GameInviteBanner {

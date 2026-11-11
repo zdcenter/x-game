@@ -2160,6 +2160,7 @@
   "game.pk_leaving_msg": "Le duel est toujours en cours ! Choisissez \"Quitter temporairement\" pour conserver votre place pendant 30s et revenir à tout moment. \"Déclarer forfait\" accordera la victoire à l'adversaire.",
   "game.pk_temporary_leave": "Quitter temporairement (30s)",
   "game.pk_forfeit_leave": "Déclarer forfait",
+  "game.pk_continue_battle": "Continuer le combat",
   "game.reconnect_match": "Retour au match",
   "lobby.reconnect_match_btn": "Retour au match",
   "game.pk_opponent_disconnected_title": "Adversaire temporairement déconnecté",

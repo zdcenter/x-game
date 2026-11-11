@@ -147,7 +147,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     // 无论是单机还是联机，当状态重置为 Waiting（等待室/重开）或 Starting（倒计时）时，自动触发重置
     effect(() => {
       const cur = this.status();
-      if (cur === GameStatus.Waiting || cur === GameStatus.Starting) {
+      if (cur === GameStatus.Waiting) {
         untracked(() => this.resetLocalGameState());
       }
     });
@@ -156,6 +156,12 @@ export abstract class BaseGameStore implements GameStoreInterface {
     effect(() => {
       const evt = this.ws.walkoverVictoryEvent();
       if (evt) {
+        const mode = untracked(() => this.currentRoomMode());
+        const currentSt = untracked(() => this.status());
+        // 守卫：单机模式或等待大厅状态且未在对决中，绝不响应
+        if (mode === GameMode.Single || (currentSt === GameStatus.Waiting && !untracked(() => this.isWalkoverVictory()))) {
+          return;
+        }
         const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
         const winnerId = (evt.winnerId || '').trim().toLowerCase();
         // 若 winnerId 匹配自己，或未指定 winnerId，或房间内活跃参赛者仅剩自己，确立不战而胜
@@ -181,7 +187,10 @@ export abstract class BaseGameStore implements GameStoreInterface {
       const left = this.ws.playerLeftEvent();
       if (left) {
         const mode = untracked(() => this.currentRoomMode());
-        if (mode !== GameMode.Single) {
+        const st = untracked(() => this.status());
+        // 关键守卫：只有在对战正在进行（Playing 或 Starting）时，对手退出才触发不战而胜！
+        // 在等待大厅中有人进出绝不是不战而胜！
+        if (mode !== GameMode.Single && (st === GameStatus.Playing || st === GameStatus.Starting)) {
           const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
           const leftId = (left.playerId || '').trim().toLowerCase();
           if (leftId !== myId) {
@@ -206,16 +215,20 @@ export abstract class BaseGameStore implements GameStoreInterface {
     effect(() => {
       const evt = this.ws.playerForfeitedEvent();
       if (evt) {
-        const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
-        const forfId = (evt.forfeitedPlayerId || '').trim().toLowerCase();
-        const winnerId = (evt.winnerId || '').trim().toLowerCase();
-        untracked(() => {
-          this.forfeitedPlayer.set(evt.forfeitedPlayerId);
-          if (winnerId === myId || (forfId !== myId && !evt.remainingCount)) {
-            this._isSpectator.set(false);
-            this.isWalkoverVictory.set(true);
-          }
-        });
+        const mode = untracked(() => this.currentRoomMode());
+        const st = untracked(() => this.status());
+        if (mode !== GameMode.Single && (st === GameStatus.Playing || st === GameStatus.Starting || untracked(() => this.forfeitedPlayer()) !== null)) {
+          const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
+          const forfId = (evt.forfeitedPlayerId || '').trim().toLowerCase();
+          const winnerId = (evt.winnerId || '').trim().toLowerCase();
+          untracked(() => {
+            this.forfeitedPlayer.set(evt.forfeitedPlayerId);
+            if (winnerId === myId || (forfId !== myId && !evt.remainingCount)) {
+              this._isSpectator.set(false);
+              this.isWalkoverVictory.set(true);
+            }
+          });
+        }
       }
     });
 
@@ -472,18 +485,31 @@ export abstract class BaseGameStore implements GameStoreInterface {
     if (this.currentRoomMode() === GameMode.Single) {
       return this.singlePlayerStatus();
     }
+    const st = this.rawState() as any;
+    if (!st) {
+      if (this.isWalkoverVictory() || this.effectiveForfeitedPlayer()) {
+        return GameStatus.Finished;
+      }
+      return GameStatus.Waiting;
+    }
+    let s = st.status ?? st.state?.status;
+    if (typeof s === 'number') {
+      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
+      s = statusMap[s] || 'waiting';
+    }
+    if (typeof s === 'string') s = s.toLowerCase();
+
+    // 关键权威守卫：当后端返回明确处于 waiting / idle 状态（如新创建房间或重新等待中）时，
+    // 绝不能被任何旧的不战而胜或认输状态覆盖，必须呈现等待就绪大厅！
+    if (s === 'waiting' || s === 'idle') {
+      return GameStatus.Waiting;
+    }
+
     if (this.isWalkoverVictory()) {
       return GameStatus.Finished;
     }
     if (this.effectiveForfeitedPlayer()) {
       return GameStatus.Finished;
-    }
-    const st = this.rawState() as any;
-    if (!st) return GameStatus.Waiting;
-    let s = st.status ?? st.state?.status;
-    if (typeof s === 'number') {
-      const statusMap: any[] = [GameStatus.Waiting, GameStatus.Starting, GameStatus.Playing, GameStatus.Finished];
-      return statusMap[s] || 'waiting';
     }
     if (s === 'finished' || (Array.isArray(st.winners) && st.winners.length > 0) || st.winner) {
       return GameStatus.Finished;
@@ -573,6 +599,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
   }
 
   joinRoom(roomId: string, mode: GameModeType | string = GameMode.Single, difficulty: GameDifficultyType | string = GameDifficulty.Medium, hostId?: string, target: number = 1, password: string = '', bounty: number = 0, isSpectator: boolean = false, action: string = '') {
+    this.isWalkoverVictory.set(false);
+    this.forfeitedPlayer.set(null);
     this.roomId.set(roomId);
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
@@ -616,6 +644,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   leaveRoom(forfeit: boolean = false) {
     this.isWalkoverVictory.set(false);
+    this.forfeitedPlayer.set(null);
     this.resetLocalGameState();
     if (this.enableSinglePlayerSave && this.currentRoomMode() === GameMode.Single && this.isFinished()) {
       this.clearSinglePlayerSave();

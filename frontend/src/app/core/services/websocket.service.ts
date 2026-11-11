@@ -224,6 +224,12 @@ export class WebSocketService {
     this.kickedEvent.set(0);
     this.unexpectedDisconnectEvent.set(0);
     this.connectionRejectedEvent.set(0);
+    this.walkoverVictoryEvent.set(null);
+    this.playerForfeitedEvent.set(null);
+    this.playerLeftEvent.set(null);
+    this.playerDisconnectedEvent.set(null);
+    this.playerReconnectedEvent.set(null);
+    this.hostChangedEvent.set(null);
     this.gameReconnectAttempts = 0;
     this.gameDisconnectIntentional = false;
 
@@ -675,9 +681,12 @@ export class WebSocketService {
     this.currentMode.set('');
     this.currentDifficulty.set('');
     this.isCurrentSpectator.set(false);
+    this.walkoverVictoryEvent.set(null);
+    this.playerForfeitedEvent.set(null);
     this.playerDisconnectedEvent.set(null);
     this.playerReconnectedEvent.set(null);
     this.playerLeftEvent.set(null);
+    this.hostChangedEvent.set(null);
     this.lastGameConnectConfig = null;
     this.gameState.set(null);
   }
