@@ -242,6 +242,8 @@ func Register(router fiber.Router) {
 					if action["type"] == "ping" {
 						// Application-level ping: respond with pong
 						player.WriteMessage(websocket.TextMessage, []byte(`{"type":"pong"}`))
+					} else if action["type"] == "get_lobby" || action["type"] == "refresh_lobby" {
+						wsManager.Lobby.SendLobbyStateTo(player)
 					} else if action["type"] == "dismiss_room" {
 						if roomID, ok := action["roomId"].(string); ok && roomID != "" {
 							wsManager.DismissRoom(roomID, playerID)

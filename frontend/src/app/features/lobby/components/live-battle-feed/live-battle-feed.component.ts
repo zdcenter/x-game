@@ -519,7 +519,12 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   // Active multiplayer rooms from websocket lobby
   activeRooms = computed(() => {
     const raw = this.wsService.activeRooms() || [];
-    return raw.filter((r: any) => r && r.mode !== GameMode.Single && r.status !== 'finished');
+    return raw.filter((r: any) => 
+      r && 
+      r.mode !== GameMode.Single && 
+      r.status !== 'finished' && 
+      ((r.players ?? 0) > 0 || (r.contestants && r.contestants.length > 0))
+    );
   });
 
   // Rooms actively dueling / in-game (Status is playing/starting AND has at least 2 players) -> Strictly Spectate
@@ -580,11 +585,13 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.fetchBattles();
+    this.wsService.refreshLobby();
 
     // Auto-poll battles every 30 seconds
     this.timer = setInterval(() => {
       this.currentTime.set(Date.now());
       this.fetchBattles(false);
+      this.wsService.refreshLobby();
     }, 30000);
   }
 
@@ -613,6 +620,7 @@ export class LiveBattleFeedComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.refreshing.set(true);
     this.fetchBattles(false);
+    this.wsService.refreshLobby();
   }
 
   private handleLiveBattleFinished(battle: any): void {

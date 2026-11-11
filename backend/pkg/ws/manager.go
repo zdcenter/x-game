@@ -383,11 +383,11 @@ func init() {
 // janitor runs every 5 minutes to evict rooms that slipped through normal cleanup
 // (e.g. all connections dropped simultaneously, engine goroutines outlived clients).
 // Cleanup thresholds (measured from LastActivity):
-//   - empty room (0 clients)  → 10 minutes
-//   - finished game           → 30 minutes
+//   - empty room (0 clients)  → 10 seconds
+//   - finished game           → 1 minute
 //   - any other state         → 2 hours (safety net for frozen rooms)
 func janitor() {
-	ticker := time.NewTicker(5 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
 		cleanupStaleRooms()
@@ -396,9 +396,9 @@ func janitor() {
 
 func cleanupStaleRooms() {
 	const (
-		emptyTTL    = int64(10 * 60)      // 10 min
-		finishedTTL = int64(30 * 60)      // 30 min
-		staleTTL    = int64(2 * 60 * 60)  // 2 h
+		emptyTTL    = int64(10)          // 10 sec: purge abandoned/empty rooms swiftly
+		finishedTTL = int64(60)          // 1 min: purge completed matches after idle
+		staleTTL    = int64(2 * 60 * 60) // 2 h
 	)
 	now := time.Now().Unix()
 
@@ -772,6 +772,19 @@ func (r *Room) RemoveClient(client *Client) {
 					go Lobby.BroadcastLobbyUpdate()
 					room.checkWalkoverVictoryLocked(true)
 				}
+
+				activeContestants := 0
+				for _, c := range room.Clients {
+					if !c.IsSpectator {
+						activeContestants++
+					}
+				}
+				if len(room.Clients) == 0 || activeContestants == 0 {
+					mu.Lock()
+					delete(Rooms, rID)
+					mu.Unlock()
+					go Lobby.BroadcastLobbyUpdate()
+				}
 			}(roomID, clientID)
 		}
 		return
@@ -1000,6 +1013,30 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			delete(r.Clients, clientID)
 			senderClient.Close()
 			r.BroadcastStateLocked()
+
+			activeContestants := 0
+			for _, c := range r.Clients {
+				if !c.IsSpectator {
+					activeContestants++
+				}
+			}
+
+			if len(r.Clients) == 0 || activeContestants == 0 {
+				roomID := r.ID
+				mu.Lock()
+				delete(Rooms, roomID)
+				mu.Unlock()
+				go Lobby.BroadcastLobbyUpdate()
+
+				msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, msg)
+					c.Close()
+				}
+				r.Clients = make(map[string]*Client)
+				return
+			}
+
 			go Lobby.BroadcastLobbyUpdate()
 			return
 		}
@@ -1217,6 +1254,19 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					room.BroadcastStateLocked()
 					go Lobby.BroadcastLobbyUpdate()
 					room.checkWalkoverVictoryLocked(true)
+				}
+
+				activeContestants := 0
+				for _, c := range room.Clients {
+					if !c.IsSpectator {
+						activeContestants++
+					}
+				}
+				if len(room.Clients) == 0 || activeContestants == 0 {
+					mu.Lock()
+					delete(Rooms, rID)
+					mu.Unlock()
+					go Lobby.BroadcastLobbyUpdate()
 				}
 			}(r.ID, clientID)
 			return

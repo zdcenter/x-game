@@ -38,6 +38,7 @@ export class PkArenaComponent implements OnInit, OnDestroy {
     this.initialGameId.set(this.route.snapshot.queryParams['game'] || '');
     const player = this.auth.currentUser()?.username || this.auth.guestId;
     this.wsService.connectLobby(player, player);
+    this.wsService.refreshLobby();
   }
 
   ngOnDestroy() {

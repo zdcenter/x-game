@@ -40,7 +40,12 @@ export class LiveRoomService {
   readonly waitingRooms = computed<WaitingRoom[]>(() => {
     const raw = this.ws.activeRooms() || [];
     return raw
-      .filter((r: any) => r && r.status === 'waiting' && r.mode !== GameMode.Single)
+      .filter((r: any) => 
+        r && 
+        r.status === 'waiting' && 
+        r.mode !== GameMode.Single && 
+        ((r.players ?? 0) > 0 || (r.contestants && r.contestants.length > 0))
+      )
       .sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
   });
 

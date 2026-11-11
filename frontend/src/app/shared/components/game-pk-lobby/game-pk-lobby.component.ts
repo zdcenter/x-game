@@ -189,7 +189,12 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => r.mode !== GameMode.Single && r.status !== 'finished'));
+  allRooms   = computed(() => this.wsService.activeRooms().filter((r: any) => 
+    r && 
+    r.mode !== GameMode.Single && 
+    r.status !== 'finished' && 
+    ((r.players ?? 0) > 0 || (r.contestants && r.contestants.length > 0))
+  ));
   myRooms    = computed(() => this.allRooms().filter((r: any) => this.isMyRoom(r)));
   otherRooms = computed(() => {
     const others = this.allRooms().filter((r: any) => !this.isMyRoom(r));
@@ -218,6 +223,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit() {
     this.initForm();
+    this.wsService.refreshLobby();
   }
 
   ngOnDestroy() {}

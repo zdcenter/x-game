@@ -433,6 +433,7 @@ export class WebSocketService {
     if (this.lobbySocket) {
       if ((this.lobbySocket.readyState === WebSocket.CONNECTING || this.lobbySocket.readyState === WebSocket.OPEN) && 
           this.lobbySocket.url.includes(`playerId=${playerId}`)) {
+        this.refreshLobby();
         return;
       }
       this.lobbyDisconnectIntentional = true;
@@ -462,6 +463,7 @@ export class WebSocketService {
       this.lobbyReconnectAttempts = 0;
       console.log('Lobby WS Connected');
       this.startLobbyHeartbeat();
+      this.refreshLobby();
     };
 
     this.lobbySocket.onmessage = (event) => {
@@ -606,6 +608,16 @@ export class WebSocketService {
 
   setRoomPassword(password: string) {
     this.send({ action: C2SAction.SetPassword, password } as any);
+  }
+
+  refreshLobby(): void {
+    if (this.lobbySocket && this.isLobbyConnected()) {
+      try {
+        this.lobbySocket.send(JSON.stringify({ type: 'get_lobby' }));
+      } catch (e) {
+        console.warn('Failed to send get_lobby request', e);
+      }
+    }
   }
 
   sendLobby(action: any) {

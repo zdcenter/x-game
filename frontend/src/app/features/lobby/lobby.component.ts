@@ -348,6 +348,10 @@ export class LobbyComponent implements OnInit, OnDestroy {
     if (isBrowser()) {
       this.recentGameIds.set(getRecentGames());
 
+      const player = this.authStore.currentUser()?.username || this.authStore.guestId;
+      this.wsService.connectLobby(player, player);
+      this.wsService.refreshLobby();
+
       // 非关键背景数据平滑阶梯载入，杜绝在首屏 t=0 瞬间并发 7 道 HTTP 请求卡死网络关键链路
       setTimeout(() => {
         this.loadGamesStats();
