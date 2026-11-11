@@ -113,10 +113,14 @@ func (e *NonogramEngine) AddPlayer(playerID string) {
 	}
 }
 
+func (e *NonogramEngine) removePlayerLocked(playerID string) {
+	delete(e.Players, playerID)
+}
+
 func (e *NonogramEngine) RemovePlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
-	delete(e.Players, playerID)
+	e.removePlayerLocked(playerID)
 }
 
 func (e *NonogramEngine) HasPlayer(playerID string) bool {
@@ -248,7 +252,7 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 			}
 		}
 	case "forfeit":
-		e.RemovePlayer(playerID)
+		e.removePlayerLocked(playerID)
 		if len(e.Players) <= 1 {
 			e.State = engine.StateFinished
 			for id := range e.Players {

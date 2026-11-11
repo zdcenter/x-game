@@ -120,7 +120,7 @@ func (e *MinesweeperEngine) HandleAction(playerID string, actionType string, pay
 		}
 
 		if baseAction.Action == string(domain.ActionForfeit) {
-			e.RemovePlayer(playerID)
+			e.removePlayerLocked(playerID)
 			if len(e.Scores) == 0 {
 				e.Board.Status = engine.StateFinished
 				e.State = engine.StateFinished
@@ -362,11 +362,15 @@ func (e *MinesweeperEngine) AddPlayer(playerID string) {
 	}
 }
 
+func (e *MinesweeperEngine) removePlayerLocked(playerID string) {
+	delete(e.Scores, playerID)
+	delete(e.Errors, playerID)
+}
+
 func (e *MinesweeperEngine) RemovePlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
-	delete(e.Scores, playerID)
-	delete(e.Errors, playerID)
+	e.removePlayerLocked(playerID)
 }
 
 func (e *MinesweeperEngine) HasPlayer(playerID string) bool {

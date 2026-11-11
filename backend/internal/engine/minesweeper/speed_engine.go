@@ -111,13 +111,17 @@ func (e *SpeedEngine) AddPlayer(playerID string) {
 	}
 }
 
-func (e *SpeedEngine) RemovePlayer(playerID string) {
-	e.Mu.Lock()
-	defer e.Mu.Unlock()
+func (e *SpeedEngine) removePlayerLocked(playerID string) {
 	delete(e.Boards, playerID)
 	delete(e.Scores, playerID)
 	delete(e.Wins, playerID)
 	delete(e.Errors, playerID)
+}
+
+func (e *SpeedEngine) RemovePlayer(playerID string) {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.removePlayerLocked(playerID)
 }
 
 func (e *SpeedEngine) HasPlayer(playerID string) bool {
@@ -191,7 +195,7 @@ func (e *SpeedEngine) HandleAction(playerID string, actionType string, payload [
 		}
 
 		if baseAction.Action == string(domain.ActionForfeit) {
-			e.RemovePlayer(playerID)
+			e.removePlayerLocked(playerID)
 			if len(e.Boards) <= 1 {
 				e.State = engine.StateFinished
 				for id := range e.Boards {
