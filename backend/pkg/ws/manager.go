@@ -98,6 +98,13 @@ func GetActiveRooms() []RoomSnapshot {
 	snapshots := make([]RoomSnapshot, 0, len(roomsCopy))
 	for _, r := range roomsCopy {
 		r.mu.Lock()
+
+		// 过滤 1：若房间内已无任何客户端连接（已全部离开或正在解散），坚决不展示在公共大厅
+		if len(r.Clients) == 0 {
+			r.mu.Unlock()
+			continue
+		}
+
 		playerCount := 0
 		spectatorCount := 0
 		opponent := ""
@@ -110,6 +117,12 @@ func GetActiveRooms() []RoomSnapshot {
 					opponent = pid
 				}
 			}
+		}
+
+		// 过滤 2：若当前房间无任何非旁观有效参赛选手，不作为可加入房间展示
+		if playerCount == 0 {
+			r.mu.Unlock()
+			continue
 		}
 
 		// Fallback for opponent from contestants if opponent is temporarily reconnecting
@@ -126,8 +139,20 @@ func GetActiveRooms() []RoomSnapshot {
 		for cid := range r.Contestants {
 			contestants = append(contestants, cid)
 		}
-		if len(contestants) > playerCount {
-			playerCount = len(contestants)
+		// 确保当前在线参赛玩家全部计入 contestants
+		for pid, c := range r.Clients {
+			if !c.IsSpectator {
+				found := false
+				for _, cid := range contestants {
+					if cid == pid {
+						found = true
+						break
+					}
+				}
+				if !found {
+					contestants = append(contestants, pid)
+				}
+			}
 		}
 
 		game := r.Game
@@ -151,6 +176,13 @@ func GetActiveRooms() []RoomSnapshot {
 		} else {
 			status = domain.StatusWaiting
 		}
+
+		// 过滤 3：已完结（Finished）的房间不可从大厅加入对决，避免挂出死房间
+		if status == domain.StatusFinished {
+			r.mu.Unlock()
+			continue
+		}
+
 		bounty := r.BountyCoins
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
@@ -588,153 +620,51 @@ func (r *Room) RemoveClient(client *Client) {
 			activeContestants++
 		}
 	}
-	isEmpty := activeContestants == 0
+	isEmpty := len(r.Clients) == 0
 	isHostLeaving := r.Host == client.ID && !isSwitchingGame
-	gameStatus := r.Engine.GetStatus()
+	gameStatus := engine.StateWaiting
+	if r.Engine != nil {
+		gameStatus = r.Engine.GetStatus()
+	}
 
 	// Clean up ready state
 	client.IsReady = false
 
 	roomID := r.ID
 	clientID := client.ID
-	r.mu.Unlock()
 
-	// Update lobby presence to idle
-	go Lobby.UpdatePlayerPresence(clientID, "idle", "", "", "", "", "")
-
-	// In-game disconnect broadcast & timeout handling
-	if gameStatus == engine.StatePlaying && !client.IsSpectator {
-		disMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "gracePeriod": 30}`, domain.EventPlayerDisconnected, clientID))
-		r.mu.Lock()
+	// 核心分支 1：房间已全员离线，或非切游戏模式下已无任何活跃参赛选手（仅剩旁观或无人）
+	// 立即解散并销毁房间，零延迟从大厅和内存中清除，彻底杜绝死房间/幽灵房间挂在大厅！
+	if !isSwitchingGame && (isEmpty || activeContestants == 0) {
+		var clientsToClose []*Client
 		for _, c := range r.Clients {
-			c.WriteMessage(websocket.TextMessage, disMsg)
+			clientsToClose = append(clientsToClose, c)
+		}
+		r.Clients = make(map[string]*Client)
+		delete(r.Contestants, clientID)
+		if r.Engine != nil {
+			r.Engine.RemovePlayer(clientID)
 		}
 		r.mu.Unlock()
 
-		if isHostLeaving {
-			// Game in progress: give host 30 seconds to reconnect, then transfer or delete
-			log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", clientID, roomID)
-			go func(rID string, hID string) {
-				time.Sleep(30 * time.Second)
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
 
-				mu.Lock()
-				room, exists := Rooms[rID]
-				mu.Unlock()
+		go Lobby.BroadcastLobbyUpdate()
+		go Lobby.UpdatePlayerPresence(clientID, "idle", "", "", "", "", "")
 
-				if !exists {
-					return
-				}
-				room.transferHost(hID)
-			}(roomID, clientID)
-		} else {
-			// Opponent disconnected from active game: grant 30s grace period. If not reconnected, forfeit!
-			log.Printf("Contestant %s disconnected from active game in room %s, starting 30s grace period before forfeit", clientID, roomID)
-			go func(rID string, pID string) {
-				time.Sleep(30 * time.Second)
-
-				mu.Lock()
-				room, exists := Rooms[rID]
-				mu.Unlock()
-
-				if !exists {
-					return
-				}
-
-				room.mu.Lock()
-				defer room.mu.Unlock()
-
-				// If contestant reconnected within 30s, do not forfeit
-				if c, reconnected := room.Clients[pID]; reconnected && !c.IsSpectator {
-					return
-				}
-
-				// Player did not return: forfeit!
-				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
-					log.Printf("Contestant %s forfeited by disconnect timeout in room %s", pID, rID)
-					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
-					delete(room.Contestants, pID)
-					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "timeout"}`, domain.EventPlayerLeft, pID))
-					for _, c := range room.Clients {
-						c.WriteMessage(websocket.TextMessage, leftMsg)
-					}
-					room.BroadcastStateLocked()
-					go Lobby.BroadcastLobbyUpdate()
-					room.checkWalkoverVictoryLocked(true)
-				}
-			}(roomID, clientID)
+		msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
+		for _, c := range clientsToClose {
+			c.WriteMessage(websocket.TextMessage, msg)
+			c.Close()
 		}
-	} else if isEmpty && !isSwitchingGame {
-		// Room temporarily has no active contestants (e.g. mobile screen lock or network switch):
-		// Grant 25s grace period for client reconnection before destroying the room
-		go func(rID string) {
-			time.Sleep(25 * time.Second)
-			mu.Lock()
-			room, exists := Rooms[rID]
-			mu.Unlock()
-			if !exists {
-				return
-			}
-
-			room.mu.Lock()
-			hasContestant := false
-			for _, c := range room.Clients {
-				if !c.IsSpectator {
-					hasContestant = true
-					break
-				}
-			}
-			var clientsToClose []*Client
-			if !hasContestant {
-				for _, c := range room.Clients {
-					clientsToClose = append(clientsToClose, c)
-				}
-				room.Clients = make(map[string]*Client)
-			}
-			room.mu.Unlock()
-
-			if !hasContestant {
-				mu.Lock()
-				delete(Rooms, rID)
-				mu.Unlock()
-				go Lobby.BroadcastLobbyUpdate()
-
-				msg := []byte(fmt.Sprintf(`{"type": "%s"}`, domain.EventRoomDismissed))
-				for _, c := range clientsToClose {
-					c.WriteMessage(websocket.TextMessage, msg)
-					c.Close()
-				}
-			}
-		}(roomID)
 		return
-	} else if !client.IsSpectator && gameStatus == engine.StateWaiting && !isSwitchingGame {
-		// In waiting room, give 25s grace period before freeing up the player slot
-		go func(rID string, pID string) {
-			time.Sleep(25 * time.Second)
-			mu.Lock()
-			room, exists := Rooms[rID]
-			mu.Unlock()
-			if !exists {
-				return
-			}
+	}
 
-			room.mu.Lock()
-			defer room.mu.Unlock()
-
-			if _, reconnected := room.Clients[pID]; !reconnected {
-				if room.Engine != nil && room.Engine.GetStatus() == engine.StateWaiting {
-					room.Engine.RemovePlayer(pID)
-					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "leave"}`, domain.EventPlayerLeft, pID))
-					for _, c := range room.Clients {
-						c.WriteMessage(websocket.TextMessage, leftMsg)
-					}
-					room.BroadcastStateLocked()
-					go Lobby.BroadcastLobbyUpdate()
-				}
-			}
-		}(roomID, clientID)
-	} else if isEmpty && isSwitchingGame {
-		// All contestants temporarily disconnected to load the new game page.
-		// Start a 30s grace timer to clean up only if nobody reconnects.
+	// 核心分支 2：房主切换游戏关卡/玩法，全员短暂断开重连新页面，给予 30 秒缓冲保护期
+	if isEmpty && isSwitchingGame {
+		r.mu.Unlock()
 		go func(rID string, changedAt int64) {
 			time.Sleep(30 * time.Second)
 			mu.Lock()
@@ -765,27 +695,100 @@ func (r *Room) RemoveClient(client *Client) {
 				go Lobby.BroadcastLobbyUpdate()
 			}
 		}(roomID, r.GameChangedAt)
-	} else if isHostLeaving && gameStatus == engine.StateWaiting && !isSwitchingGame {
-		// Host disconnected from waiting room: give 15s grace period before transferring host (F5 refresh protection)
-		go func(rID string, hID string) {
-			time.Sleep(15 * time.Second)
-
-			mu.Lock()
-			room, exists := Rooms[rID]
-			mu.Unlock()
-
-			if !exists {
-				return
-			}
-			room.transferHost(hID)
-		}(roomID, clientID)
-	} else if isHostLeaving {
-		// Not in active game: transfer host immediately
-		r.transferHost(client.ID)
+		return
 	}
 
-	go r.BroadcastState()
-	go Lobby.BroadcastLobbyUpdate()
+	// 至此 activeContestants > 0（房间内仍有其他参赛选手在场）
+	r.mu.Unlock()
+	go Lobby.UpdatePlayerPresence(clientID, "idle", "", "", "", "", "")
+
+	// 核心分支 3：对局激战中（Playing）玩家断线，启动 30 秒断网保护与认输定时器
+	if gameStatus == engine.StatePlaying && !client.IsSpectator {
+		disMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "gracePeriod": 30}`, domain.EventPlayerDisconnected, clientID))
+		r.mu.Lock()
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, disMsg)
+		}
+		r.BroadcastStateLocked()
+		r.mu.Unlock()
+		go Lobby.BroadcastLobbyUpdate()
+
+		if isHostLeaving {
+			log.Printf("Host %s disconnected from active game in room %s, starting 30s grace period", clientID, roomID)
+			go func(rID string, hID string) {
+				time.Sleep(30 * time.Second)
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+				if !exists {
+					return
+				}
+				room.transferHost(hID)
+			}(roomID, clientID)
+		} else {
+			log.Printf("Contestant %s disconnected from active game in room %s, starting 30s grace period before forfeit", clientID, roomID)
+			go func(rID string, pID string) {
+				time.Sleep(30 * time.Second)
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+				if !exists {
+					return
+				}
+
+				room.mu.Lock()
+				defer room.mu.Unlock()
+
+				// 若 30 秒内已重连，取消超时判负
+				if c, reconnected := room.Clients[pID]; reconnected && !c.IsSpectator {
+					return
+				}
+
+				// 超时未归：判负认输并裁决不战而胜
+				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
+					log.Printf("Contestant %s forfeited by disconnect timeout in room %s", pID, rID)
+					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
+					delete(room.Contestants, pID)
+					leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "timeout"}`, domain.EventPlayerLeft, pID))
+					for _, c := range room.Clients {
+						c.WriteMessage(websocket.TextMessage, leftMsg)
+					}
+					room.BroadcastStateLocked()
+					go Lobby.BroadcastLobbyUpdate()
+					room.checkWalkoverVictoryLocked(true)
+				}
+			}(roomID, clientID)
+		}
+		return
+	}
+
+	// 核心分支 4：等待大厅（Waiting）或已完结对局（Finished）有选手离开（尚有其他选手留守）
+	if isHostLeaving {
+		if gameStatus == engine.StateWaiting {
+			// 房主在大厅离线（可能是按了 F5 刷新页面）：给予 15 秒缓冲期，若 15 秒内未重连才将房主移交给其他玩家
+			go func(rID string, hID string) {
+				time.Sleep(15 * time.Second)
+				mu.Lock()
+				room, exists := Rooms[rID]
+				mu.Unlock()
+				if !exists {
+					return
+				}
+				room.transferHost(hID)
+			}(roomID, clientID)
+		} else {
+			r.transferHost(clientID)
+		}
+	} else {
+		r.mu.Lock()
+		leftMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "leave"}`, domain.EventPlayerLeft, clientID))
+		for _, c := range r.Clients {
+			c.WriteMessage(websocket.TextMessage, leftMsg)
+		}
+		r.BroadcastStateLocked()
+		r.mu.Unlock()
+		go Lobby.BroadcastLobbyUpdate()
+	}
 }
 
 // transferHost picks the next available client as host. If no clients remain, dismisses the room.
@@ -870,10 +873,10 @@ func (r *Room) checkWalkoverVictoryLocked(allowIfFinished bool) {
 		return
 	}
 	currentStatus := r.Engine.GetStatus()
-	if !allowIfFinished && currentStatus != engine.StatePlaying {
+	if !allowIfFinished && currentStatus != engine.StatePlaying && currentStatus != engine.StateStarting {
 		return
 	}
-	if currentStatus == engine.StateWaiting || currentStatus == engine.StateStarting {
+	if currentStatus == engine.StateWaiting {
 		return
 	}
 
@@ -1065,7 +1068,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 	if action == string(domain.ActionForfeit) || action == "forfeit" {
 		log.Printf("Contestant %s explicitly forfeited in room %s", clientID, r.ID)
-		wasPlaying := r.Engine != nil && r.Engine.GetStatus() == engine.StatePlaying
+		wasPlaying := r.Engine != nil && (r.Engine.GetStatus() == engine.StatePlaying || r.Engine.GetStatus() == engine.StateStarting)
 
 		// 1. Pass forfeit to engine
 		if r.Engine != nil {

@@ -252,3 +252,92 @@ func TestIdiomRoomAndSpectator(t *testing.T) {
 	}
 }
 
+func TestRoomImmediateCleanupWhenAllClientsLeave(t *testing.T) {
+	roomID := "test-all-leave-cleanup-1"
+	room, err := CreateRoom(roomID, "tilematch", "pk_speed", "easy", "admin", "", 1, 0)
+	if err != nil {
+		t.Fatalf("failed to create room: %v", err)
+	}
+	defer func() {
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
+	}()
+
+	admin := &Client{ID: "admin"}
+	testUser := &Client{ID: "test"}
+	_ = room.AddClient(admin, "")
+	_ = room.AddClient(testUser, "")
+
+	// 1. Both disconnect via RemoveClient
+	room.RemoveClient(testUser)
+	room.RemoveClient(admin)
+
+	// Room should be deleted IMMEDIATELY (no 25s delay!)
+	mu.Lock()
+	_, exists := Rooms[roomID]
+	mu.Unlock()
+
+	if exists {
+		t.Fatalf("room should have been destroyed immediately when all contestants left")
+	}
+
+	// Room should NOT be in GetActiveRooms()
+	snapshots := GetActiveRooms()
+	for _, snap := range snapshots {
+		if snap.ID == roomID {
+			t.Fatalf("empty room should NOT be listed in GetActiveRooms snapshots")
+		}
+	}
+}
+
+func TestFinishedRoomImmediateCleanupWhenClientsLeave(t *testing.T) {
+	roomID := "test-finished-all-leave-1"
+	room, err := CreateRoom(roomID, "tilematch", "pk_speed", "easy", "admin", "", 1, 0)
+	if err != nil {
+		t.Fatalf("failed to create room: %v", err)
+	}
+	defer func() {
+		mu.Lock()
+		delete(Rooms, roomID)
+		mu.Unlock()
+	}()
+
+	admin := &Client{ID: "admin"}
+	testUser := &Client{ID: "test"}
+	_ = room.AddClient(admin, "")
+	_ = room.AddClient(testUser, "")
+
+	// Start game
+	admin.IsReady = true
+	testUser.IsReady = true
+	_, _ = room.Engine.HandleAction("admin", "start", []byte(`{"action":"start"}`))
+
+	// testUser forfeits
+	room.HandleMessage("test", []byte(`{"action":"forfeit"}`))
+
+	// Verify room is finished
+	if room.Engine.GetStatus() != engine.StateFinished {
+		t.Fatalf("expected game to be finished after forfeit, got %v", room.Engine.GetStatus())
+	}
+
+	// Finished room should NOT be listed in GetActiveRooms snapshots
+	for _, snap := range GetActiveRooms() {
+		if snap.ID == roomID {
+			t.Fatalf("finished room should not be visible in lobby GetActiveRooms")
+		}
+	}
+
+	// Now admin leaves finished match
+	room.RemoveClient(admin)
+
+	// Room must be destroyed immediately!
+	mu.Lock()
+	_, exists := Rooms[roomID]
+	mu.Unlock()
+
+	if exists {
+		t.Fatalf("finished room should have been destroyed immediately when all players left")
+	}
+}
+

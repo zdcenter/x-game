@@ -174,8 +174,8 @@ func (e *Engine) HandleAction(playerID string, action string, payload []byte) (e
 		return e.State, nil
 	}
 
-	// 3. 对战进行中动作
-	if e.State == engine.StatePlaying {
+	// 3. 对战进行中动作 (包括倒计时阶段认输)
+	if e.State == engine.StatePlaying || e.State == engine.StateStarting {
 		switch action {
 		case "move":
 			var req struct {
