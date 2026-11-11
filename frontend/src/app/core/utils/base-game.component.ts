@@ -366,18 +366,14 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
     if (this.store.currentRoomMode() !== GameMode.Single && this.store.roomId()) {
       if ((this.store.status() === GameStatus.Playing || this.store.status() === GameStatus.Starting) && !this.store.isSpectator?.()) {
         const title = this.i18nBase.t('game.pk_leaving_title')() || '正在激烈对决中';
-        const msg = this.i18nBase.t('game.pk_leaving_msg')() || '对决仍在进行中！您可选择【暂回大厅】，系统将保留 30 秒席位，30秒内可随时一键返回对决；若选择【认输退出】将直接判定对方获胜。';
+        const msg = this.i18nBase.t('game.pk_leaving_msg')() || '对决正在进行中！中途退出将判定您本局认输，对方直接获胜。确定退出房间吗？';
         this.baseToastService.confirm({
           title,
           message: msg,
-          confirmText: this.i18nBase.t('game.pk_temporary_leave')() || '暂回大厅 (保留席位)',
-          cancelText: this.i18nBase.t('game.pk_forfeit_leave')() || '认输退出',
-          confirmStyle: 'primary',
+          confirmText: this.i18nBase.t('game.confirm_forfeit_leave')() || '确定退出 (判负)',
+          cancelText: this.i18nBase.t('game.continue_battle')() || '继续战斗',
+          confirmStyle: 'danger',
           onConfirm: () => {
-            this.store.leaveRoom(false);
-            this.navigateToLobby();
-          },
-          onCancel: () => {
             const rId = this.store.roomId();
             if (rId && typeof sessionStorage !== 'undefined') {
               try {
@@ -396,6 +392,9 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
             setTimeout(() => {
               this.navigateToLobby();
             }, 120);
+          },
+          onCancel: () => {
+            // 继续战斗，留在局内
           }
         });
         return;

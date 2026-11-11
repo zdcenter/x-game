@@ -176,7 +176,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
-    // 闭环保障：监听玩家退出事件，若当前对局中仅剩自己一人且对局进行中，自动判定不战而胜！
+    // 闭环保障：监听玩家退出事件，若对手退出后房间内活跃参赛者仅剩自己，确立不战而胜！
     effect(() => {
       const left = this.ws.playerLeftEvent();
       if (left) {
@@ -191,8 +191,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
               const pid = (p.id || p.userId || p.username || '').trim().toLowerCase();
               return pid !== leftId;
             });
-            const st = untracked(() => this.status());
-            if (remainingContestants.length <= 1 && (st === GameStatus.Playing || st === GameStatus.Starting)) {
+            if (remainingContestants.length <= 1) {
               untracked(() => {
                 this._isSpectator.set(false);
                 this.isWalkoverVictory.set(true);
@@ -203,12 +202,19 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
-    // 监听选手在局内主动认输事件（双方留在房间内，直接进入结算并支持再来一局）
+    // 监听选手在局内主动认输事件
     effect(() => {
       const evt = this.ws.playerForfeitedEvent();
       if (evt) {
+        const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
+        const forfId = (evt.forfeitedPlayerId || '').trim().toLowerCase();
+        const winnerId = (evt.winnerId || '').trim().toLowerCase();
         untracked(() => {
           this.forfeitedPlayer.set(evt.forfeitedPlayerId);
+          if (winnerId === myId || (forfId !== myId && !evt.remainingCount)) {
+            this._isSpectator.set(false);
+            this.isWalkoverVictory.set(true);
+          }
         });
       }
     });

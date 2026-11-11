@@ -912,7 +912,7 @@ func (r *Room) checkWalkoverVictoryLocked(allowIfFinished bool) {
 
 	activeContestants := make([]string, 0)
 	for pid, c := range r.Clients {
-		if !c.IsSpectator {
+		if !c.IsSpectator && (r.ForfeitedContestants == nil || !r.ForfeitedContestants[pid]) {
 			activeContestants = append(activeContestants, pid)
 		}
 	}
@@ -1167,11 +1167,14 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					r.Engine.ForceFinish()
 				}
 
-				// 广播选手认输通知（双方均留在房间内，支持立即再来一局）
+				// 广播选手认输通知与不战而胜裁决（确保双方均收到终局结算）
 				forfeitMsg := []byte(fmt.Sprintf(`{"type": "%s", "forfeitedPlayerId": "%s", "winnerId": "%s"}`,
 					domain.EventPlayerForfeited, clientID, winnerID))
+				walkoverMsg := []byte(fmt.Sprintf(`{"type": "%s", "winnerId": "%s", "reason": "opponent_forfeit"}`,
+					domain.EventWalkoverVictory, winnerID))
 				for _, c := range r.Clients {
 					c.WriteMessage(websocket.TextMessage, forfeitMsg)
+					c.WriteMessage(websocket.TextMessage, walkoverMsg)
 				}
 			} else {
 				// 多人对决（3人及以上）：当前认输选手出局，其余选手继续战斗！
@@ -1319,23 +1322,15 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		reason := "leave"
 		if isForfeit {
 			reason = "forfeit"
-		}
-		if isForfeit && r.Engine != nil && (gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting) {
-			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
-			// Guarantee match concludes if only 0 or 1 active contestant remains after forfeit
-			activeRemaining := 0
-			var winnerID string
-			for pid, c := range r.Clients {
-				if !c.IsSpectator && pid != clientID {
-					activeRemaining++
-					winnerID = pid
-				}
+			if r.ForfeitedContestants == nil {
+				r.ForfeitedContestants = make(map[string]bool)
 			}
-			if activeRemaining <= 1 && (r.Engine.GetStatus() == engine.StatePlaying || r.Engine.GetStatus() == engine.StateStarting) {
-				r.Engine.HandleAction(clientID, "game_over", []byte(`{"action":"game_over"}`))
-				log.Printf("Room %s: game concluded by forfeit of %s, remaining contestant: %s", r.ID, clientID, winnerID)
+			r.ForfeitedContestants[clientID] = true
+			if r.Engine != nil {
+				r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 			}
 		}
+
 		delete(r.Clients, clientID)
 		delete(r.Contestants, clientID)
 		if r.Engine != nil {
@@ -1349,7 +1344,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			c.WriteMessage(websocket.TextMessage, leftMsg)
 		}
 
-		if gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting {
+		if isForfeit || gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting {
 			r.checkWalkoverVictoryLocked(true)
 		}
 
@@ -1613,6 +1608,9 @@ func (r *Room) BroadcastStateLocked() {
 		stateMap["winners"] = r.Winners
 		stateMap["winner"] = r.Winner
 		stateMap["status"] = "finished"
+	}
+	if r.ForfeitedPlayer != "" {
+		stateMap["forfeitedPlayer"] = r.ForfeitedPlayer
 	}
 
 	// Generic extraction of engine players map (supporting map[string]struct, map[string]*Player, struct, etc.)

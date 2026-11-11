@@ -1166,6 +1166,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   readonly resultTitle = computed(() => {
     if (this.customResultTitle) return this.customResultTitle;
     if (this.store?.isWalkoverVictory?.()) {
+      const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();
+      if (forfeited) {
+        const myId = (this.storePlayerId() || '').trim().toLowerCase();
+        if ((forfeited || '').trim().toLowerCase() === myId) {
+          return '本局已认输';
+        }
+        return '🏆 不战而胜 (对手认输)';
+      }
       return this.i18n.t('game.walkover_win_title')() || '🏆 不战而胜！';
     }
     const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();
@@ -1190,6 +1198,14 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
   readonly effectiveResultSubtitle = computed(() => {
     if (this.customResultSubtitle) return this.customResultSubtitle;
     if (this.store?.isWalkoverVictory?.()) {
+      const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();
+      if (forfeited) {
+        const myId = (this.storePlayerId() || '').trim().toLowerCase();
+        if ((forfeited || '').trim().toLowerCase() === myId) {
+          return '您已主动认输，本局遗憾落败';
+        }
+        return '对手已主动认输，恭喜赢得本场对决胜利！';
+      }
       return this.i18n.t('game.walkover_win_subtitle')() || '其他对手已全部退出，恭喜您赢得本场对决胜利！';
     }
     const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();

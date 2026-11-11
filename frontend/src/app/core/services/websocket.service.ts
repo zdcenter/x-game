@@ -302,6 +302,15 @@ export class WebSocketService {
         if (msg.hasPassword !== undefined) {
           msg.state.hasPassword = msg.hasPassword;
         }
+        if (msg.winners) {
+          msg.state.winners = msg.winners;
+        }
+        if (msg.winner) {
+          msg.state.winner = msg.winner;
+        }
+        if (msg.forfeitedPlayer) {
+          msg.state.forfeitedPlayer = msg.forfeitedPlayer;
+        }
         this.gameState.set(msg.state);
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
         this.gameDisconnectIntentional = true;
