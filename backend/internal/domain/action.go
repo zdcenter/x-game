@@ -89,6 +89,8 @@ const (
 	EventPlayerDisconnected S2CEvent = "player_disconnected"
 	// 对战选手恢复连接
 	EventPlayerReconnected  S2CEvent = "player_reconnected"
+	// 选手局内主动认输
+	EventPlayerForfeited    S2CEvent = "player_forfeited"
 	// 对战其他对手全部退出，独存选手不战而胜
 	EventWalkoverVictory    S2CEvent = "walkover_victory"
 

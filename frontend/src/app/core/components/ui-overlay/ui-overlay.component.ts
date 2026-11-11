@@ -252,6 +252,32 @@ export class UiOverlayComponent implements OnDestroy {
       }
     });
 
+    // 监听选手在局内主动认输事件（不退出房间）
+    effect(() => {
+      const forfeit = this.wsService.playerForfeitedEvent();
+      if (forfeit) {
+        const myName = (this.auth.currentUser()?.username || this.auth.guestId || '').toLowerCase().trim();
+        const forfId = (forfeit.forfeitedPlayerId || '').toLowerCase().trim();
+        const isMe = forfId === myName;
+
+        if (forfeit.remainingCount && forfeit.remainingCount > 1) {
+          // 3人及以上PK，部分选手认输
+          if (isMe) {
+            this.toastService.info('您已主动认输本局，其他选手继续对决！');
+          } else {
+            this.toastService.info(`玩家【${forfeit.forfeitedPlayerId}】已认输，当前剩余 ${forfeit.remainingCount} 人继续对决！`);
+          }
+        } else {
+          // 1v1 对决或仅剩最后 1 人
+          if (isMe) {
+            this.toastService.info('您已主动认输');
+          } else {
+            this.toastService.success(`对手【${forfeit.forfeitedPlayerId}】已主动认输，恭喜获胜！`);
+          }
+        }
+      }
+    });
+
     // 监听不战而胜事件
     effect(() => {
       const walkover = this.wsService.walkoverVictoryEvent();

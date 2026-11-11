@@ -128,6 +128,8 @@ export enum S2CEvent {
   PlayerReconnected = 'player_reconnected',
   /** 玩家主动退出或弃赛认输离开房间 */
   PlayerLeft = 'player_left',
+  /** 对战选手局内主动认输 */
+  PlayerForfeited = 'player_forfeited',
   /** 对局因其他玩家全部退出而判定不战而胜 */
   WalkoverVictory = 'walkover_victory',
 

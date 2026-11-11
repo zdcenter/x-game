@@ -59,6 +59,8 @@ type Room struct {
 	Contestants   map[string]bool      // playerID -> true for all registered contestants (persists across disconnects)
 	Winner        string               // Sole winner (walkover or decided by room)
 	Winners       []string             // Array of winners for current round
+	ForfeitedPlayer string             // Player ID who explicitly surrendered/forfeited in this round
+	ForfeitedContestants map[string]bool // Player IDs who forfeited in CURRENT round
 	mu            sync.Mutex
 }
 
@@ -630,8 +632,8 @@ func (r *Room) RemoveClient(client *Client) {
 	}
 
 	activeContestants := 0
-	for _, c := range r.Clients {
-		if !c.IsSpectator {
+	for pid, c := range r.Clients {
+		if !c.IsSpectator && (r.ForfeitedContestants == nil || !r.ForfeitedContestants[pid]) {
 			activeContestants++
 		}
 	}
@@ -774,8 +776,8 @@ func (r *Room) RemoveClient(client *Client) {
 				}
 
 				activeContestants := 0
-				for _, c := range room.Clients {
-					if !c.IsSpectator {
+				for pid, c := range room.Clients {
+					if !c.IsSpectator && (room.ForfeitedContestants == nil || !room.ForfeitedContestants[pid]) {
 						activeContestants++
 					}
 				}
@@ -1094,6 +1096,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
 		r.Winner = ""
 		r.Winners = nil
+		r.ForfeitedPlayer = ""
+		r.ForfeitedContestants = make(map[string]bool)
 		r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
 
 		activePlayers := 0
@@ -1127,21 +1131,60 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), payload)
 		}
 
-		// 2. Broadcast forfeit event to all clients in the room
-		forfeitMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "reason": "forfeit"}`, domain.EventPlayerLeft, clientID))
-		for _, c := range r.Clients {
-			c.WriteMessage(websocket.TextMessage, forfeitMsg)
-		}
-
-		// 3. Mark client as spectator and remove from active contestants
-		delete(r.Contestants, clientID)
-		if c, exists := r.Clients[clientID]; exists {
-			c.IsSpectator = true
-		}
-
-		// 4. Award walkover victory if match was in progress
 		if wasPlaying {
-			r.checkWalkoverVictoryLocked(true)
+			if r.ForfeitedContestants == nil {
+				r.ForfeitedContestants = make(map[string]bool)
+			}
+			r.ForfeitedContestants[clientID] = true
+
+			activeContestants := make([]string, 0)
+			for pid, c := range r.Clients {
+				if !c.IsSpectator && !r.ForfeitedContestants[pid] {
+					activeContestants = append(activeContestants, pid)
+				}
+			}
+
+			if len(activeContestants) <= 1 {
+				r.ForfeitedPlayer = clientID
+				// 仅剩 0 或 1 名活跃选手，胜负已定！
+				var winnerID string
+				if len(activeContestants) == 1 {
+					winnerID = activeContestants[0]
+				} else {
+					for cid := range r.Contestants {
+						if cid != clientID {
+							winnerID = cid
+							break
+						}
+					}
+				}
+
+				r.Winner = winnerID
+				if winnerID != "" {
+					r.Winners = []string{winnerID}
+				}
+				if r.Engine != nil {
+					r.Engine.ForceFinish()
+				}
+
+				// 广播选手认输通知（双方均留在房间内，支持立即再来一局）
+				forfeitMsg := []byte(fmt.Sprintf(`{"type": "%s", "forfeitedPlayerId": "%s", "winnerId": "%s"}`,
+					domain.EventPlayerForfeited, clientID, winnerID))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, forfeitMsg)
+				}
+			} else {
+				// 多人对决（3人及以上）：当前认输选手出局，其余选手继续战斗！
+				if r.Engine != nil {
+					r.Engine.RemovePlayer(clientID)
+				}
+				remaining := len(activeContestants)
+				forfeitMsg := []byte(fmt.Sprintf(`{"type": "%s", "forfeitedPlayerId": "%s", "remainingCount": %d}`,
+					domain.EventPlayerForfeited, clientID, remaining))
+				for _, c := range r.Clients {
+					c.WriteMessage(websocket.TextMessage, forfeitMsg)
+				}
+			}
 		}
 
 		r.BroadcastStateLocked()
@@ -1257,8 +1300,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 
 				activeContestants := 0
-				for _, c := range room.Clients {
-					if !c.IsSpectator {
+				for pid, c := range room.Clients {
+					if !c.IsSpectator && (room.ForfeitedContestants == nil || !room.ForfeitedContestants[pid]) {
 						activeContestants++
 					}
 				}
@@ -1530,6 +1573,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 			}
 		}
+		r.ForfeitedContestants = make(map[string]bool)
+		r.ForfeitedPlayer = ""
 	}
 
 	// 2. 将对局动作分发给游戏引擎
@@ -1624,6 +1669,9 @@ func (r *Room) BroadcastStateLocked() {
 		currentStatus = "finished"
 		payloadMap["winners"] = r.Winners
 		payloadMap["winner"] = r.Winner
+	}
+	if r.ForfeitedPlayer != "" {
+		payloadMap["forfeitedPlayer"] = r.ForfeitedPlayer
 	}
 	payloadMap["status"] = currentStatus
 

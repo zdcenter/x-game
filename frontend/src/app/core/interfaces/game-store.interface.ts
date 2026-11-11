@@ -50,6 +50,10 @@ export interface GameStoreInterface {
   /** 是否是不战而胜（其他对手全部退出） */
   readonly isWalkoverVictory?: Signal<boolean>;
 
+  /** 主动认输玩家ID（若有人认输） */
+  readonly forfeitedPlayer?: Signal<string | null>;
+  readonly effectiveForfeitedPlayer?: Signal<string | null>;
+
   // ===== 大厅/等待房间需要的数据 =====
 
   /**

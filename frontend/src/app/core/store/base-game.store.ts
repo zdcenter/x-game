@@ -176,7 +176,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
-    // 闭环保障：监听玩家退出或认输事件，若当前对局中仅剩自己一人，自动判定不战而胜！
+    // 闭环保障：监听玩家退出事件，若当前对局中仅剩自己一人且对局进行中，自动判定不战而胜！
     effect(() => {
       const left = this.ws.playerLeftEvent();
       if (left) {
@@ -191,7 +191,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
               const pid = (p.id || p.userId || p.username || '').trim().toLowerCase();
               return pid !== leftId;
             });
-            if (remainingContestants.length <= 1) {
+            const st = untracked(() => this.status());
+            if (remainingContestants.length <= 1 && (st === GameStatus.Playing || st === GameStatus.Starting)) {
               untracked(() => {
                 this._isSpectator.set(false);
                 this.isWalkoverVictory.set(true);
@@ -202,25 +203,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
       }
     });
 
-    // 终极保底：联机对战中，若状态已 Finished 且活跃参赛选手仅剩 <= 1 人，直接确立不战而胜
+    // 监听选手在局内主动认输事件（双方留在房间内，直接进入结算并支持再来一局）
     effect(() => {
-      const mode = this.currentRoomMode();
-      if (mode !== GameMode.Single) {
-        const st = this.status();
-        const raw = this.rawState() as any;
-        const isFin = st === GameStatus.Finished || raw?.status === 'finished' || raw?.status === 3;
-        if (isFin) {
-          const players = this.roomPlayers();
-          const activeContestants = players.filter(p => !p.isSpectator);
-          const myId = (this.playerId() || '').trim().toLowerCase();
-          const winners = this.winners().map((w: string) => (w || '').trim().toLowerCase());
-          if (activeContestants.length <= 1 || (winners.length > 0 && winners.includes(myId))) {
-            untracked(() => {
-              this._isSpectator.set(false);
-              this.isWalkoverVictory.set(true);
-            });
-          }
-        }
+      const evt = this.ws.playerForfeitedEvent();
+      if (evt) {
+        untracked(() => {
+          this.forfeitedPlayer.set(evt.forfeitedPlayerId);
+        });
       }
     });
 
@@ -275,6 +264,13 @@ export abstract class BaseGameStore implements GameStoreInterface {
 
   readonly roomId = signal<string>('');
   readonly isWalkoverVictory = signal<boolean>(false);
+  readonly forfeitedPlayer = signal<string | null>(null);
+  readonly effectiveForfeitedPlayer = computed<string | null>(() => {
+    const direct = this.forfeitedPlayer();
+    if (direct) return direct;
+    const raw = this.rawState() as any;
+    return raw?.forfeitedPlayer || raw?.forfeit_player || null;
+  });
   protected readonly _isSpectator = signal<boolean>(false);
   readonly isSpectator: Signal<boolean> = computed(() => {
     if (this.isWalkoverVictory()) return false;
@@ -473,6 +469,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
     if (this.isWalkoverVictory()) {
       return GameStatus.Finished;
     }
+    if (this.effectiveForfeitedPlayer()) {
+      return GameStatus.Finished;
+    }
     const st = this.rawState() as any;
     if (!st) return GameStatus.Waiting;
     let s = st.status ?? st.state?.status;
@@ -498,8 +497,18 @@ export abstract class BaseGameStore implements GameStoreInterface {
    * - false: 失败/惜败/死局
    */
   readonly isVictory = computed<boolean>(() => {
-    // 0. 若触发不战而胜（对手全部认输或退出房间），当前存活玩家直接获胜！
+    // 0. 若触发不战而胜（对手全部退出房间），当前存活玩家直接获胜！
     if (this.isWalkoverVictory()) return true;
+
+    // 0.5 若有选手主动认输（且本人不是认输者），当前玩家获胜！若本人是认输者，则落败！
+    const forfeited = this.effectiveForfeitedPlayer();
+    if (forfeited) {
+      const myId = (this.playerId() || '').trim().toLowerCase();
+      if ((forfeited || '').trim().toLowerCase() === myId) {
+        return false;
+      }
+      return true;
+    }
 
     // 1. 若有明确的 winners 数组（联机对战或重写了 singlePlayerWinners 的单机游戏）
     const w = this.winners();
@@ -762,6 +771,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
    */
   resetLocalGameState(): void {
     this.isWalkoverVictory.set(false);
+    this.forfeitedPlayer.set(null);
     this.hintsUsed.set(0);
     this.onResetLocalGameState();
   }

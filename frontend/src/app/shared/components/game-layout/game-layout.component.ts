@@ -1141,8 +1141,11 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (!this.store || !this.autoManageOverlays) {
       return false;
     }
-    // 不战而胜（对手全部认输或退出房间）直接无条件呈现胜利结算弹窗！
+    // 不战而胜（对手全部退出房间）或主动认输直接无条件呈现结算弹窗！
     if (this.store.isWalkoverVictory?.()) {
+      return true;
+    }
+    if ((this.store as any)?.effectiveForfeitedPlayer?.()) {
       return true;
     }
     if (this.effectiveStatus() !== GameStatus.Finished) {
@@ -1165,6 +1168,15 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (this.store?.isWalkoverVictory?.()) {
       return this.i18n.t('game.walkover_win_title')() || '🏆 不战而胜！';
     }
+    const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();
+    if (forfeited) {
+      const myId = (this.storePlayerId() || '').trim().toLowerCase();
+      if ((forfeited || '').trim().toLowerCase() === myId) {
+        return '本局已认输';
+      } else {
+        return '🎉 对手认输！';
+      }
+    }
     if (this.isSpectatorActive()) {
       const winners = (this.store as any)?.winners?.() || [];
       const winnerName = winners.length > 0 ? winners[0] : '';
@@ -1179,6 +1191,15 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (this.customResultSubtitle) return this.customResultSubtitle;
     if (this.store?.isWalkoverVictory?.()) {
       return this.i18n.t('game.walkover_win_subtitle')() || '其他对手已全部退出，恭喜您赢得本场对决胜利！';
+    }
+    const forfeited = (this.store as any)?.effectiveForfeitedPlayer?.();
+    if (forfeited) {
+      const myId = (this.storePlayerId() || '').trim().toLowerCase();
+      if ((forfeited || '').trim().toLowerCase() === myId) {
+        return '您已主动认输，本局遗憾落败';
+      } else {
+        return '对手已主动认输，恭喜赢得本场对决！';
+      }
     }
     if (this.isSpectatorActive()) {
       const isWalkover = (this.wsService as any)?.walkoverVictoryEvent?.() !== null;
