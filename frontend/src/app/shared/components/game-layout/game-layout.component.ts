@@ -1147,9 +1147,11 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       const isWin = this.resultStatus() === 'win';
       if (isWin && flow.winAction === 'auto_next') return false;
       if (!isWin && (flow.loseAction === 'board_overlay' || flow.loseAction === 'auto_restart')) return false;
+      // 单机母版内部延时就绪，或外部显式传入了 showOverlay=true/false，精准控制弹窗展示时机
+      return this.showOverlaySignal() ?? this.isInternalModalReady();
     }
-    // 母版内部延时就绪，或外部显式传入了 showOverlay=true/false，均能精准控制弹窗展示时机
-    return this.showOverlaySignal() ?? this.isInternalModalReady();
+    // 联机对战/PK模式：一旦终局已定（无论是对手弃赛认输还是正常决出胜负），立即全自动弹出终局结算大厅！
+    return true;
   });
 
   readonly resultTitle = computed(() => {

@@ -981,7 +981,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			go Lobby.BroadcastLobbyUpdate()
 			return
 		}
-		if action == string(domain.ActionLeaveRoom) {
+		if action == string(domain.ActionLeaveRoom) || action == "leave_room" {
 			delete(r.Clients, clientID)
 			senderClient.Close()
 			r.BroadcastStateLocked()
@@ -1141,7 +1141,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		return
 	}
 
-	if action == string(domain.ActionLeaveRoom) {
+	if action == string(domain.ActionLeaveRoom) || action == "leave_room" {
 		isSwitching := time.Now().Unix()-r.GameChangedAt < 30
 		if isSwitching {
 			return
@@ -1163,7 +1163,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		}
 
 		// In-game temporary leave (player did NOT explicitly forfeit): hold contestant seat for 30s
-		if gameStatus == engine.StatePlaying && !leavingClient.IsSpectator && !isForfeit {
+		if (gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting) && !leavingClient.IsSpectator && !isForfeit {
 			log.Printf("Contestant %s temporarily left active game in room %s, holding seat for 30s", clientID, r.ID)
 			delete(r.Clients, clientID)
 			leavingClient.Close()
@@ -1191,7 +1191,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				if c, reconnected := room.Clients[pID]; reconnected && !c.IsSpectator {
 					return
 				}
-				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
+				if room.Engine != nil && (room.Engine.GetStatus() == engine.StatePlaying || room.Engine.GetStatus() == engine.StateStarting) {
 					log.Printf("Contestant %s forfeited by temporary leave timeout in room %s", pID, rID)
 					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 					delete(room.Contestants, pID)
@@ -1212,7 +1212,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		if isForfeit {
 			reason = "forfeit"
 		}
-		if isForfeit && r.Engine != nil && gameStatus == engine.StatePlaying {
+		if isForfeit && r.Engine != nil && (gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting) {
 			r.Engine.HandleAction(clientID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 			// Guarantee match concludes if only 0 or 1 active contestant remains after forfeit
 			activeRemaining := 0
@@ -1223,7 +1223,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					winnerID = pid
 				}
 			}
-			if activeRemaining <= 1 && r.Engine.GetStatus() == engine.StatePlaying {
+			if activeRemaining <= 1 && (r.Engine.GetStatus() == engine.StatePlaying || r.Engine.GetStatus() == engine.StateStarting) {
 				r.Engine.HandleAction(clientID, "game_over", []byte(`{"action":"game_over"}`))
 				log.Printf("Room %s: game concluded by forfeit of %s, remaining contestant: %s", r.ID, clientID, winnerID)
 			}
@@ -1241,7 +1241,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			c.WriteMessage(websocket.TextMessage, leftMsg)
 		}
 
-		if gameStatus == engine.StatePlaying {
+		if gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting {
 			r.checkWalkoverVictoryLocked(true)
 		}
 

@@ -156,9 +156,15 @@ export abstract class BaseGameStore implements GameStoreInterface {
     effect(() => {
       const evt = this.ws.walkoverVictoryEvent();
       if (evt) {
-        const myId = untracked(() => this.playerId());
-        if (!evt.winnerId || evt.winnerId === myId) {
-          untracked(() => this.isWalkoverVictory.set(true));
+        const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
+        const winnerId = (evt.winnerId || '').trim().toLowerCase();
+        // 只要不是观战者，且（未指定 winnerId、winnerId 匹配自己、或房间内活跃参赛者仅剩自己），均确立不战而胜
+        if (!untracked(() => this.isSpectator())) {
+          const players = untracked(() => this.roomPlayers());
+          const activeContestants = players.filter(p => !p.isSpectator);
+          if (!winnerId || winnerId === myId || activeContestants.length <= 1) {
+            untracked(() => this.isWalkoverVictory.set(true));
+          }
         }
       }
     });
@@ -168,15 +174,36 @@ export abstract class BaseGameStore implements GameStoreInterface {
       const left = this.ws.playerLeftEvent();
       if (left) {
         const mode = untracked(() => this.currentRoomMode());
-        const isPlaying = untracked(() => this.isPlaying() || this.status() === GameStatus.Playing);
-        if (mode !== GameMode.Single && isPlaying) {
-          const myId = untracked(() => this.playerId());
-          if (left.playerId !== myId) {
+        if (mode !== GameMode.Single && !untracked(() => this.isSpectator())) {
+          const myId = (untracked(() => this.playerId()) || '').trim().toLowerCase();
+          const leftId = (left.playerId || '').trim().toLowerCase();
+          if (leftId !== myId) {
             const players = untracked(() => this.roomPlayers());
-            const remainingContestants = players.filter(p => !p.isSpectator && (p.id || p.userId) !== left.playerId);
+            const remainingContestants = players.filter(p => {
+              if (p.isSpectator) return false;
+              const pid = (p.id || p.userId || p.username || '').trim().toLowerCase();
+              return pid !== leftId;
+            });
             if (remainingContestants.length <= 1) {
               untracked(() => this.isWalkoverVictory.set(true));
             }
+          }
+        }
+      }
+    });
+
+    // 终极保底：联机对战中，若状态已 Finished 且活跃参赛选手仅剩 <= 1 人，非观战玩家直接确立不战而胜
+    effect(() => {
+      const mode = this.currentRoomMode();
+      if (mode !== GameMode.Single && !this.isSpectator()) {
+        const st = this.status();
+        const raw = this.rawState() as any;
+        const isFin = st === GameStatus.Finished || raw?.status === 'finished' || raw?.status === 3;
+        if (isFin) {
+          const players = this.roomPlayers();
+          const activeContestants = players.filter(p => !p.isSpectator);
+          if (activeContestants.length <= 1) {
+            untracked(() => this.isWalkoverVictory.set(true));
           }
         }
       }
@@ -450,7 +477,8 @@ export abstract class BaseGameStore implements GameStoreInterface {
     // 1. 若有明确的 winners 数组（联机对战或重写了 singlePlayerWinners 的单机游戏）
     const w = this.winners();
     if (w && w.length > 0) {
-      return w.includes(this.playerId());
+      const myId = (this.playerId() || '').trim().toLowerCase();
+      return w.some((x: string) => (x || '').trim().toLowerCase() === myId);
     }
 
     // 2. 检查子类自定义的 isLocalVictory 信号 (如果有)

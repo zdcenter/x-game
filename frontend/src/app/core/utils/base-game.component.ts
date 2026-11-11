@@ -364,7 +364,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
   goBack() {
     // 准则5：单机游戏纯客户端运行，绝不执行联机房间解散逻辑或提示
     if (this.store.currentRoomMode() !== GameMode.Single && this.store.roomId()) {
-      if (this.store.status() === GameStatus.Playing && !this.store.isSpectator?.()) {
+      if ((this.store.status() === GameStatus.Playing || this.store.status() === GameStatus.Starting) && !this.store.isSpectator?.()) {
         const title = this.i18nBase.t('game.pk_leaving_title')() || '正在激烈对决中';
         const msg = this.i18nBase.t('game.pk_leaving_msg')() || '对决仍在进行中！您可选择【暂回大厅】，系统将保留 30 秒席位，30秒内可随时一键返回对决；若选择【认输退出】将直接判定对方获胜。';
         this.baseToastService.confirm({
