@@ -149,16 +149,26 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       this.pendingResumeSession.set(null);
-      this.store.joinRoom(
-        pending.roomId,
-        pending.mode,
-        pending.difficulty,
-        pending.host || '',
-        pending.target ?? 1,
-        pending.password,
-        pending.bountyCoins,
-        pending.isSpectator
-      );
+      if (pending.isCreate) {
+        this.handleCreateRoom({
+          name: pending.roomId,
+          mode: pending.mode,
+          difficulty: pending.difficulty,
+          password: pending.password,
+          target: pending.target,
+          bountyCoins: pending.bountyCoins
+        });
+      } else {
+        this.handleJoinRoom({
+          roomId: pending.roomId,
+          mode: pending.mode,
+          difficulty: pending.difficulty,
+          host: pending.host || '',
+          password: pending.password,
+          bountyCoins: pending.bountyCoins,
+          isSpectator: pending.isSpectator
+        });
+      }
       return;
     } else {
       // Legacy migration: if older version saved in 'nonogram_saved_game', migrate to ResumeGameService

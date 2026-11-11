@@ -107,12 +107,16 @@
         <!-- Center Floating Emblem Badge -->
         <div class="w-18 h-18 sm:w-22 sm:h-22 rounded-3xl flex items-center justify-center text-4xl sm:text-5xl mb-2.5 shadow-xl relative border-2 transition-transform"
              [ngClass]="{
-               'bg-gradient-to-br from-amber-300/30 via-yellow-400/20 to-amber-600/30 border-amber-400/70 shadow-amber-500/30 animate-trophy-impact': status === GameResult.Win,
-               'bg-gradient-to-br from-rose-500/20 via-red-950/20 to-purple-950/20 border-rose-500/40 shadow-rose-950/40 animate-shield-impact': status === GameResult.Lose
+               'bg-gradient-to-br from-amber-300/30 via-yellow-400/20 to-amber-600/30 border-amber-400/70 shadow-amber-500/30 animate-trophy-impact': isSpectator || status === GameResult.Win,
+               'bg-gradient-to-br from-rose-500/20 via-red-950/20 to-purple-950/20 border-rose-500/40 shadow-rose-950/40 animate-shield-impact': !isSpectator && status === GameResult.Lose
              }">
-          <span>{{ status === GameResult.Win ? (isNewRecord ? '👑' : '🏆') : (isPkMatch ? '⚔️' : '🛡️') }}</span>
+          <span>{{ isSpectator ? '🏆' : (status === GameResult.Win ? (isNewRecord ? '👑' : '🏆') : (isPkMatch ? '⚔️' : '🛡️')) }}</span>
           
-          @if (status === GameResult.Win) {
+          @if (isSpectator) {
+            <span class="absolute -bottom-2.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-slate-950 shadow-md border border-emerald-200/60">
+              MATCH ENDED
+            </span>
+          } @else if (status === GameResult.Win) {
             <span class="absolute -top-1 -right-1 text-sm animate-bounce">✨</span>
             <span class="absolute -bottom-2.5 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-md border border-yellow-200/60">
               {{ isNewRecord ? 'RECORD' : (isPkMatch ? 'VICTORY' : 'CLEAR') }}
@@ -126,20 +130,20 @@
 
         <h2 class="text-2xl sm:text-3xl md:text-4xl font-black mb-1.5 tracking-tight"
             [ngClass]="{
-              'bg-gradient-to-r from-amber-300 via-yellow-100 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(245,158,11,0.5)]': status === GameResult.Win,
-              'bg-gradient-to-r from-rose-400 via-red-300 to-rose-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(244,63,94,0.4)]': status === GameResult.Lose
+              'bg-gradient-to-r from-amber-300 via-yellow-100 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_2px_12px_rgba(245,158,11,0.5)]': isSpectator || status === GameResult.Win,
+              'bg-gradient-to-r from-rose-400 via-red-300 to-rose-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(244,63,94,0.4)]': !isSpectator && status === GameResult.Lose
             }">
           {{ title }}
         </h2>
 
         <p class="text-[var(--color-text-secondary)] text-xs sm:text-sm font-medium max-w-md leading-relaxed">
-          {{ subtitle || (status === GameResult.Win
+          {{ subtitle || (isSpectator ? '本场对决已圆满结束' : (status === GameResult.Win
             ? (isPkMatch ? i18n.t('result.honor_title_pk_win')() : i18n.t('result.honor_title_win')())
-            : (isPkMatch ? i18n.t('result.honor_title_pk_lose')() : i18n.t('result.honor_title_lose')())) }}
+            : (isPkMatch ? i18n.t('result.honor_title_pk_lose')() : i18n.t('result.honor_title_lose')()))) }}
         </p>
 
         <!-- Dopamine Defeat Near-Miss Hook -->
-        @if (status === GameResult.Lose) {
+        @if (!isSpectator && status === GameResult.Lose) {
           <div class="w-full max-w-sm mt-3 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/15 via-amber-500/15 to-rose-500/15 border border-rose-500/30 flex items-center justify-between text-xs animate-pulse">
             <span class="flex items-center gap-1.5 font-bold text-rose-300">
               <span class="text-sm">⚡</span>
@@ -543,6 +547,13 @@
               class="w-full py-2.5 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] hover:bg-[var(--color-bg-card)] text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-amber-400 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer shadow-sm">
               <span>👁️</span>
               <span>{{ i18n.t('game.spectate_opponent')() }}</span>
+            </button>
+          } @else if (isSpectator) {
+            <!-- Spectator: Clean Exit / Return to Arena Button -->
+            <button (click)="handleLeave()"
+              class="w-full py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-xl shadow-emerald-500/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group cursor-pointer">
+              <span>🚪</span>
+              <span>{{ i18n.t('game.exit_spectate_to_lobby')() || '退出观战 (返回大厅)' }}</span>
             </button>
           } @else if (status === GameResult.Lose) {
             <!-- Defeat: Passionate High-Voltage Revenge Button -->

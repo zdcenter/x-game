@@ -595,7 +595,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
     }
 
     // 仅在明确认输或非对战进行状态时才清理重连凭证；暂回大厅时保留凭证供断线秒重连
-    const isPlaying = this.isPlaying() || this.status() === GameStatus.Playing;
+    const isPlayingOrStarting = this.isPlaying() || this.status() === GameStatus.Playing || this.status() === GameStatus.Starting;
     if (forfeit) {
       const rId = this.roomId();
       if (rId && typeof sessionStorage !== 'undefined') {
@@ -608,7 +608,7 @@ export abstract class BaseGameStore implements GameStoreInterface {
         } catch (e) {}
       }
     }
-    if (forfeit || !isPlaying) {
+    if (forfeit || !isPlayingOrStarting) {
       if (typeof sessionStorage !== 'undefined' && this.gameId) {
         const prefix = `${this.gameId}_reconnect`;
         const room = sessionStorage.getItem(`${prefix}_room`);

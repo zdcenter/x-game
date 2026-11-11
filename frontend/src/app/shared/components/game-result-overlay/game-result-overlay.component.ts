@@ -218,6 +218,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   /** PK Match Specific Inputs */
   @Input() isPkMatch: boolean = false;
   @Input() isWalkover: boolean = false;
+  @Input() isSpectator: boolean = false;
   @Input() isHost: boolean = false;
   @Input() opponentInfo?: { nickname?: string; avatar?: string; score?: number | string; isHost?: boolean; id?: string; playerId?: string };
   @Input() pkSeriesScore?: { me: number; opponent: number };

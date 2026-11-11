@@ -501,7 +501,22 @@ func (r *Room) AddClient(client *Client, password string) error {
 		r.Contestants[r.Host] = true
 	}
 
-	isReturningContestant := client.ID == r.Host || (r.Engine != nil && r.Engine.HasPlayer(client.ID)) || r.Contestants[client.ID]
+	isReturningContestant := false
+	if strings.EqualFold(client.ID, r.Host) {
+		client.ID = r.Host
+		isReturningContestant = true
+	} else {
+		for cid := range r.Contestants {
+			if strings.EqualFold(cid, client.ID) {
+				client.ID = cid
+				isReturningContestant = true
+				break
+			}
+		}
+	}
+	if !isReturningContestant && r.Engine != nil && r.Engine.HasPlayer(client.ID) {
+		isReturningContestant = true
+	}
 
 	// Check password (host and returning contestants skip password check)
 	if !isReturningContestant && r.Password != "" && client.ID != r.Host && password != r.Password {
@@ -562,7 +577,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 
 	r.Clients[client.ID] = client
 
-	if !client.IsSpectator && (st == engine.StateWaiting || st == engine.StateFinished || r.Engine.HasPlayer(client.ID) || isReturningContestant) {
+	if !client.IsSpectator && (st == engine.StateWaiting || st == engine.StateFinished || !r.Engine.HasPlayer(client.ID)) {
 		r.Engine.AddPlayer(client.ID)
 	}
 
@@ -702,8 +717,8 @@ func (r *Room) RemoveClient(client *Client) {
 	r.mu.Unlock()
 	go Lobby.UpdatePlayerPresence(clientID, "idle", "", "", "", "", "")
 
-	// 核心分支 3：对局激战中（Playing）玩家断线，启动 30 秒断网保护与认输定时器
-	if gameStatus == engine.StatePlaying && !client.IsSpectator {
+	// 核心分支 3：对局激战中（Playing 或 Starting）玩家断线，启动 30 秒断网保护与认输定时器
+	if (gameStatus == engine.StatePlaying || gameStatus == engine.StateStarting) && !client.IsSpectator {
 		disMsg := []byte(fmt.Sprintf(`{"type": "%s", "playerId": "%s", "gracePeriod": 30}`, domain.EventPlayerDisconnected, clientID))
 		r.mu.Lock()
 		for _, c := range r.Clients {
@@ -745,7 +760,7 @@ func (r *Room) RemoveClient(client *Client) {
 				}
 
 				// 超时未归：判负认输并裁决不战而胜
-				if room.Engine != nil && room.Engine.GetStatus() == engine.StatePlaying {
+				if room.Engine != nil && (room.Engine.GetStatus() == engine.StatePlaying || room.Engine.GetStatus() == engine.StateStarting) {
 					log.Printf("Contestant %s forfeited by disconnect timeout in room %s", pID, rID)
 					room.Engine.HandleAction(pID, string(domain.ActionForfeit), []byte(`{"action":"forfeit"}`))
 					delete(room.Contestants, pID)

@@ -713,6 +713,7 @@ import { JuiceService } from '../../../core/services/juice.service';
       [stats]="overlayStats || []"
       [isPkMatch]="effectiveRoomMode() !== GameMode.Single"
       [isWalkover]="store?.isWalkoverVictory?.() ?? false"
+      [isSpectator]="isSpectatorActive()"
       [opponentInfo]="resultOpponent()"
       [pkSeriesScore]="resultPkSeriesScore()"
       [pkRoundFormat]="resultPkRoundFormat()"
@@ -720,9 +721,9 @@ import { JuiceService } from '../../../core/services/juice.service';
       [isNewRecord]="resultIsNewRecord()"
       [replayData]="effectiveReplayData()"
       [showLeave]="true"
-      [showRestart]="effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId()"
-      [showDismiss]="effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
-      [showRevive]="effectiveShowRevive()"
+      [showRestart]="!isSpectatorActive() && (effectiveRoomMode() === GameMode.Single || effectiveHostId() === storePlayerId())"
+      [showDismiss]="!isSpectatorActive() && effectiveRoomMode() !== GameMode.Single && effectiveHostId() === storePlayerId()"
+      [showRevive]="!isSpectatorActive() && effectiveShowRevive()"
       [showNextLevel]="showNextLevel"
       (soloPractice)="onSoloPractice()"
       (waitOpponent)="onWaitOpponent()"
@@ -1123,7 +1124,12 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     const defeat = this.isDefeatSignal();
     if (defeat !== undefined) return defeat ? 'lose' : 'win';
 
-    // 2. 统一遵从平台契约 store.isVictory()！
+    // 2. 旁观者一律展示庆祝胜负已分主题，而非挫败感红幕
+    if (this.isSpectatorActive()) {
+      return 'win';
+    }
+
+    // 3. 统一遵从平台契约 store.isVictory()！
     if (this.store) {
       return this.store.isVictory() ? 'win' : 'lose';
     }
@@ -1173,6 +1179,15 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (this.customResultSubtitle) return this.customResultSubtitle;
     if (this.store?.isWalkoverVictory?.()) {
       return this.i18n.t('game.walkover_win_subtitle')() || '其他对手已全部退出，恭喜您赢得本场对决胜利！';
+    }
+    if (this.isSpectatorActive()) {
+      const isWalkover = (this.wsService as any)?.walkoverVictoryEvent?.() !== null;
+      if (isWalkover) {
+        return this.i18n.t('game.spectator_walkover_subtitle')() || '选手主动认输离场，恭喜获胜选手！';
+      }
+      const winners = (this.store as any)?.winners?.() || [];
+      const winnerName = winners.length > 0 ? winners[0] : '';
+      return winnerName ? `恭喜选手【${winnerName}】获得对决胜利！` : '本场巅峰对决已结束！';
     }
     return '';
   });
