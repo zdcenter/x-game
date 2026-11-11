@@ -587,6 +587,17 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     }
   }
 
+  canJoinRoom(room: any): boolean {
+    if (!room) return false;
+    // 游戏中或正在倒计时，外部玩家仅可实时观战
+    if (room.status === 'playing' || room.status === 'starting') {
+      return false;
+    }
+    const max = (room.game === 'gomoku' || room.game === 'idiom') ? 2 : (room.maxPlayers || 8);
+    const count = typeof room.players === 'number' ? room.players : (room.player_count ?? (Array.isArray(room.players) ? room.players.length : 1));
+    return count < max;
+  }
+
   playSameGame(player: any) {
     if (!player.game) return;
     const lang = this.router.url.split('/')[1] || 'zh';

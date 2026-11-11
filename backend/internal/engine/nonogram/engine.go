@@ -267,6 +267,27 @@ func (e *NonogramEngine) HandleAction(playerID string, action string, payload []
 	return e.State, nil
 }
 
+func (e *NonogramEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winner = ""
+	e.Winners = nil
+	for _, p := range e.Players {
+		p.Progress = 0
+		p.Score = 0
+		p.Errors = 0
+		p.FreezeUntil = 0
+		if len(p.Grid) > 0 {
+			for r := range p.Grid {
+				for c := range p.Grid[r] {
+					p.Grid[r][c] = 0
+				}
+			}
+		}
+	}
+}
+
 func (e *NonogramEngine) CheckGameOver() (bool, []string) {
 	e.Mu.RLock()
 	defer e.Mu.RUnlock()

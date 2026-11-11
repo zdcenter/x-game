@@ -611,6 +611,17 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this._pkStatSubmitted = false;
     this.lastStatResult.set(null);
 
+    // Clear forfeited_rooms entry if re-joining room as contestant for a new round
+    if (!isSpectator && typeof sessionStorage !== 'undefined' && roomId) {
+      try {
+        const list = JSON.parse(sessionStorage.getItem('forfeited_rooms') || '[]');
+        if (Array.isArray(list) && list.includes(roomId)) {
+          const updated = list.filter((id: string) => id !== roomId);
+          sessionStorage.setItem('forfeited_rooms', JSON.stringify(updated));
+        }
+      } catch (e) {}
+    }
+
     // Auto-save reconnect info to sessionStorage for refresh protection
     if (typeof sessionStorage !== 'undefined' && this.gameId && mode !== GameMode.Single && roomId) {
       const prefix = `${this.gameId}_reconnect`;

@@ -570,6 +570,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 
 	if !client.IsSpectator {
 		r.Contestants[client.ID] = true
+		client.IsReady = true // Auto-ready contestants upon entering room
 	}
 
 	// Preserve IsReady state on reconnect
@@ -1002,7 +1003,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			}
 			senderClient.IsSpectator = false
-			senderClient.IsReady = false
+			senderClient.IsReady = true
+			r.Contestants[clientID] = true
 			if r.Host == "" {
 				r.Host = clientID
 			}
@@ -1114,11 +1116,18 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 			}
 			r.Engine.HandleAction(r.Host, string(domain.ActionStartGame), []byte(`{"action":"start"}`))
 		} else {
-			for _, c := range r.Clients {
-				c.IsReady = false
+			// Room has fewer than 2 players (waiting for new opponents)
+			r.Engine.ResetToWaiting()
+			r.Contestants = make(map[string]bool)
+			for pid, c := range r.Clients {
+				if !c.IsSpectator {
+					r.Contestants[pid] = true
+					c.IsReady = true
+				}
 			}
 		}
 		r.BroadcastStateLocked()
+		go Lobby.BroadcastLobbyUpdate()
 		return
 	}
 
@@ -1559,12 +1568,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				return
 			}
 			for _, c := range r.Clients {
-				if !c.IsSpectator && c.ID != r.Host && !c.IsReady {
-					log.Printf("Cannot start game: player %s is not ready", c.ID)
-					if hostClient, ok := r.Clients[clientID]; ok {
-						hostClient.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type":"start_rejected","reason":"player_not_ready","player":"%s"}`, c.ID)))
-					}
-					return
+				if !c.IsSpectator {
+					c.IsReady = true
 				}
 			}
 		}

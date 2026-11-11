@@ -2313,5 +2313,6 @@
   "game.walkover_win_subtitle": "All opponents have left the match. Congratulations on your victory!",
   "game.walkover_solo_practice": "Continue as Solo Practice",
   "game.walkover_wait_new_opponent": "Wait for Opponents",
+  "game.guest_auto_ready_tip": "Ready · Waiting for host to start...",
   "game.walkover_toast": "All opponents have left. You won the match!"
 }

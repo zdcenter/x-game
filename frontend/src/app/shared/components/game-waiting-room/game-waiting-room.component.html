@@ -267,9 +267,9 @@
                 <!-- Challenger Pod -->
                 @if (sortedPlayers.length > 1) {
                   <div class="relative flex-1 flex flex-col items-center justify-center p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all duration-300 shadow-sm bg-[var(--color-bg-card)] min-h-[125px] sm:min-h-[170px]"
-                       [class.border-emerald-500]="readyPlayers[sortedPlayers[1].id]"
-                       [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="readyPlayers[sortedPlayers[1].id]"
-                       [class.border-amber-500/40]="!readyPlayers[sortedPlayers[1].id]">
+                       [class.border-emerald-500]="isPlayerReady(sortedPlayers[1].id)"
+                       [class.shadow-[0_0_16px_rgba(16,185,129,0.12)]]="isPlayerReady(sortedPlayers[1].id)"
+                       [class.border-amber-500/40]="!isPlayerReady(sortedPlayers[1].id)">
                     
                     @if (currentUserId === hostId && sortedPlayers[1].id !== hostId) {
                       <button (click)="kick.emit(sortedPlayers[1].id)"
@@ -284,7 +284,7 @@
                            [style.background]="getPlayerGradient(1)">
                         {{ sortedPlayers[1].id?.charAt(0)?.toUpperCase() }}
                       </div>
-                      @if (readyPlayers[sortedPlayers[1].id]) {
+                      @if (isPlayerReady(sortedPlayers[1].id)) {
                         <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full border-2 border-[var(--color-bg-card)] shadow-md flex items-center justify-center text-white text-[10px] sm:text-xs font-black animate-scale-in">✓</div>
                       } @else {
                         <div class="absolute -bottom-1 -left-1 w-4.5 h-4.5 sm:w-6 sm:h-6 bg-amber-500/20 border-2 border-[var(--color-bg-card)] flex items-center justify-center rounded-full">
@@ -298,12 +298,12 @@
                     </span>
 
                     <span class="mt-1 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
-                          [class.text-emerald-400]="readyPlayers[sortedPlayers[1].id]"
-                          [class.text-amber-400]="!readyPlayers[sortedPlayers[1].id]">
+                          [class.text-emerald-400]="isPlayerReady(sortedPlayers[1].id)"
+                          [class.text-amber-400]="!isPlayerReady(sortedPlayers[1].id)">
                       <span class="w-1.5 h-1.5 rounded-full"
-                            [class.bg-emerald-400]="readyPlayers[sortedPlayers[1].id]"
-                            [class.bg-amber-400]="!readyPlayers[sortedPlayers[1].id]"></span>
-                      <span>{{ readyPlayers[sortedPlayers[1].id] ? (i18n.t('game.ready')() || '已准备') : (i18n.t('game.waiting_challenger')() || '准备中...') }}</span>
+                            [class.bg-emerald-400]="isPlayerReady(sortedPlayers[1].id)"
+                            [class.bg-amber-400]="!isPlayerReady(sortedPlayers[1].id)"></span>
+                      <span>{{ isPlayerReady(sortedPlayers[1].id) ? (i18n.t('game.ready')() || '已就绪') : (i18n.t('game.waiting_challenger')() || '准备中...') }}</span>
                     </span>
 
                     <div class="flex items-center gap-1 mt-1.5 flex-wrap justify-center">
@@ -707,12 +707,14 @@
                       <span>🚪</span>
                       <span>{{ i18n.t('game.leave_spectate')() || '退出观战' }}</span>
                     </button>
-                  } @else if (readyPlayers[currentUserId]) {
-                    <button (click)="cancelReady.emit(); audioService.playClick()"
-                            class="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black text-sm uppercase tracking-wide shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
-                      <span>✕</span>
-                      <span>{{ i18n.t('game.cancel_ready')() || '取消准备' }}</span>
-                    </button>
+                  } @else if (isPlayerReady(currentUserId)) {
+                    <div class="w-full py-3.5 px-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold text-sm flex items-center justify-center gap-2">
+                      <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <span>{{ i18n.t('game.guest_auto_ready_tip')() || '已就绪 · 等待房主开始游戏...' }}</span>
+                    </div>
                   } @else {
                     <button (click)="ready.emit(); audioService.playClick()"
                             class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-sm uppercase tracking-wide hover:brightness-110 shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98] animate-pulse flex items-center justify-center gap-2 cursor-pointer">

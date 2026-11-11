@@ -47,6 +47,9 @@ type GameEngine interface {
 
 	// ForceFinish forces the engine state to StateFinished
 	ForceFinish()
+
+	// ResetToWaiting forcefully resets the engine state to StateWaiting
+	ResetToWaiting()
 }
 
 // EngineFactory is a function that creates a new instance of a GameEngine

@@ -2313,5 +2313,6 @@
   "game.walkover_win_subtitle": "其他对手已全部退出，恭喜您赢得本场对决胜利！",
   "game.walkover_solo_practice": "转为单人练习",
   "game.walkover_wait_new_opponent": "等候新对手",
+  "game.guest_auto_ready_tip": "已就绪 · 等待房主开始游戏...",
   "game.walkover_toast": "对手已全部退出，您赢得了本场胜利！"
 }

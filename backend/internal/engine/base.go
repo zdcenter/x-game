@@ -116,6 +116,13 @@ func (b *BaseEngine) ForceFinish() {
 	b.State = StateFinished
 }
 
+// ResetToWaiting forcefully resets the engine state to StateWaiting
+func (b *BaseEngine) ResetToWaiting() {
+	b.Mu.Lock()
+	defer b.Mu.Unlock()
+	b.State = StateWaiting
+}
+
 // SetBroadcaster allows the engine to trigger a websocket broadcast asynchronously
 func (b *BaseEngine) SetBroadcaster(broadcaster func()) {
 	b.broadcast = broadcaster

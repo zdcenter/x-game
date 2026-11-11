@@ -275,9 +275,15 @@ export class GameWaitingRoomComponent implements OnInit, OnDestroy {
 
   get allGuestsReady(): boolean {
     if (!this.players) return false;
-    const guests = this.players.filter(p => p.id !== this.hostId);
+    const guests = this.players.filter(p => p.id !== this.hostId && !p.isSpectator);
     if (guests.length === 0 && this.mode !== GameMode.Single) return false; // Must have at least 1 guest in PK
-    return guests.every(g => this.readyPlayers[g.id]);
+    return guests.every(g => this.isPlayerReady(g.id));
+  }
+
+  isPlayerReady(playerId: string): boolean {
+    if (!playerId) return false;
+    if (playerId === this.hostId) return true;
+    return this.readyPlayers[playerId] !== false;
   }
 
   getModeName(modeId: string): string {
