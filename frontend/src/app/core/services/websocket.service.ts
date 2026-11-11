@@ -318,6 +318,13 @@ export class WebSocketService {
           msg.state.forfeitedPlayer = msg.forfeitedPlayer;
         }
         this.gameState.set(msg.state);
+        const curStatus = (msg.state?.status ?? msg.state?.state?.status ?? msg.status)?.toLowerCase();
+        if (curStatus === 'waiting' || curStatus === 'starting' || curStatus === 'playing') {
+          if (this.walkoverVictoryEvent()) this.walkoverVictoryEvent.set(null);
+          if (this.playerForfeitedEvent()) this.playerForfeitedEvent.set(null);
+          if (this.playerLeftEvent()) this.playerLeftEvent.set(null);
+          if (this.playerDisconnectedEvent()) this.playerDisconnectedEvent.set(null);
+        }
       } else if (msg.type === S2CEvent.RoomDismissed || (msg.type === S2CEvent.Error && (msg.message === WSErrorCode.RoomDismissed || (msg.error && msg.error.includes(WSErrorCode.RoomDismissed))))) {
         this.gameDisconnectIntentional = true;
         this.roomDismissedEvent.update(v => v + 1);

@@ -99,4 +99,22 @@ func TestRematchAfterForfeitAndWaitingForNewOpponent(t *testing.T) {
 	if room.Engine.GetStatus() != engine.StateStarting && room.Engine.GetStatus() != engine.StatePlaying {
 		t.Fatalf("round 2 should start successfully, got %v", room.Engine.GetStatus())
 	}
+	if room.Winner != "" {
+		t.Fatalf("round 2 winner should be empty, got %s", room.Winner)
+	}
+	if len(room.Winners) != 0 {
+		t.Fatalf("round 2 winners should be empty, got %v", room.Winners)
+	}
+	if room.ForfeitedPlayer != "" {
+		t.Fatalf("round 2 forfeited player should be empty, got %s", room.ForfeitedPlayer)
+	}
+	if room.ForfeitedContestants != nil && room.ForfeitedContestants["test"] {
+		t.Fatalf("round 2 test client should not be in ForfeitedContestants")
+	}
+
+	// Player moves in round 2 (e.g. playing chess/sliding)
+	room.HandleMessage("test", []byte(`{"action":"move", "tile": 1}`))
+	if room.Winner != "" {
+		t.Fatalf("move should not trigger false walkover/winner, got %s", room.Winner)
+	}
 }

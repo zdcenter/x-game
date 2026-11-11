@@ -571,6 +571,19 @@ func (r *Room) AddClient(client *Client, password string) error {
 	if !client.IsSpectator {
 		r.Contestants[client.ID] = true
 		client.IsReady = true // Auto-ready contestants upon entering room
+		if r.ForfeitedContestants != nil {
+			delete(r.ForfeitedContestants, client.ID)
+		}
+		if r.ForfeitedPlayer == client.ID {
+			r.ForfeitedPlayer = ""
+		}
+	}
+
+	if st == engine.StateWaiting {
+		r.Winner = ""
+		r.Winners = nil
+		r.ForfeitedPlayer = ""
+		r.ForfeitedContestants = make(map[string]bool)
 	}
 
 	// Preserve IsReady state on reconnect
@@ -1573,6 +1586,8 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 			}
 		}
+		r.Winner = ""
+		r.Winners = nil
 		r.ForfeitedContestants = make(map[string]bool)
 		r.ForfeitedPlayer = ""
 	}
@@ -1609,13 +1624,25 @@ func (r *Room) BroadcastStateLocked() {
 		}
 	}
 
-	if len(r.Winners) > 0 {
-		stateMap["winners"] = r.Winners
-		stateMap["winner"] = r.Winner
-		stateMap["status"] = "finished"
+	engineStatus := "waiting"
+	if r.Engine != nil {
+		engineStatus = string(r.Engine.GetStatus())
 	}
-	if r.ForfeitedPlayer != "" {
-		stateMap["forfeitedPlayer"] = r.ForfeitedPlayer
+
+	if engineStatus == "finished" {
+		if len(r.Winners) > 0 {
+			stateMap["winners"] = r.Winners
+			stateMap["winner"] = r.Winner
+		}
+		if r.ForfeitedPlayer != "" {
+			stateMap["forfeitedPlayer"] = r.ForfeitedPlayer
+		}
+		stateMap["status"] = "finished"
+	} else {
+		stateMap["status"] = engineStatus
+		delete(stateMap, "forfeitedPlayer")
+		delete(stateMap, "winner")
+		delete(stateMap, "winners")
 	}
 
 	// Generic extraction of engine players map (supporting map[string]struct, map[string]*Player, struct, etc.)
@@ -1664,19 +1691,16 @@ func (r *Room) BroadcastStateLocked() {
 		"target":       r.Target,
 		"hasPassword":  r.Password != "",
 	}
-	currentStatus := "waiting"
-	if r.Engine != nil {
-		currentStatus = string(r.Engine.GetStatus())
+	if engineStatus == "finished" {
+		if len(r.Winners) > 0 {
+			payloadMap["winners"] = r.Winners
+			payloadMap["winner"] = r.Winner
+		}
+		if r.ForfeitedPlayer != "" {
+			payloadMap["forfeitedPlayer"] = r.ForfeitedPlayer
+		}
 	}
-	if len(r.Winners) > 0 {
-		currentStatus = "finished"
-		payloadMap["winners"] = r.Winners
-		payloadMap["winner"] = r.Winner
-	}
-	if r.ForfeitedPlayer != "" {
-		payloadMap["forfeitedPlayer"] = r.ForfeitedPlayer
-	}
-	payloadMap["status"] = currentStatus
+	payloadMap["status"] = engineStatus
 
 	data, err := json.Marshal(payloadMap)
 	if err != nil {

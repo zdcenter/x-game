@@ -147,8 +147,12 @@ export abstract class BaseGameStore implements GameStoreInterface {
     // 无论是单机还是联机，当状态重置为 Waiting（等待室/重开）或 Starting（倒计时）时，自动触发重置
     effect(() => {
       const cur = this.status();
-      if (cur === GameStatus.Waiting) {
-        untracked(() => this.resetLocalGameState());
+      if (cur === GameStatus.Waiting || cur === GameStatus.Starting) {
+        untracked(() => {
+          this.isWalkoverVictory.set(false);
+          this.forfeitedPlayer.set(null);
+          this.resetLocalGameState();
+        });
       }
     });
 
@@ -819,6 +823,9 @@ export abstract class BaseGameStore implements GameStoreInterface {
     this.isWalkoverVictory.set(false);
     this.forfeitedPlayer.set(null);
     this.hintsUsed.set(0);
+    if (this.ws.walkoverVictoryEvent()) this.ws.walkoverVictoryEvent.set(null);
+    if (this.ws.playerForfeitedEvent()) this.ws.playerForfeitedEvent.set(null);
+    if (this.ws.playerLeftEvent()) this.ws.playerLeftEvent.set(null);
     this.onResetLocalGameState();
   }
 
