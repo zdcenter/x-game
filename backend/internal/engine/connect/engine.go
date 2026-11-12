@@ -20,6 +20,7 @@ type SpeedEngine struct {
 	engine.BaseEngine
 	Players    map[string]*SpeedPlayer
 	Difficulty string
+	Host       string
 	Puzzle     string // The puzzle ID or JSON payload
 	Winners    []string
 }
@@ -29,25 +30,61 @@ func init() {
 	engine.Register("connect_speed", func() engine.GameEngine { return &SpeedEngine{} })
 }
 
-func (e *SpeedEngine) fetchPuzzle() {
-	var puzzles []domain.ConnectPuzzle
-	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
-		// Fallback puzzle
-		e.Puzzle = `{"width":5,"height":5,"endpoints":[{"color":1,"p1":[0,0],"p2":[4,4]}]}`
-	} else {
-		p := puzzles[rand.Intn(len(puzzles))]
-		puzzleData := map[string]interface{}{
-			"id":        p.ID,
-			"width":     p.Width,
-			"height":    p.Height,
-			"endpoints": json.RawMessage(p.Endpoints),
-		}
-		if p.Blocks != "" && p.Blocks != "[]" {
-			puzzleData["blocks"] = json.RawMessage(p.Blocks)
-		}
-		b, _ := json.Marshal(puzzleData)
-		e.Puzzle = string(b)
+func (e *SpeedEngine) setPuzzle(p domain.ConnectPuzzle) {
+	puzzleData := map[string]interface{}{
+		"id":        p.ID,
+		"width":     p.Width,
+		"height":    p.Height,
+		"endpoints": json.RawMessage(p.Endpoints),
 	}
+	if p.Blocks != "" && p.Blocks != "[]" {
+		puzzleData["blocks"] = json.RawMessage(p.Blocks)
+	}
+	b, _ := json.Marshal(puzzleData)
+	e.Puzzle = string(b)
+}
+
+func (e *SpeedEngine) fetchPuzzle() {
+	if db.DB != nil {
+		if e.Host != "" {
+			var hostUser domain.User
+			if err := db.DB.Where("LOWER(username) = LOWER(?)", e.Host).First(&hostUser).Error; err == nil && hostUser.ID > 0 {
+				var unplayedPuzzles []domain.ConnectPuzzle
+				err := db.DB.Where(
+					"difficulty = ? AND id NOT IN (SELECT puzzle_id FROM gm_user_connect_progresses WHERE user_id = ? AND status = ?)",
+					e.Difficulty, hostUser.ID, domain.ConnectStatusFinished,
+				).Find(&unplayedPuzzles).Error
+				if err == nil && len(unplayedPuzzles) > 0 {
+					p := unplayedPuzzles[rand.Intn(len(unplayedPuzzles))]
+					e.setPuzzle(p)
+					return
+				}
+			}
+		}
+
+		var puzzles []domain.ConnectPuzzle
+		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err == nil && len(puzzles) > 0 {
+			p := puzzles[rand.Intn(len(puzzles))]
+			e.setPuzzle(p)
+			return
+		}
+	}
+
+	// Fallback puzzle
+	e.Puzzle = `{"width":5,"height":5,"endpoints":[{"color":1,"p1":[0,0],"p2":[4,4]}]}`
+}
+
+func (e *SpeedEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	for _, p := range e.Players {
+		p.Progress = 0
+		p.Finished = false
+		p.Paths = ""
+	}
+	e.fetchPuzzle()
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
@@ -60,6 +97,7 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
+	e.Host = opts.Host
 
 	e.fetchPuzzle()
 

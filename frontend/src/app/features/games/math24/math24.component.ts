@@ -46,8 +46,6 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   private http = inject(HttpClient);
   private pendingDailyChallengeId = signal<string | null>(null);
   view = signal<'lobby' | 'room' | 'play'>('lobby');
-  startingCountdown = signal(3);
-  private countdownInterval: any;
 
   readonly opponentsPkStats = computed<PkPlayerStats[]>(() => {
     return Object.entries(this.store.players())
@@ -103,21 +101,17 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
         if (status === GameStatus.Starting) {
           untracked(() => {
             this.view.set('play');
-            this.startingCountdown.set(3);
-            if (this.countdownInterval) clearInterval(this.countdownInterval);
-            this.countdownInterval = setInterval(() => {
-              this.startingCountdown.update(v => Math.max(1, v - 1));
-            }, 1000);
+            this.gameTimer.startCountdown();
           });
         } else if (status === GameStatus.Playing) {
           untracked(() => {
             this.view.set('play');
-            if (this.countdownInterval) clearInterval(this.countdownInterval);
+            this.gameTimer.stopCountdown();
           });
         } else if (status === GameStatus.Waiting) {
           untracked(() => {
             this.view.set('room');
-            if (this.countdownInterval) clearInterval(this.countdownInterval);
+            this.gameTimer.stopCountdown();
           });
         }
       }
@@ -170,8 +164,8 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
   }
 
   override ngOnDestroy() {
+    this.gameTimer.stopCountdown();
     super.ngOnDestroy();
-    if (this.countdownInterval) clearInterval(this.countdownInterval);
     this.store.leaveRoom();
   }
 
@@ -198,14 +192,8 @@ export class Math24Component extends BaseGameComponent implements OnInit, OnDest
       super.goBack();
     } else if (this.view() === 'play' && this.store.currentRoomMode() === GameMode.Single) {
       this.goToLobby();
-    } else if (this.view() === 'room') {
-      this.store.leaveRoom();
-      this.roomLifecycle.clearReconnectInfo();
-      this.view.set('lobby');
     } else {
-      this.store.leaveRoom();
-      this.roomLifecycle.clearReconnectInfo();
-      this.view.set('lobby');
+      super.goBack();
     }
   }
 

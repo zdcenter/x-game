@@ -265,6 +265,8 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   override goBack(): void {
     if (this.view() === 'lobby' && this.store.currentRoomMode() === GameMode.Single) {
       super.goBack();
+    } else if (this.store.currentRoomMode() !== GameMode.Single) {
+      super.goBack();
     } else {
       this.store.leaveRoom();
       this.view.set('lobby');

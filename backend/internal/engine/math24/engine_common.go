@@ -15,30 +15,68 @@ type Math24Player struct {
 	FreezeUntil int64  `json:"freezeUntil"` // Timestamp in ms
 }
 
-// getRandomPuzzles fetches N random puzzles of a given difficulty
-func getRandomPuzzles(difficulty string, n int) []domain.Math24Puzzle {
-	var puzzles []domain.Math24Puzzle
+// getRandomPuzzles fetches N random puzzles of a given difficulty, prioritizing host unplayed puzzles
+func getRandomPuzzles(difficulty string, n int, hostUsername string) []domain.Math24Puzzle {
 	if difficulty == "" {
 		difficulty = string(domain.Math24DifficultyEasy)
 	}
-	db.DB.Where("difficulty = ?", difficulty).Find(&puzzles)
 
-	// Shuffle and pick N
-	if len(puzzles) == 0 {
-		// Fallback puzzle
-		return []domain.Math24Puzzle{
-			{ID: "fallback", Difficulty: domain.Math24DifficultyEasy, Cards: "1,2,3,4"},
+	if db.DB != nil {
+		if hostUsername != "" {
+			var hostUser domain.User
+			if err := db.DB.Where("LOWER(username) = LOWER(?)", hostUsername).First(&hostUser).Error; err == nil && hostUser.ID > 0 {
+				var unplayed []domain.Math24Puzzle
+				err := db.DB.Where(
+					"difficulty = ? AND id NOT IN (SELECT puzzle_id FROM gm_user_math24_progresses WHERE user_id = ? AND status = ?)",
+					difficulty, hostUser.ID, "finished",
+				).Find(&unplayed).Error
+				if err == nil && len(unplayed) >= n {
+					rand.Shuffle(len(unplayed), func(i, j int) {
+						unplayed[i], unplayed[j] = unplayed[j], unplayed[i]
+					})
+					return unplayed[:n]
+				} else if err == nil && len(unplayed) > 0 {
+					var all []domain.Math24Puzzle
+					db.DB.Where("difficulty = ?", difficulty).Find(&all)
+					unplayedMap := make(map[string]bool)
+					for _, u := range unplayed {
+						unplayedMap[u.ID] = true
+					}
+					var rest []domain.Math24Puzzle
+					for _, a := range all {
+						if !unplayedMap[a.ID] {
+							rest = append(rest, a)
+						}
+					}
+					rand.Shuffle(len(rest), func(i, j int) {
+						rest[i], rest[j] = rest[j], rest[i]
+					})
+					combined := append(unplayed, rest...)
+					if len(combined) > n {
+						return combined[:n]
+					}
+					return combined
+				}
+			}
+		}
+
+		var puzzles []domain.Math24Puzzle
+		db.DB.Where("difficulty = ?", difficulty).Find(&puzzles)
+		if len(puzzles) > 0 {
+			rand.Shuffle(len(puzzles), func(i, j int) {
+				puzzles[i], puzzles[j] = puzzles[j], puzzles[i]
+			})
+			if len(puzzles) > n {
+				return puzzles[:n]
+			}
+			return puzzles
 		}
 	}
 
-	rand.Shuffle(len(puzzles), func(i, j int) {
-		puzzles[i], puzzles[j] = puzzles[j], puzzles[i]
-	})
-
-	if len(puzzles) > n {
-		return puzzles[:n]
+	// Fallback puzzle
+	return []domain.Math24Puzzle{
+		{ID: "fallback", Difficulty: domain.Math24DifficultyEasy, Cards: "1,2,3,4"},
 	}
-	return puzzles
 }
 
 // evalExpression evaluates a 24-point expression (very simplified for now).

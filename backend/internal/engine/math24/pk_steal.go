@@ -12,6 +12,7 @@ type PKStealEngine struct {
 	Players       map[string]*Math24Player `json:"players"`
 	CurrentPuzzle *domain.Math24Puzzle     `json:"currentPuzzle"`
 	Difficulty    string                   `json:"difficulty"`
+	Host          string                   `json:"host,omitempty"`
 	Target        int                      `json:"target"`
 	Winners       []string                 `json:"winners"`
 }
@@ -26,6 +27,21 @@ func init() {
 	})
 }
 
+func (e *PKStealEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	puzzles := getRandomPuzzles(e.Difficulty, 1, e.Host)
+	if len(puzzles) > 0 {
+		e.CurrentPuzzle = &puzzles[0]
+	}
+	for _, p := range e.Players {
+		p.Score = 0
+		p.FreezeUntil = 0
+	}
+}
+
 func (e *PKStealEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
@@ -33,8 +49,9 @@ func (e *PKStealEngine) InitGame(options interface{}) error {
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
 	e.Target = opts.Target
+	e.Host = opts.Host
 
-	puzzles := getRandomPuzzles(e.Difficulty, 1)
+	puzzles := getRandomPuzzles(e.Difficulty, 1, e.Host)
 	if len(puzzles) > 0 {
 		e.CurrentPuzzle = &puzzles[0]
 	}
@@ -87,7 +104,7 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
-		puzzles := getRandomPuzzles(e.Difficulty, 1)
+		puzzles := getRandomPuzzles(e.Difficulty, 1, e.Host)
 		if len(puzzles) > 0 {
 			e.CurrentPuzzle = &puzzles[0]
 		}
@@ -116,7 +133,7 @@ func (e *PKStealEngine) HandleAction(playerID string, actionType string, payload
 		if solveData.IsCorrect {
 			p.Score++
 			// Move to next puzzle
-			puzzles := getRandomPuzzles(e.Difficulty, 1)
+			puzzles := getRandomPuzzles(e.Difficulty, 1, e.Host)
 			if len(puzzles) > 0 {
 				e.CurrentPuzzle = &puzzles[0]
 			}

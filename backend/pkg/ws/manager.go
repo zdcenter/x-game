@@ -1482,8 +1482,12 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 				r.Engine = eng
 
-				for _, c := range r.Clients {
-					c.IsReady = false
+				for id, c := range r.Clients {
+					if !c.IsSpectator && id != r.Host {
+						c.IsReady = true
+					} else {
+						c.IsReady = false
+					}
 				}
 
 				msg := []byte(fmt.Sprintf(`{"type": "%s", "game": "%s", "mode": "%s", "difficulty": "%s", "roomId": "%s", "host": "%s"}`, domain.EventRoomGameChanged, gameId, mode, diff, r.ID, r.Host))

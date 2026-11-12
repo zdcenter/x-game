@@ -1,5 +1,5 @@
 import { GameSpectatingOverlayComponent, SpectatingPlayerInfo } from '../../../shared/components/game-spectating-overlay/game-spectating-overlay.component';
-import { computed, Component, inject, OnInit, OnDestroy, HostListener, ViewChild, effect, signal } from '@angular/core';
+import { computed, Component, inject, OnInit, OnDestroy, HostListener, ViewChild, effect, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { Classic2048Store } from './store/classic2048.store';
@@ -175,6 +175,9 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
 
     effect(() => {
       const s = this.store.status();
+      if (s === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      }
       if (s === GameStatus.Playing) {
         if (this.store.localMoves() === 0 && this.store.localScore() === 0) {
           this.timeSeconds = 0;

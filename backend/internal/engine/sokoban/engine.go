@@ -29,6 +29,7 @@ type SokobanEngine struct {
 	engine.BaseEngine
 	Mode          string                  `json:"mode"`
 	Difficulty    string                  `json:"difficulty"`
+	Host          string                  `json:"host,omitempty"`
 	GlobalStartAt int64                   `json:"globalStartAt"`
 	Players       map[string]*PlayerState `json:"players"`
 	Winners       []string                `json:"winners"`
@@ -80,6 +81,56 @@ func copyBoard(board [][]string) [][]string {
 	return newBoard
 }
 
+func (e *SokobanEngine) pickPuzzle(hostUsername string) string {
+	if db.DB != nil {
+		if hostUsername != "" {
+			var hostUser domain.User
+			if err := db.DB.Where("LOWER(username) = LOWER(?)", hostUsername).First(&hostUser).Error; err == nil && hostUser.ID > 0 {
+				var unplayed []domain.SokobanPuzzle
+				err := db.DB.Where(
+					"difficulty = ? AND id NOT IN (SELECT puzzle_id FROM gm_user_sokoban_progresses WHERE user_id = ? AND status = ?)",
+					e.Difficulty, hostUser.ID, "finished",
+				).Find(&unplayed).Error
+				if err == nil && len(unplayed) > 0 {
+					return unplayed[rand.Intn(len(unplayed))].Puzzle
+				}
+			}
+		}
+
+		var allPuzzles []domain.SokobanPuzzle
+		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&allPuzzles).Error; err == nil && len(allPuzzles) > 0 {
+			var valid []string
+			for _, p := range allPuzzles {
+				if p.Puzzle != "" {
+					valid = append(valid, p.Puzzle)
+				}
+			}
+			if len(valid) > 0 {
+				return valid[rand.Intn(len(valid))]
+			}
+		}
+	}
+	return ""
+}
+
+func (e *SokobanEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.GlobalStartAt = 0
+	e.Winners = []string{}
+	levelStr := e.pickPuzzle(e.Host)
+	if levelStr != "" {
+		e.LevelMap = parseLevel(levelStr)
+	}
+	for _, pl := range e.Players {
+		pl.Board = copyBoard(e.LevelMap)
+		pl.History = make([][][]string, 0)
+		pl.Moves = 0
+		pl.Status = "playing"
+	}
+}
+
 func (e *SokobanEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
@@ -89,31 +140,13 @@ func (e *SokobanEngine) InitGame(options interface{}) error {
 	opts := engine.ParseGameOptions(options)
 	e.Mode = opts.ModeStr()
 	e.Difficulty = opts.DiffStr()
+	e.Host = opts.Host
 
 	if e.Difficulty == "" {
 		e.Difficulty = string(domain.DiffEasy)
 	}
 
-	levelStr := ""
-
-	// 只从数据库获取题库
-	var dbPuzzles []domain.SokobanPuzzle
-	if db.DB != nil {
-		db.DB.Where("difficulty = ?", e.Difficulty).Find(&dbPuzzles)
-	}
-
-	var validPuzzles []string
-	for _, p := range dbPuzzles {
-		if p.Puzzle != "" {
-			validPuzzles = append(validPuzzles, p.Puzzle)
-		}
-	}
-
-	if len(validPuzzles) > 0 {
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		levelStr = validPuzzles[r.Intn(len(validPuzzles))]
-	}
-
+	levelStr := e.pickPuzzle(e.Host)
 	e.LevelMap = parseLevel(levelStr)
 
 	// Single player jumps straight to playing
@@ -180,6 +213,16 @@ func (e *SokobanEngine) HandleAction(playerID string, actionType string, payload
 		e.State = engine.StateWaiting
 		e.GlobalStartAt = 0
 		e.Winners = []string{}
+		levelStr := e.pickPuzzle(e.Host)
+		if levelStr != "" {
+			e.LevelMap = parseLevel(levelStr)
+		}
+		for _, pl := range e.Players {
+			pl.Board = copyBoard(e.LevelMap)
+			pl.History = make([][][]string, 0)
+			pl.Moves = 0
+			pl.Status = "playing"
+		}
 		return e.State, nil
 	}
 

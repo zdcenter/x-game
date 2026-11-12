@@ -12,6 +12,7 @@ type PKSpeedEngine struct {
 	Players    map[string]*Math24Player `json:"players"`
 	Puzzles    []domain.Math24Puzzle    `json:"puzzles"`
 	Difficulty string                   `json:"difficulty"`
+	Host       string                   `json:"host,omitempty"`
 	Target     int                      `json:"target"`
 	Winners    []string                 `json:"winners"`
 }
@@ -26,6 +27,18 @@ func init() {
 	})
 }
 
+func (e *PKSpeedEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target, e.Host)
+	for _, p := range e.Players {
+		p.Progress = 0
+		p.FreezeUntil = 0
+	}
+}
+
 func (e *PKSpeedEngine) InitGame(options interface{}) error {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()
@@ -33,7 +46,8 @@ func (e *PKSpeedEngine) InitGame(options interface{}) error {
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
 	e.Target = opts.Target
-	e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target)
+	e.Host = opts.Host
+	e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target, e.Host)
 	e.State = engine.StateWaiting
 	return nil
 }
@@ -82,7 +96,7 @@ func (e *PKSpeedEngine) HandleAction(playerID string, actionType string, payload
 	if actionType == string(domain.ActionRestartGame) && e.State == engine.StateFinished {
 		e.State = engine.StateWaiting
 		e.Winners = []string{}
-		e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target)
+		e.Puzzles = getRandomPuzzles(e.Difficulty, e.Target, e.Host)
 		for _, p := range e.Players {
 			p.Progress = 0
 			p.FreezeUntil = 0

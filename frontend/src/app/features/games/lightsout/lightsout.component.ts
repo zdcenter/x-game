@@ -1,6 +1,6 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
-import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed, untracked } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -204,6 +204,13 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
             this.shockwave.set(null);
           }
         }, 360);
+      }
+    });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
       }
     });
 

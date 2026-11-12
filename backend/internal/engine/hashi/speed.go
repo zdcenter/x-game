@@ -20,6 +20,7 @@ type SpeedEngine struct {
 	engine.BaseEngine
 	Players    map[string]*SpeedPlayer
 	Difficulty string
+	Host       string
 	Puzzle     string // The puzzle content as JSON string
 	Winners    []string
 	Wins       map[string]int // Accumulated wins across rounds
@@ -29,6 +30,19 @@ type SpeedEngine struct {
 func init() {
 	engine.RegisterGame("hashi")
 	engine.Register("hashi_speed", func() engine.GameEngine { return &SpeedEngine{} })
+}
+
+func (e *SpeedEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	for _, p := range e.Players {
+		p.Progress = 0
+		p.Finished = false
+		p.Bridges = nil
+	}
+	e.fetchNewPuzzle()
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
@@ -48,20 +62,40 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
 	e.Target = opts.Target
+	e.Host = opts.Host
 
 	e.fetchNewPuzzle()
 	return nil
 }
 
 func (e *SpeedEngine) fetchNewPuzzle() {
-	var puzzles []domain.HashiPuzzle
-	if db.DB == nil || db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error != nil || len(puzzles) == 0 {
-		// Fallback puzzle 7x7 if none found
-		e.Puzzle = `{"width":7,"height":7,"islands":[{"r":0,"c":0,"v":3},{"r":0,"c":2,"v":4},{"r":0,"c":4,"v":3},{"r":0,"c":6,"v":2},{"r":2,"c":0,"v":3},{"r":2,"c":2,"v":4},{"r":2,"c":4,"v":4},{"r":2,"c":6,"v":3},{"r":4,"c":0,"v":3},{"r":4,"c":2,"v":4},{"r":4,"c":4,"v":3},{"r":4,"c":6,"v":2},{"r":6,"c":0,"v":2},{"r":6,"c":2,"v":3},{"r":6,"c":4,"v":2},{"r":6,"c":6,"v":1}],"solution":[]}`
-	} else {
-		p := puzzles[rand.Intn(len(puzzles))]
-		e.Puzzle = p.Content
+	if db.DB != nil {
+		if e.Host != "" {
+			var hostUser domain.User
+			if err := db.DB.Where("LOWER(username) = LOWER(?)", e.Host).First(&hostUser).Error; err == nil && hostUser.ID > 0 {
+				var unplayedPuzzles []domain.HashiPuzzle
+				err := db.DB.Where(
+					"difficulty = ? AND id NOT IN (SELECT puzzle_id FROM gm_user_hashi_progresses WHERE user_id = ? AND status = ?)",
+					e.Difficulty, hostUser.ID, "finished",
+				).Find(&unplayedPuzzles).Error
+				if err == nil && len(unplayedPuzzles) > 0 {
+					p := unplayedPuzzles[rand.Intn(len(unplayedPuzzles))]
+					e.Puzzle = p.Content
+					return
+				}
+			}
+		}
+
+		var puzzles []domain.HashiPuzzle
+		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err == nil && len(puzzles) > 0 {
+			p := puzzles[rand.Intn(len(puzzles))]
+			e.Puzzle = p.Content
+			return
+		}
 	}
+
+	// Fallback puzzle 7x7 if none found
+	e.Puzzle = `{"width":7,"height":7,"islands":[{"r":0,"c":0,"v":3},{"r":0,"c":2,"v":4},{"r":0,"c":4,"v":3},{"r":0,"c":6,"v":2},{"r":2,"c":0,"v":3},{"r":2,"c":2,"v":4},{"r":2,"c":4,"v":4},{"r":2,"c":6,"v":3},{"r":4,"c":0,"v":3},{"r":4,"c":2,"v":4},{"r":4,"c":4,"v":3},{"r":4,"c":6,"v":2},{"r":6,"c":0,"v":2},{"r":6,"c":2,"v":3},{"r":6,"c":4,"v":2},{"r":6,"c":6,"v":1}],"solution":[]}`
 }
 
 func (e *SpeedEngine) AddPlayer(playerID string) {

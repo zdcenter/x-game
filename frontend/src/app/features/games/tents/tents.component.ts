@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TentsStore } from './store/tents.store';
@@ -87,6 +87,9 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
     // 通关多巴胺礼花喷射与触感回馈
     effect(() => {
+      if (this.store.status() === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
+      }
       if (this.store.status() === GameStatus.Finished && this.store.currentRoomMode() === GameMode.Single) {
         this.celebrateVictory();
         this.vibrateSuccess();

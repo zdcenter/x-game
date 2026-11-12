@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, computed, signal, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { TilematchStore } from './store/tilematch.store';
@@ -226,6 +226,13 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
           subText: `${emoji} x3 消除了！`,
           combo
         });
+      }
+    });
+
+    effect(() => {
+      const status = this.store.status();
+      if (status === GameStatus.Starting) {
+        untracked(() => this.gameTimer.startCountdown());
       }
     });
 
