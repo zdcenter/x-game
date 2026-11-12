@@ -498,23 +498,80 @@
           </div>
         }
 
+        <!-- ── Status Filter Bar (全部对局 / 等待应战 / 激烈交锋) ── -->
+        <div class="flex flex-wrap items-center justify-between gap-3 p-1.5 sm:p-2 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
+          <!-- Left: Filter Pills -->
+          <div class="inline-flex p-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-inner gap-1">
+            <button (click)="roomStatusFilter.set('all')"
+                    class="px-3 sm:px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    [class.bg-gradient-to-r]="roomStatusFilter() === 'all'"
+                    [class.from-violet-600]="roomStatusFilter() === 'all'"
+                    [class.to-indigo-600]="roomStatusFilter() === 'all'"
+                    [class.text-white]="roomStatusFilter() === 'all'"
+                    [class.shadow-xs]="roomStatusFilter() === 'all'"
+                    [class.text-[var(--color-text-muted)]]="roomStatusFilter() !== 'all'"
+                    [class.hover:text-[var(--color-text-main)]]="roomStatusFilter() !== 'all'">
+              <span>🎮</span>
+              <span>{{ t('game.filter_all_rooms') || '全部对局' }}</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono ml-0.5"
+                    [class.bg-white/20]="roomStatusFilter() === 'all'"
+                    [class.bg-black/10]="roomStatusFilter() !== 'all'">{{ allRooms().length }}</span>
+            </button>
+
+            <button (click)="roomStatusFilter.set('waiting')"
+                    class="px-3 sm:px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    [class.bg-gradient-to-r]="roomStatusFilter() === 'waiting'"
+                    [class.from-emerald-600]="roomStatusFilter() === 'waiting'"
+                    [class.to-teal-600]="roomStatusFilter() === 'waiting'"
+                    [class.text-white]="roomStatusFilter() === 'waiting'"
+                    [class.shadow-xs]="roomStatusFilter() === 'waiting'"
+                    [class.text-[var(--color-text-muted)]]="roomStatusFilter() !== 'waiting'"
+                    [class.hover:text-[var(--color-text-main)]]="roomStatusFilter() !== 'waiting'">
+              <span class="w-2 h-2 rounded-full bg-emerald-400" [class.animate-pulse]="waitingRoomsCount() > 0"></span>
+              <span>{{ t('game.filter_waiting_rooms') || '等待应战' }}</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono ml-0.5 font-bold"
+                    [class.bg-white/20]="roomStatusFilter() === 'waiting'"
+                    [class.bg-emerald-500/15]="roomStatusFilter() !== 'waiting'"
+                    [class.text-emerald-700]="roomStatusFilter() !== 'waiting'"
+                    [class.dark:text-emerald-300]="roomStatusFilter() !== 'waiting'">{{ waitingRoomsCount() }}</span>
+            </button>
+
+            <button (click)="roomStatusFilter.set('playing')"
+                    class="px-3 sm:px-3.5 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                    [class.bg-gradient-to-r]="roomStatusFilter() === 'playing'"
+                    [class.from-rose-600]="roomStatusFilter() === 'playing'"
+                    [class.to-pink-600]="roomStatusFilter() === 'playing'"
+                    [class.text-white]="roomStatusFilter() === 'playing'"
+                    [class.shadow-xs]="roomStatusFilter() === 'playing'"
+                    [class.text-[var(--color-text-muted)]]="roomStatusFilter() !== 'playing'"
+                    [class.hover:text-[var(--color-text-main)]]="roomStatusFilter() !== 'playing'">
+              <span class="w-2 h-2 rounded-full bg-rose-400" [class.animate-ping]="playingRoomsCount() > 0"></span>
+              <span>{{ t('game.filter_playing_rooms') || '激烈交锋' }}</span>
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono ml-0.5 font-bold"
+                    [class.bg-white/20]="roomStatusFilter() === 'playing'"
+                    [class.bg-rose-500/15]="roomStatusFilter() !== 'playing'"
+                    [class.text-rose-700]="roomStatusFilter() !== 'playing'"
+                    [class.dark:text-rose-300]="roomStatusFilter() !== 'playing'">{{ playingRoomsCount() }}</span>
+            </button>
+          </div>
+
+          <!-- Right: Game filter chip notice or status indicator -->
+          <div class="flex items-center gap-2 text-xs">
+            @if (roomGameFilter()) {
+              <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-300 font-bold">
+                <span>{{ gameLabel(roomGameFilter()) }}</span>
+                <button (click)="roomGameFilter.set('')" class="hover:text-rose-500 text-[11px] ml-0.5 cursor-pointer" title="清除游戏筛选">✕</button>
+              </div>
+            }
+            <span class="text-[11px] font-mono text-[var(--color-text-muted)] hidden sm:inline">
+              筛选出 {{ otherRooms().length }} 间对局
+            </span>
+          </div>
+        </div>
+
         <!-- Other Active Rooms Section (Widescreen Multi-Column Grid) -->
         <div>
           @if (otherRooms().length > 0) {
-            <div class="flex items-center justify-between mb-3 px-1">
-              <h3 class="text-xs font-black text-[var(--color-text-muted)] uppercase tracking-widest flex items-center gap-1.5">
-                <span>⚔️</span>
-                <span>{{ t('game.active_rooms') }}</span>
-                @if (roomGameFilter()) {
-                  <span class="ml-1 normal-case font-bold text-violet-500">— {{ gameLabel(roomGameFilter()) }}</span>
-                  <button (click)="roomGameFilter.set('')" class="ml-1 text-[10px] text-zinc-400 hover:text-zinc-600 underline cursor-pointer">清除</button>
-                }
-              </h3>
-              <span class="text-[11px] font-mono text-[var(--color-text-muted)]">
-                共 {{ otherRooms().length }} 间对局房
-              </span>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
               @for (room of otherRooms(); track room.id) {
                 <ng-container *ngTemplateOutlet="roomCard; context: { room: room, isMine: false }"></ng-container>
@@ -533,11 +590,36 @@
               </div>
 
               <h3 class="text-base sm:text-lg font-black text-[var(--color-text-main)] mb-1">
-                {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】等待中的房间') : (t('game.no_rooms') || '当前暂无等待中的对局') }}
+                @if (roomStatusFilter() === 'playing') {
+                  {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】正在交锋的对决') : '当前暂无正在激烈交锋的对决' }}
+                } @else if (roomStatusFilter() === 'waiting') {
+                  {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】等待加入的房间') : (t('game.no_rooms') || '当前暂无等待加入的对局') }}
+                } @else {
+                  {{ roomGameFilter() ? ('暂无【' + gameLabel(roomGameFilter()) + '】相关的房间') : '当前暂无活跃的对战房间' }}
+                }
               </h3>
               <p class="text-xs sm:text-sm text-[var(--color-text-muted)] max-w-md leading-relaxed mb-5">
-                {{ roomGameFilter() ? '点击发起该游戏专属房间，或选择其他热门项目：' : '选择热门游戏一键开房，或点击右上角发起随机匹配：' }}
+                @if (roomStatusFilter() === 'playing') {
+                  当前暂无正在交锋的比赛，您可以切换至【等待应战】寻找对手，或自主发起新房间：
+                } @else {
+                  {{ roomGameFilter() ? '点击发起该游戏专属房间，或选择其他热门项目：' : '选择热门游戏一键开房，或点击右上角发起随机匹配：' }}
+                }
               </p>
+
+              @if (roomStatusFilter() === 'playing') {
+                <div class="flex flex-wrap items-center justify-center gap-2.5 mb-5">
+                  <button (click)="roomStatusFilter.set('waiting')"
+                          class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span>⚔️</span>
+                    <span>查看等待应战房间 ({{ waitingRoomsCount() }})</span>
+                  </button>
+                  <button (click)="openCreateModal()"
+                          class="px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
+                    <span>➕</span>
+                    <span>创建新擂台</span>
+                  </button>
+                </div>
+              }
 
               <!-- If filtered by a specific game, offer targeted create & reset -->
               @if (roomGameFilter()) {
@@ -678,7 +760,9 @@
 <!-- ══════ Room Card Template ══════ -->
 <ng-template #roomCard let-room="room" let-isMine="isMine">
   <div
-    [class]="'rounded-2xl border-2 p-4 transition-all shadow-sm hover:shadow-md flex flex-col justify-between ' + (isMine ? 'border-violet-500/60 bg-[var(--color-bg-card)]' : 'border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-violet-500/40')">
+    [class]="'rounded-2xl border-2 p-4 transition-all shadow-sm hover:shadow-md flex flex-col justify-between ' + 
+             (isMine ? 'border-violet-500/60 bg-[var(--color-bg-card)]' : 
+              ((room.status === 'playing' || room.status === 'starting') ? 'border-rose-500/30 bg-[var(--color-bg-card)] hover:border-rose-500/60 shadow-rose-500/5' : 'border-[var(--color-border-card)] bg-[var(--color-bg-main)] hover:border-violet-500/40'))">
 
     <div>
       <!-- Row 1: game chip + room name + status -->
@@ -693,8 +777,15 @@
         </span>
         <!-- Status indicator -->
         <span
-          [class]="'text-[9px] font-black px-1.5 py-0.5 rounded-full shrink-0 ' + (room.status === GameStatus.Waiting ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30')">
-          {{ room.status === GameStatus.Waiting ? t('game.waiting') : t('game.playing') }}
+          [class]="'text-[9px] font-black px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1 ' + 
+                   (room.status === GameStatus.Waiting ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30')">
+          @if (room.status === GameStatus.Waiting) {
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>{{ t('game.waiting') || '等待中' }}</span>
+          } @else {
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+            <span>{{ t('game.filter_playing_rooms') || '激烈交锋' }}</span>
+          }
         </span>
       </div>
 
@@ -724,15 +815,31 @@
         }
       </div>
 
-      <!-- Row 3: Host info + player avatars -->
+      <!-- Row 3: Host info / Duel match-up -->
       <div class="flex items-center justify-between text-xs text-[var(--color-text-secondary)] mb-3 pb-2 border-b border-[var(--color-border-card)]">
-        <span class="truncate flex items-center gap-1 font-medium">
-          <span class="text-[10px] text-[var(--color-text-muted)]">房主:</span>
-          <span class="font-bold text-[var(--color-text-main)]">{{ formatHost(room.host) }}</span>
-        </span>
-        <span class="font-mono text-[11px] font-bold text-violet-400 shrink-0">
-          {{ room.players }}/{{ getMaxPlayers(room.game) }} 玩家
-        </span>
+        @if (room.status === 'playing' || room.status === 'starting' || room.opponent) {
+          <div class="truncate flex items-center gap-1.5 font-bold min-w-0">
+            <span class="text-blue-500 truncate max-w-[85px] sm:max-w-[100px]">{{ formatHost(room.host) }}</span>
+            <span class="text-[10px] font-black text-rose-500 px-1 py-0.2 rounded bg-rose-500/10 shrink-0">VS</span>
+            <span class="text-amber-500 truncate max-w-[85px] sm:max-w-[100px]">{{ formatHost(room.opponent || '对手') }}</span>
+          </div>
+        } @else {
+          <span class="truncate flex items-center gap-1 font-medium">
+            <span class="text-[10px] text-[var(--color-text-muted)]">房主:</span>
+            <span class="font-bold text-[var(--color-text-main)]">{{ formatHost(room.host) }}</span>
+          </span>
+        }
+        <div class="flex items-center gap-2 shrink-0">
+          @if (room.spectators && room.spectators > 0) {
+            <span class="text-[10px] font-mono text-amber-500 flex items-center gap-0.5" title="当前观战人数">
+              <span>👁️</span>
+              <span>{{ room.spectators }}</span>
+            </span>
+          }
+          <span class="font-mono text-[11px] font-bold text-violet-400">
+            {{ room.players }}/{{ getMaxPlayers(room.game) }} 玩家
+          </span>
+        </div>
       </div>
     </div>
 
@@ -742,7 +849,7 @@
         <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, false, undefined, false)"
           class="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-xs active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer animate-pulse ring-2 ring-emerald-400/40">
           <span>⚡</span>
-          <span>{{ room.status === 'playing' ? (t('game.reconnect_match') || '返回对决') : (t('game.enter_my_room') || '进入我的房间') }}</span>
+          <span>{{ (room.status === 'playing' || room.status === 'starting') ? (t('game.reconnect_match') || '返回对决') : (t('game.enter_my_room') || '进入我的房间') }}</span>
         </button>
       } @else if (canJoinRoom(room)) {
         <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword, room.bountyCoins)"
@@ -757,9 +864,9 @@
         </button>
       } @else {
         <button (click)="onJoinRoom(room.id, room.game, room.mode, room.difficulty, room.host, room.hasPassword, undefined, true)"
-          class="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-[var(--color-text-main)] active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer">
-          <span>👁️</span>
-          <span>{{ t('game.spectate') }}</span>
+          class="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-rose-500/15 via-pink-500/15 to-amber-500/15 hover:from-rose-500/25 hover:to-amber-500/25 border border-rose-500/40 text-rose-600 dark:text-rose-300 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs">
+          <span class="animate-pulse">👁️</span>
+          <span>{{ t('game.spectate') || '实时观战' }}</span>
         </button>
       }
     </div>

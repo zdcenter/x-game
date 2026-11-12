@@ -141,7 +141,8 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
   }
 
   // Room list filter
-  roomGameFilter = signal('');   // '' = all games
+  roomGameFilter   = signal('');   // '' = all games
+  roomStatusFilter = signal<'all' | 'waiting' | 'playing'>('all');
 
   // Password prompt for password-protected rooms
   pwPromptOpen   = signal(false);
@@ -195,11 +196,23 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     r.status !== 'finished' && 
     ((r.players ?? 0) > 0 || (r.contestants && r.contestants.length > 0))
   ));
+  waitingRoomsCount = computed(() => this.allRooms().filter((r: any) => r.status === 'waiting').length);
+  playingRoomsCount = computed(() => this.allRooms().filter((r: any) => r.status === 'playing' || r.status === 'starting').length);
+
   myRooms    = computed(() => this.allRooms().filter((r: any) => this.isMyRoom(r)));
   otherRooms = computed(() => {
-    const others = this.allRooms().filter((r: any) => !this.isMyRoom(r));
+    let others = this.allRooms().filter((r: any) => !this.isMyRoom(r));
     const filter = this.roomGameFilter();
-    return filter ? others.filter((r: any) => r.game === filter) : others;
+    if (filter) {
+      others = others.filter((r: any) => r.game === filter);
+    }
+    const stFilter = this.roomStatusFilter();
+    if (stFilter === 'waiting') {
+      others = others.filter((r: any) => r.status === 'waiting');
+    } else if (stFilter === 'playing') {
+      others = others.filter((r: any) => r.status === 'playing' || r.status === 'starting');
+    }
+    return others;
   });
   onlinePlayers = computed(() => this.wsService.onlinePlayers().filter((p: any) => p.id !== this.playerId()));
 
