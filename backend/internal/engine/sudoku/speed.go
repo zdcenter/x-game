@@ -2,11 +2,9 @@ package sudoku
 
 import (
 	"encoding/json"
-	"math/rand"
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
-	"github.com/x-game/backend/pkg/db"
 )
 
 type SpeedPlayer struct {
@@ -20,6 +18,7 @@ type SpeedEngine struct {
 	engine.BaseEngine
 	Players    map[string]*SpeedPlayer
 	Difficulty string
+	Host       string
 	Puzzle     string
 	Solution   string
 	Winners    []string
@@ -28,6 +27,19 @@ type SpeedEngine struct {
 func init() {
 	engine.RegisterGame("sudoku")
 	engine.Register("sudoku_speed", func() engine.GameEngine { return &SpeedEngine{} })
+}
+
+func (e *SpeedEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	for _, p := range e.Players {
+		p.Progress = 0
+		p.Board = ""
+		p.Finished = false
+	}
+	e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
 }
 
 func (e *SpeedEngine) InitGame(options interface{}) error {
@@ -40,16 +52,9 @@ func (e *SpeedEngine) InitGame(options interface{}) error {
 
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
+	e.Host = opts.Host
 
-	var puzzles []domain.SudokuPuzzle
-	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
-		e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
-		e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-	} else {
-		p := puzzles[rand.Intn(len(puzzles))]
-		e.Puzzle = p.Puzzle
-		e.Solution = p.Solution
-	}
+	e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
 
 	return nil
 }
@@ -116,16 +121,8 @@ func (e *SpeedEngine) HandleAction(playerID string, action string, payload []byt
 			p.Board = ""
 			p.Finished = false
 		}
-		// Fetch a new puzzle
-		var puzzles []domain.SudokuPuzzle
-		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
-			e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
-			e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-		} else {
-			p := puzzles[rand.Intn(len(puzzles))]
-			e.Puzzle = p.Puzzle
-			e.Solution = p.Solution
-		}
+		// Fetch a new puzzle matching difficulty and host unplayed status
+		e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
 		return e.State, nil
 	}
 

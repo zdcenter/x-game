@@ -335,7 +335,7 @@ func CreateRoom(roomID, gameId, mode, difficulty, hostId, password string, targe
 		r.Contestants[hostId] = true
 	}
 
-	options := getGameOptions(gameId, mode, difficulty, target)
+	options := getGameOptions(gameId, mode, difficulty, target, hostId)
 	r.Engine.InitGame(options)
 
 	if asyncEng, ok := r.Engine.(interface{ SetBroadcaster(func()) }); ok {
@@ -485,11 +485,12 @@ func cleanupStaleRooms() {
 }
 
 // getGameOptions fetches the database config and merges it with standard options
-func getGameOptions(gameId, mode, difficulty string, target int) map[string]interface{} {
+func getGameOptions(gameId, mode, difficulty string, target int, host string) map[string]interface{} {
 	options := map[string]interface{}{
 		"mode":       mode,
 		"difficulty": difficulty,
 		"target":     target,
+		"host":       host,
 	}
 	var gameConfig domain.GameConfig
 	if db.DB != nil {
@@ -1242,7 +1243,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 		if clientID == r.Host && r.Engine != nil && r.Engine.GetStatus() == engine.StateWaiting {
 			if targetVal, ok := baseMsg["target"].(float64); ok && int(targetVal) > 0 {
 				r.Target = int(targetVal)
-				r.Engine.InitGame(getGameOptions(string(r.Game), string(r.Mode), string(r.Difficulty), r.Target))
+				r.Engine.InitGame(getGameOptions(string(r.Game), string(r.Mode), string(r.Difficulty), r.Target, r.Host))
 				for id, client := range r.Clients {
 					if !client.IsSpectator {
 						r.Engine.AddPlayer(id)
@@ -1467,7 +1468,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 				r.GameChangedAt = time.Now().Unix()
 
-				eng.InitGame(getGameOptions(gameId, mode, diff, r.Target))
+				eng.InitGame(getGameOptions(gameId, mode, diff, r.Target, r.Host))
 
 				for id, client := range r.Clients {
 					if !client.IsSpectator {

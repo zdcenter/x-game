@@ -2,12 +2,10 @@ package sudoku
 
 import (
 	"encoding/json"
-	"math/rand"
 	"time"
 
 	"github.com/x-game/backend/internal/domain"
 	"github.com/x-game/backend/internal/engine"
-	"github.com/x-game/backend/pkg/db"
 )
 
 type StealPlayer struct {
@@ -21,6 +19,7 @@ type StealEngine struct {
 	engine.BaseEngine
 	Players        map[string]*StealPlayer
 	Difficulty     string
+	Host           string
 	PenaltySeconds int
 	Puzzle         string
 	Solution       string
@@ -31,6 +30,20 @@ type StealEngine struct {
 func init() {
 	engine.RegisterGame("sudoku")
 	engine.Register("sudoku_steal", func() engine.GameEngine { return &StealEngine{} })
+}
+
+func (e *StealEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = []string{}
+	for _, p := range e.Players {
+		p.Score = 0
+		p.FreezeUntil = 0
+		p.Finished = false
+	}
+	e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
+	e.CurrentBoard = e.Puzzle
 }
 
 func (e *StealEngine) InitGame(options interface{}) error {
@@ -45,24 +58,14 @@ func (e *StealEngine) InitGame(options interface{}) error {
 
 	opts := engine.ParseGameOptions(options)
 	e.Difficulty = opts.DiffStr()
+	e.Host = opts.Host
 	if penalty, ok := opts.Raw["penaltySeconds"].(float64); ok {
 		e.PenaltySeconds = int(penalty)
 	} else if penalty, ok := opts.Raw["penaltySeconds"].(int); ok {
 		e.PenaltySeconds = penalty
 	}
 
-	// Fetch a random puzzle from DB
-	var puzzles []domain.SudokuPuzzle
-	if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
-		// Fallback
-		e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
-		e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-	} else {
-		p := puzzles[rand.Intn(len(puzzles))]
-		e.Puzzle = p.Puzzle
-		e.Solution = p.Solution
-	}
-
+	e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
 	e.CurrentBoard = e.Puzzle
 	return nil
 }
@@ -132,16 +135,8 @@ func (e *StealEngine) HandleAction(playerID string, action string, payload []byt
 			p.FreezeUntil = 0
 			p.Finished = false
 		}
-		// Fetch a new puzzle
-		var puzzles []domain.SudokuPuzzle
-		if err := db.DB.Where("difficulty = ?", e.Difficulty).Find(&puzzles).Error; err != nil || len(puzzles) == 0 {
-			e.Puzzle = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"
-			e.Solution = "534678912672195348198342567859761423426853791713924856961537284287419635345286179"
-		} else {
-			p := puzzles[rand.Intn(len(puzzles))]
-			e.Puzzle = p.Puzzle
-			e.Solution = p.Solution
-		}
+		// Fetch a new puzzle matching difficulty and host unplayed status
+		e.Puzzle, e.Solution = PickSudokuPuzzle(e.Difficulty, e.Host)
 		e.CurrentBoard = e.Puzzle
 		return e.State, nil
 	}

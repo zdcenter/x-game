@@ -90,24 +90,63 @@ export class SudokuStore extends BaseGameStore {
       const status = this.gameStatus();
       const currentView = this.view();
       const puzzle = this.rawState().puzzle;
+      const isPkMode = this.currentRoomMode() !== GameMode.Single;
 
-      // When server sends GameStatus.Starting, show countdown overlay
-      if (status === GameStatus.Starting && (currentView === 'room' || currentView === 'lobby')) {
-        this.view.set('countdown');
-        if (puzzle) {
-          this.initBoard(puzzle);
+      if (isPkMode) {
+        // When server sends waiting (in room), ensure view is 'room' and board is cleanly reset
+        if (status === GameStatus.Waiting) {
+          if (currentView !== 'room') {
+            this.view.set('room');
+          }
+          if (this.board().length > 0 || this.originalPuzzleStr() !== '') {
+            this.board.set([]);
+            this.originalPuzzleStr.set('');
+            this.solution.set('');
+            this.isFinished.set(false);
+            this.timeSpent.set(0);
+            this.selectedCell.set(null);
+            if (this.roomId()) {
+              localStorage.removeItem(`sudoku_pk_${this.roomId()}`);
+            }
+          }
+          return;
+        }
+
+        // When server sends GameStatus.Starting, show countdown overlay
+        if (status === GameStatus.Starting) {
+          if (currentView !== 'countdown') {
+            this.view.set('countdown');
+          }
+          if (puzzle && (this.originalPuzzleStr() !== puzzle || this.board().length === 0)) {
+            if (this.roomId()) {
+              localStorage.removeItem(`sudoku_pk_${this.roomId()}`);
+            }
+            this.initBoard(puzzle);
+          }
+          return;
+        }
+
+        // When server sends GameStatus.Playing, transition to play view
+        if (status === GameStatus.Playing) {
+          if (currentView !== 'play') {
+            this.view.set('play');
+          }
+          // Init board whenever play state is reached and board is empty or puzzle changed
+          if (puzzle && (this.board().length === 0 || this.originalPuzzleStr() !== puzzle)) {
+            const savedState = localStorage.getItem(`sudoku_pk_${this.roomId()}`);
+            this.initBoard(puzzle, '', savedState || undefined);
+          }
+          return;
         }
       }
+    });
 
-      // When server sends GameStatus.Playing, transition to play view
-      if (status === GameStatus.Playing) {
-        if (currentView !== 'play') {
-          this.view.set('play');
-        }
-        // Init board whenever play state is reached and board is empty (handles late-arriving puzzle)
-        if (this.board().length === 0 && puzzle) {
-          const savedState = localStorage.getItem(`sudoku_pk_${this.roomId()}`);
-          this.initBoard(puzzle, '', savedState || undefined);
+    // Auto-sync currentDifficulty with room difficulty in PK mode
+    effect(() => {
+      const rState = this.rawState() as any;
+      if (this.currentRoomMode() !== GameMode.Single && rState?.difficulty) {
+        if (this.currentDifficulty() !== rState.difficulty) {
+          this.currentDifficulty.set(rState.difficulty);
         }
       }
     });
@@ -200,6 +239,15 @@ export class SudokuStore extends BaseGameStore {
   ) {
     if (mode !== GameMode.Single || roomId) {
       this.view.set('room');
+      this.board.set([]);
+      this.originalPuzzleStr.set('');
+      this.solution.set('');
+      this.isFinished.set(false);
+      this.timeSpent.set(0);
+      this.selectedCell.set(null);
+      if (roomId) {
+        localStorage.removeItem(`sudoku_pk_${roomId}`);
+      }
     }
     if (diff) {
       this.currentDifficulty.set(diff);
@@ -208,8 +256,28 @@ export class SudokuStore extends BaseGameStore {
   }
 
   override leaveRoom() {
+    this.board.set([]);
+    this.originalPuzzleStr.set('');
+    this.solution.set('');
+    if (this.roomId()) {
+      localStorage.removeItem(`sudoku_pk_${this.roomId()}`);
+    }
     super.leaveRoom();
     this.view.set('lobby');
+  }
+
+  protected override onResetLocalGameState(): void {
+    if (this.currentRoomMode() !== GameMode.Single) {
+      this.board.set([]);
+      this.originalPuzzleStr.set('');
+      this.solution.set('');
+      this.isFinished.set(false);
+      this.timeSpent.set(0);
+      this.selectedCell.set(null);
+      if (this.roomId()) {
+        localStorage.removeItem(`sudoku_pk_${this.roomId()}`);
+      }
+    }
   }
 
   playAgain() {

@@ -14,6 +14,7 @@ type GameOptions struct {
 	Target     int                    `json:"target"`
 	Bounty     int                    `json:"bounty"`
 	Seed       int64                  `json:"seed"`
+	Host       string                 `json:"host"`
 	Raw        map[string]interface{} `json:"-"`
 }
 
@@ -56,6 +57,10 @@ func ParseGameOptions(raw interface{}) *GameOptions {
 
 	if diffStr, ok := m["difficulty"].(string); ok && diffStr != "" {
 		opts.Difficulty = domain.GameDifficulty(diffStr)
+	}
+
+	if hostStr, ok := m["host"].(string); ok && hostStr != "" {
+		opts.Host = hostStr
 	}
 
 	if targetVal, ok := m["target"]; ok {
