@@ -64,6 +64,56 @@
             @if (isToolsMenuOpen()) {
               <div class="absolute right-0 top-full mt-2 w-56 sm:w-60 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
                    (click)="$event.stopPropagation()">
+
+                <!-- 👤 会员名称 / 用户身份卡片 (Member Profile Header Card) -->
+                @if (authStore.isAuthenticated()) {
+                  <a [routerLink]="['/', i18n.currentLang(), 'profile']"
+                     (click)="closeToolsMenu()"
+                     class="w-full flex items-center justify-between p-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)]/50 border border-[var(--color-border-card)] transition-all cursor-pointer select-none group mb-0.5 shadow-2xs">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-2xs">
+                        {{ (authStore.currentUser()?.nickname || authStore.currentUser()?.username || 'U').charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="min-w-0 flex-1 text-left">
+                        <div class="flex items-center gap-1.5">
+                          <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[95px] group-hover:text-violet-500">
+                            {{ authStore.currentUser()?.nickname || authStore.currentUser()?.username }}
+                          </span>
+                          <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                            Lv.{{ authStore.currentUser()?.level || 1 }}
+                          </span>
+                        </div>
+                        <div class="text-[9px] text-[var(--color-text-muted)] truncate">
+                          {{ i18n.t('profile.title')() || '个人中心' }}
+                        </div>
+                      </div>
+                    </div>
+                    <span class="text-xs text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform shrink-0">›</span>
+                  </a>
+                } @else {
+                  <div (click)="openAuthModal(); closeToolsMenu()"
+                       class="w-full flex items-center justify-between p-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)]/50 border border-[var(--color-border-card)] transition-all cursor-pointer select-none group mb-0.5 shadow-2xs">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <div class="w-7 h-7 rounded-lg bg-gray-500/15 border border-[var(--color-border-card)] flex items-center justify-center text-sm shrink-0">
+                        👤
+                      </div>
+                      <div class="min-w-0 flex-1 text-left">
+                        <div class="flex items-center gap-1">
+                          <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[95px]">
+                            {{ authStore.guestId }}
+                          </span>
+                          <span class="px-1 py-0.1 rounded text-[9px] font-bold bg-gray-500/15 text-[var(--color-text-muted)] border border-[var(--color-border-card)] shrink-0">
+                            {{ i18n.t('nav.guest')() || '游客' }}
+                          </span>
+                        </div>
+                        <div class="text-[9px] text-amber-500 font-semibold truncate">
+                          {{ i18n.t('auth.login')() || '登录' }}/{{ i18n.t('auth.register')() || '注册账号' }}
+                        </div>
+                      </div>
+                    </div>
+                    <span class="text-xs text-amber-500 group-hover:translate-x-0.5 transition-transform shrink-0">›</span>
+                  </div>
+                }
                 <!-- Rule Guide in Mobile menu -->
                 @if (showRulesBtn) {
                   <button (click)="rules.emit(); closeToolsMenu()"

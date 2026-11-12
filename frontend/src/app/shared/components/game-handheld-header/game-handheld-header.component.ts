@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { DeviceService } from '../../../core/services/device.service';
 import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
@@ -11,12 +12,14 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { WebSocketService } from '../../../core/services/websocket.service';
 import { PwaService } from '../../../core/services/pwa.service';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { AuthModalService } from '../../../core/services/auth-modal.service';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
 
 @Component({
   selector: 'app-game-handheld-header',
   standalone: true,
-  imports: [CommonModule, CoinIconComponent],
+  imports: [CommonModule, RouterLink, CoinIconComponent],
   host: {
     class: 'w-full block shrink-0 z-30 pointer-events-auto'
   },
@@ -77,6 +80,57 @@ import { CoinIconComponent } from '../coin-icon/coin-icon.component';
         @if (isToolsMenuOpen()) {
           <div class="absolute right-0 top-full mt-2 w-60 sm:w-64 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-2xl p-2.5 z-50 flex flex-col gap-1 backdrop-blur-xl animate-scale-up"
                (click)="$event.stopPropagation()">
+
+            <!-- 👤 会员名称 / 身份卡片 (Member Profile Header Card) -->
+            @if (authStore.isAuthenticated()) {
+              <a [routerLink]="['/', i18n.currentLang(), 'profile']"
+                 (click)="closeToolsMenu()"
+                 class="w-full flex items-center justify-between p-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)]/50 border border-[var(--color-border-card)] transition-all cursor-pointer select-none group mb-1 shadow-2xs">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-2xs">
+                    {{ (authStore.currentUser()?.nickname || authStore.currentUser()?.username || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0 flex-1 text-left">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[105px] group-hover:text-violet-500">
+                        {{ authStore.currentUser()?.nickname || authStore.currentUser()?.username }}
+                      </span>
+                      <span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                        Lv.{{ authStore.currentUser()?.level || 1 }}
+                      </span>
+                    </div>
+                    <div class="text-[10px] text-[var(--color-text-muted)] truncate mt-0.5">
+                      {{ i18n.t('profile.title')() || '个人中心' }}
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform shrink-0">›</span>
+              </a>
+            } @else {
+              <div (click)="openAuthModal(); closeToolsMenu()"
+                   class="w-full flex items-center justify-between p-2 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)]/50 border border-[var(--color-border-card)] transition-all cursor-pointer select-none group mb-1 shadow-2xs">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-8 h-8 rounded-lg bg-gray-500/15 border border-[var(--color-border-card)] flex items-center justify-center text-base shrink-0">
+                    👤
+                  </div>
+                  <div class="min-w-0 flex-1 text-left">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-xs text-[var(--color-text-main)] truncate max-w-[105px]">
+                        {{ authStore.guestId }}
+                      </span>
+                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-gray-500/15 text-[var(--color-text-muted)] border border-[var(--color-border-card)] shrink-0">
+                        {{ i18n.t('nav.guest')() || '游客' }}
+                      </span>
+                    </div>
+                    <div class="text-[10px] text-amber-500 font-semibold truncate mt-0.5">
+                      {{ i18n.t('auth.login')() || '登录' }}/{{ i18n.t('auth.register')() || '注册账号' }}
+                    </div>
+                  </div>
+                </div>
+                <span class="text-xs text-amber-500 group-hover:translate-x-0.5 transition-transform shrink-0">›</span>
+              </div>
+            }
+
             <!-- 更换对战游戏 / 难度 (在联机对战中且为房主) -->
             <!-- 更换对战游戏 / 难度 (在联机对战中且为房主) -->
             @if (canSwitchGame()) {
@@ -276,7 +330,14 @@ export class GameHandheldHeaderComponent {
   wsService = inject(WebSocketService);
   gameSwitchService = inject(GameSwitchService);
   pwa = inject(PwaService);
+  authStore = inject(AuthStore);
+  private authModal = inject(AuthModalService);
+  private router = inject(Router);
   private elementRef = inject(ElementRef);
+
+  openAuthModal() {
+    this.authModal.open({ returnUrl: this.router.url });
+  }
 
   readonly isInPkRoom = () => !!this.wsService.currentRoomId() || this.isPkMode;
 

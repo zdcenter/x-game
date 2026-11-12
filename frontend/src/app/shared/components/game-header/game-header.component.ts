@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit, signal, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AudioService } from '../../../core/services/audio.service';
 import { HapticService } from '../../../core/services/haptic.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -10,13 +10,15 @@ import { CoinService } from '../../../core/services/coin.service';
 import { CoinGuideService } from '../../../core/services/coin-guide.service';
 import { CoinGuideModalComponent } from '../coin-guide-modal/coin-guide-modal.component';
 import { CoinIconComponent } from '../coin-icon/coin-icon.component';
+import { AuthStore } from '../../../core/auth/auth.store';
+import { AuthModalService } from '../../../core/services/auth-modal.service';
 import { isBrowser } from '../../../core/utils/browser.util';
 import { StreamerModeService } from '../../../core/services/streamer-mode.service';
 
 @Component({
   selector: 'app-game-header',
   standalone: true,
-  imports: [CommonModule, CoinGuideModalComponent, CoinIconComponent],
+  imports: [CommonModule, RouterLink, CoinGuideModalComponent, CoinIconComponent],
   templateUrl: './game-header.component.html',
 })
 export class GameHeaderComponent implements OnInit {
@@ -42,7 +44,13 @@ export class GameHeaderComponent implements OnInit {
   streamerMode = inject(StreamerModeService);
   i18n = inject(I18nService);
   router = inject(Router);
+  authStore = inject(AuthStore);
+  private authModal = inject(AuthModalService);
   private elementRef = inject(ElementRef);
+
+  openAuthModal() {
+    this.authModal.open({ returnUrl: this.router.url });
+  }
 
   readonly showZenHint = signal<boolean>(false);
   readonly isToolsMenuOpen = signal<boolean>(false);
