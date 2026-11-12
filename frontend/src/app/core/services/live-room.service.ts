@@ -239,6 +239,22 @@ export class LiveRoomService {
     return diffId;
   }
 
+  getMaxPlayers(gameId?: string): number {
+    if (!gameId) return 2;
+    return this.registry.getMaxPlayers(gameId) || 2;
+  }
+
+  isUserInRoom(room: any): boolean {
+    const myId = this.currentUserId();
+    if (!myId || !room) return false;
+    const clean = (s: string) => (s || '').toLowerCase().trim();
+    const m = clean(myId);
+    if (clean(room.host) === m || clean(room.opponent) === m || clean(room.id).startsWith(m + '-')) return true;
+    if (Array.isArray(room.contestants) && room.contestants.some((c: string) => clean(c) === m)) return true;
+    if (Array.isArray(room.playersList) && room.playersList.some((c: string) => clean(c) === m)) return true;
+    return false;
+  }
+
   getTimeAgo(createdAt?: number): string {
     if (!createdAt) return this.i18n.t('lobby.created_just_now')() || '刚刚';
     const now = Math.floor(Date.now() / 1000);

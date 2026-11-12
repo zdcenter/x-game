@@ -1401,6 +1401,8 @@
   "lobby.finished_battles_tab": "完赛战报",
   "lobby.live_matches_group": "激战直播",
   "lobby.open_challenges_group": "擂台迎战",
+  "lobby.open_challenges_spotlight_title": "全网开放擂台 · 等待迎战",
+  "lobby.waiting_rooms_ready": "间就绪",
   "lobby.spectate_btn": "实时观战",
   "lobby.join_duel_btn": "立即迎战",
   "lobby.reconnect_match_btn": "返回对决",

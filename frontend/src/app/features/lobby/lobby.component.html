@@ -26,17 +26,103 @@
     <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
     <h1 class="sr-only">{{ i18n.t('lobby.title')() }} - {{ i18n.t('lobby.subtitle')() }}</h1>
 
+    <!-- 🔥 开放擂台等候中 · 极速迎战独立置顶窗口 (Waiting Matchmaking Hub Spotlight) -->
+    @if (liveRoom.waitingRooms().length > 0) {
+      <section class="w-full animate-fade-in">
+        <div class="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-rose-950/30 p-3 sm:p-4 shadow-lg shadow-amber-500/10 backdrop-blur-md">
+          <!-- Cyber Glow Background Decoration -->
+          <div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-amber-500/15 blur-3xl pointer-events-none"></div>
+
+          <!-- Spotlight Header -->
+          <div class="flex items-center justify-between gap-2 mb-2.5 sm:mb-3">
+            <div class="flex items-center gap-2">
+              <span class="flex h-2.5 w-2.5 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+              <span class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                <span>⚔️</span>
+                <span>{{ i18n.t('lobby.open_challenges_spotlight_title')() || '全网开放擂台 · 等待迎战' }}</span>
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 animate-pulse">
+                {{ liveRoom.waitingRooms().length }} {{ i18n.t('lobby.waiting_rooms_ready')() || '间就绪' }}
+              </span>
+            </div>
+
+            <button (click)="goToPkArena()" 
+                    class="text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 transition-colors cursor-pointer group">
+              <span>{{ i18n.t('lobby.view_all_rooms')() || '进入竞技场' }}</span>
+              <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+            </button>
+          </div>
+
+          <!-- Room Cards List (Horizontal scroll on mobile/tablet, responsive flex/grid) -->
+          <div class="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+            @for (room of liveRoom.waitingRooms(); track room.id) {
+              <div class="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)]/95 border border-amber-500/30 hover:border-amber-500 shadow-xs transition-all shrink-0 w-[280px] sm:w-[320px] md:w-[340px] group">
+                <!-- Left: Game & Room Info -->
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-10 h-10 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                    {{ liveRoom.getGameEmoji(room.game) }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[110px] sm:max-w-[130px]">
+                        {{ liveRoom.getGameTitle(room.game) }}
+                      </span>
+                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        {{ liveRoom.getDifficultyLabel(room.game, room.difficulty) }}
+                      </span>
+                      @if (room.bountyCoins && room.bountyCoins > 0) {
+                        <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                          🪙 {{ room.bountyCoins }}
+                        </span>
+                      }
+                    </div>
+                    <div class="flex items-center gap-1 text-[11px] text-[var(--color-text-secondary)] mt-0.5">
+                      <span class="truncate max-w-[90px] font-semibold text-[var(--color-text-main)]">👤 {{ room.host }}</span>
+                      <span>·</span>
+                      <span class="text-emerald-500 font-bold">
+                        {{ room.players }}/{{ liveRoom.getMaxPlayers(room.game) }} 人
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: CTA Button -->
+                <div class="shrink-0">
+                  @if (liveRoom.isUserInRoom(room)) {
+                    <button (click)="liveRoom.quickJoin(room)"
+                            class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1">
+                      <span>🏠</span>
+                      <span>{{ i18n.t('game.enter_my_room')() || '我的房间' }}</span>
+                    </button>
+                  } @else {
+                    <button (click)="liveRoom.quickJoin(room)"
+                            class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:brightness-110 active:scale-95 text-white font-black text-xs sm:text-sm transition-all shadow-md shadow-orange-500/30 ring-2 ring-amber-400/60 animate-pulse cursor-pointer flex items-center gap-1">
+                      <span>⚡</span>
+                      <span>{{ i18n.t('lobby.join_duel_btn')() || '立即迎战' }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    }
+
     <!-- 🏆 全网极限纪录殿堂 ＆ ⚡ 即时电竞战报流 (Hall of Fame & Live Battles Dual Deck) -->
     <section class="w-full">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
-        <!-- 👑 游戏极限纪录殿堂 (All-Time Record Hall of Fame) -->
-        <div class="lg:col-span-7 xl:col-span-8 w-full h-full">
-          <app-hall-of-fame class="h-full block" />
+        <!-- ⚔️ 全网最新对决实况 (Live Member PK Feed) - 移动端/平板居上 (order-1), 桌面宽屏居右 (order-2 lg:col-span-5) -->
+        <div class="order-1 lg:order-2 lg:col-span-5 xl:col-span-4 w-full h-full">
+          <app-live-battle-feed class="h-full block" />
         </div>
 
-        <!-- ⚔️ 全网最新对决实况 (Live Member PK Feed) -->
-        <div class="lg:col-span-5 xl:col-span-4 w-full h-full">
-          <app-live-battle-feed class="h-full block" />
+        <!-- 👑 游戏极限纪录殿堂 (All-Time Record Hall of Fame) - 移动端/平板居下 (order-2), 桌面宽屏居左 (order-1 lg:col-span-7) -->
+        <div class="order-2 lg:order-1 lg:col-span-7 xl:col-span-8 w-full h-full">
+          <app-hall-of-fame class="h-full block" />
         </div>
       </div>
     </section>

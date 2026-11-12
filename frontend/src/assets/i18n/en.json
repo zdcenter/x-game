@@ -1401,6 +1401,8 @@
   "lobby.finished_battles_tab": "Battle History",
   "lobby.live_matches_group": "Live Matches",
   "lobby.open_challenges_group": "Open Challenges",
+  "lobby.open_challenges_spotlight_title": "Open Challenges · Awaiting Opponents",
+  "lobby.waiting_rooms_ready": "Ready",
   "lobby.spectate_btn": "Spectate",
   "lobby.join_duel_btn": "Join Duel",
   "lobby.reconnect_match_btn": "Return to Match",
