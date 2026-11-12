@@ -593,7 +593,7 @@ export class GamePkLobbyComponent implements OnInit, OnDestroy {
     if (room.status === 'playing' || room.status === 'starting') {
       return false;
     }
-    const max = (room.game === 'gomoku' || room.game === 'idiom') ? 2 : (room.maxPlayers || 8);
+    const max = room.maxPlayers || this.getMaxPlayers(room.game) || 8;
     const count = typeof room.players === 'number' ? room.players : (room.player_count ?? (Array.isArray(room.players) ? room.players.length : 1));
     return count < max;
   }

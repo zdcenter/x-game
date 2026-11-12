@@ -2314,5 +2314,11 @@
   "game.walkover_solo_practice": "转为单人练习",
   "game.walkover_wait_new_opponent": "等候新对手",
   "game.guest_auto_ready_tip": "已就绪 · 等待房主开始游戏...",
-  "game.walkover_toast": "对手已全部退出，您赢得了本场胜利！"
+  "game.walkover_toast": "对手已全部退出，您赢得了本场胜利！",
+  "game.pk_you_forfeited": "您已主动认输",
+  "game.pk_you_forfeited_continuing": "您已主动认输本局，其他选手继续对决！",
+  "game.pk_you_forfeited_subtitle": "您已主动认输，本局遗憾落败",
+  "game.pk_opponent_forfeited_subtitle": "对手已主动认输，恭喜赢得本场对决胜利！",
+  "game.pk_spectator_winner_subtitle": "恭喜选手【{{ player }}】获得对决胜利！",
+  "game.pk_spectator_finished_subtitle": "本场巅峰对决已结束！"
 }

@@ -64,6 +64,26 @@ type Room struct {
 	mu            sync.Mutex
 }
 
+// GetMaxPlayersForGame returns the maximum player capacity for a game type
+func GetMaxPlayersForGame(game string) int {
+	if game == "gomoku" || game == "idiom" {
+		return 2
+	}
+	return 8
+}
+
+func (r *Room) getMaxCapacity() int {
+	return GetMaxPlayersForGame(string(r.Game))
+}
+
+// resetRoundStateLocked cleanly clears per-round outcome and forfeit data (caller must hold r.mu)
+func (r *Room) resetRoundStateLocked() {
+	r.Winner = ""
+	r.Winners = nil
+	r.ForfeitedPlayer = ""
+	r.ForfeitedContestants = make(map[string]bool)
+}
+
 var (
 	Rooms          = make(map[string]*Room)
 	DismissedRooms = make(map[string]time.Time)
@@ -189,10 +209,7 @@ func GetActiveRooms() []RoomSnapshot {
 		createdAt := r.CreatedAt
 		r.mu.Unlock()
 
-		maxPlayers := 8
-		if game == "gomoku" || game == "idiom" {
-			maxPlayers = 2
-		}
+		maxPlayers := GetMaxPlayersForGame(string(game))
 
 		snapshots = append(snapshots, RoomSnapshot{
 			ID:             r.ID,
@@ -549,10 +566,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 				currentContestants++
 			}
 		}
-		maxCapacity := 8
-		if r.Game == "gomoku" || r.Game == "idiom" {
-			maxCapacity = 2
-		}
+		maxCapacity := r.getMaxCapacity()
 		if currentContestants >= maxCapacity {
 			return fmt.Errorf("room is full (max %d players)", maxCapacity)
 		}
@@ -580,10 +594,7 @@ func (r *Room) AddClient(client *Client, password string) error {
 	}
 
 	if st == engine.StateWaiting {
-		r.Winner = ""
-		r.Winners = nil
-		r.ForfeitedPlayer = ""
-		r.ForfeitedContestants = make(map[string]bool)
+		r.resetRoundStateLocked()
 	}
 
 	// Preserve IsReady state on reconnect
@@ -1007,10 +1018,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 					currentContestants++
 				}
 			}
-			maxCapacity := 8
-			if r.Game == "gomoku" || r.Game == "idiom" {
-				maxCapacity = 2
-			}
+			maxCapacity := r.getMaxCapacity()
 			if currentContestants >= maxCapacity {
 				senderClient.WriteMessage(websocket.TextMessage, []byte(`{"type":"error","payload":"席位已满"}`))
 				return
@@ -1109,10 +1117,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 
 	if action == string(domain.ActionRestartGame) {
 		log.Printf("Restarting room %s via engine (triggered by %s)", r.ID, clientID)
-		r.Winner = ""
-		r.Winners = nil
-		r.ForfeitedPlayer = ""
-		r.ForfeitedContestants = make(map[string]bool)
+		r.resetRoundStateLocked()
 		r.Engine.HandleAction(clientID, string(domain.ActionRestartGame), payload)
 
 		activePlayers := 0
@@ -1586,10 +1591,7 @@ func (r *Room) HandleMessage(clientID string, payload []byte) {
 				}
 			}
 		}
-		r.Winner = ""
-		r.Winners = nil
-		r.ForfeitedContestants = make(map[string]bool)
-		r.ForfeitedPlayer = ""
+		r.resetRoundStateLocked()
 	}
 
 	// 2. 将对局动作分发给游戏引擎

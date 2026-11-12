@@ -97,6 +97,21 @@ func (e *ClassicEngine) HasPlayer(playerID string) bool {
 	return false
 }
 
+func (e *ClassicEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winner = ""
+	e.LastMove = nil
+	e.WinningLine = nil
+	e.History = make([][]int, 0)
+	for i := 0; i < Size; i++ {
+		for j := 0; j < Size; j++ {
+			e.Board[i][j] = Empty
+		}
+	}
+}
+
 func (e *ClassicEngine) HandleAction(playerID string, action string, payload []byte) (engine.GameState, error) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()

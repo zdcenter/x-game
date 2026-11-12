@@ -93,6 +93,19 @@ func (e *IdiomPKEngine) InitGame(options interface{}) error {
 	return nil
 }
 
+func (e *IdiomPKEngine) ResetToWaiting() {
+	e.Mu.Lock()
+	defer e.Mu.Unlock()
+	e.State = engine.StateWaiting
+	e.Winners = make([]string, 0)
+	e.RoundWinner = ""
+	e.Chain = make([]string, 0)
+	e.CurrentWord = ""
+	e.TargetChar = ""
+	e.Display = make([]string, 0)
+	e.Keyboard = make([]string, 0)
+}
+
 func (e *IdiomPKEngine) AddPlayer(playerID string) {
 	e.Mu.Lock()
 	defer e.Mu.Unlock()

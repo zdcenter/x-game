@@ -2314,5 +2314,11 @@
   "game.walkover_solo_practice": "Continue as Solo Practice",
   "game.walkover_wait_new_opponent": "Wait for Opponents",
   "game.guest_auto_ready_tip": "Ready · Waiting for host to start...",
-  "game.walkover_toast": "All opponents have left. You won the match!"
+  "game.walkover_toast": "All opponents have left. You won the match!",
+  "game.pk_you_forfeited": "You have surrendered this match.",
+  "game.pk_you_forfeited_continuing": "You surrendered. Remaining players continue the match!",
+  "game.pk_you_forfeited_subtitle": "You surrendered. Defeat for this round.",
+  "game.pk_opponent_forfeited_subtitle": "Opponent surrendered. Congratulations on your victory!",
+  "game.pk_spectator_winner_subtitle": "Congratulations to 【{{ player }}】 for winning the match!",
+  "game.pk_spectator_finished_subtitle": "The match has ended!"
 }

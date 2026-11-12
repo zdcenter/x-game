@@ -1202,9 +1202,9 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       if (forfeited) {
         const myId = (this.storePlayerId() || '').trim().toLowerCase();
         if ((forfeited || '').trim().toLowerCase() === myId) {
-          return '您已主动认输，本局遗憾落败';
+          return this.i18n.t('game.pk_you_forfeited_subtitle')() || '您已主动认输，本局遗憾落败';
         }
-        return '对手已主动认输，恭喜赢得本场对决胜利！';
+        return this.i18n.t('game.pk_opponent_forfeited_subtitle')() || '对手已主动认输，恭喜赢得本场对决胜利！';
       }
       return this.i18n.t('game.walkover_win_subtitle')() || '其他对手已全部退出，恭喜您赢得本场对决胜利！';
     }
@@ -1212,9 +1212,9 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
     if (forfeited) {
       const myId = (this.storePlayerId() || '').trim().toLowerCase();
       if ((forfeited || '').trim().toLowerCase() === myId) {
-        return '您已主动认输，本局遗憾落败';
+        return this.i18n.t('game.pk_you_forfeited_subtitle')() || '您已主动认输，本局遗憾落败';
       } else {
-        return '对手已主动认输，恭喜赢得本场对决！';
+        return this.i18n.t('game.pk_opponent_forfeited_subtitle')() || '对手已主动认输，恭喜赢得本场对决胜利！';
       }
     }
     if (this.isSpectatorActive()) {
@@ -1224,7 +1224,9 @@ export class GameLayoutComponent implements OnInit, OnChanges, OnDestroy {
       }
       const winners = (this.store as any)?.winners?.() || [];
       const winnerName = winners.length > 0 ? winners[0] : '';
-      return winnerName ? `恭喜选手【${winnerName}】获得对决胜利！` : '本场巅峰对决已结束！';
+      return winnerName
+        ? (this.i18n.t('game.pk_spectator_winner_subtitle', { player: winnerName })() || `恭喜选手【${winnerName}】获得对决胜利！`)
+        : (this.i18n.t('game.pk_spectator_finished_subtitle')() || '本场巅峰对决已结束！');
     }
     return '';
   });
