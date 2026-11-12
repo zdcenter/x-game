@@ -18,7 +18,6 @@ import { AnnouncementService, Announcement } from '../../core/services/announcem
 import { ShareService } from '../../core/services/share.service';
 import { AdService } from '../../core/services/ad.service';
 import { HallOfFameComponent } from './components/hall-of-fame/hall-of-fame.component';
-import { LiveBattleFeedComponent } from './components/live-battle-feed/live-battle-feed.component';
 import { LiveActivityTickerComponent } from '../../shared/components/live-activity-ticker/live-activity-ticker.component';
 import { LiveRoomService } from '../../core/services/live-room.service';
 import { AuthModalService } from '../../core/services/auth-modal.service';
@@ -38,7 +37,7 @@ export interface GameBadge {
 @Component({
   selector: 'app-lobby',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, LiveActivityTickerComponent, SiteRecommendModalComponent, HallOfFameComponent, LiveBattleFeedComponent],
+  imports: [CommonModule, RouterLink, FormsModule, GameLobbyPanelComponent, LiveActivityTickerComponent, SiteRecommendModalComponent, HallOfFameComponent],
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.css']
 })

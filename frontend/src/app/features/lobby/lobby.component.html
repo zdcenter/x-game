@@ -112,19 +112,9 @@
       </section>
     }
 
-    <!-- 🏆 全网极限纪录殿堂 ＆ ⚡ 即时电竞战报流 (Hall of Fame & Live Battles Dual Deck) -->
+    <!-- 👑 游戏极限纪录殿堂 (All-Time Record Hall of Fame - Full Width Hero Showcase) -->
     <section class="w-full">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
-        <!-- ⚔️ 全网最新对决实况 (Live Member PK Feed) - 移动端/平板居上 (order-1), 桌面宽屏居右 (order-2 lg:col-span-5) -->
-        <div class="order-1 lg:order-2 lg:col-span-5 xl:col-span-4 w-full h-full">
-          <app-live-battle-feed class="h-full block" />
-        </div>
-
-        <!-- 👑 游戏极限纪录殿堂 (All-Time Record Hall of Fame) - 移动端/平板居下 (order-2), 桌面宽屏居左 (order-1 lg:col-span-7) -->
-        <div class="order-2 lg:order-1 lg:col-span-7 xl:col-span-8 w-full h-full">
-          <app-hall-of-fame class="h-full block" />
-        </div>
-      </div>
+      <app-hall-of-fame class="w-full block" />
     </section>
 
     <!-- 🕒 最近常玩 (Recently Played Quick-Launch Bar) -->
