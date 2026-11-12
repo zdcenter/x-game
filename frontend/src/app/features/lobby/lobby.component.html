@@ -26,40 +26,86 @@
     <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
     <h1 class="sr-only">{{ i18n.t('lobby.title')() }} - {{ i18n.t('lobby.subtitle')() }}</h1>
 
-    <!-- 🔥 开放擂台等候中 · 极速迎战独立置顶窗口 (Waiting Matchmaking Hub Spotlight) -->
-    @if (liveRoom.waitingRooms().length > 0) {
+    <!-- ⚔️ 首页全网对决大厅 · 实时擂台与激战专区 (Live Battle Hub & Matchmaking Deck) -->
+    @if (liveRoom.hasAnyRooms()) {
       <section class="w-full animate-fade-in">
         <div class="relative overflow-hidden rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-rose-950/30 p-3 sm:p-4 shadow-lg shadow-amber-500/10 backdrop-blur-md">
           <!-- Cyber Glow Background Decoration -->
           <div class="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-amber-500/15 blur-3xl pointer-events-none"></div>
 
-          <!-- Spotlight Header -->
-          <div class="flex items-center justify-between gap-2 mb-2.5 sm:mb-3">
-            <div class="flex items-center gap-2">
+          <!-- Battle Hub Header -->
+          <div class="flex flex-wrap items-center justify-between gap-2.5 mb-2.5 sm:mb-3">
+            <!-- Left: Title & Live indicator -->
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="flex h-2.5 w-2.5 relative">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
               </span>
               <span class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <span>⚔️</span>
-                <span>{{ i18n.t('lobby.open_challenges_spotlight_title')() || '全网开放擂台 · 等待迎战' }}</span>
+                <span>{{ i18n.t('lobby.battle_hub_title')() || '全网对决大厅 · 实时擂台' }}</span>
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 animate-pulse">
-                {{ liveRoom.waitingRooms().length }} {{ i18n.t('lobby.waiting_rooms_ready')() || '间就绪' }}
-              </span>
+
+              <!-- Tab Filter Switcher (全部 / 等待应战 / 激烈交锋) -->
+              <div class="inline-flex p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-inner text-xs">
+                <button (click)="battleHubTab.set('all')"
+                        class="px-2 sm:px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer"
+                        [class.bg-gradient-to-r]="battleHubTab() === 'all'"
+                        [class.from-amber-500]="battleHubTab() === 'all'"
+                        [class.to-orange-500]="battleHubTab() === 'all'"
+                        [class.text-white]="battleHubTab() === 'all'"
+                        [class.shadow-2xs]="battleHubTab() === 'all'"
+                        [class.text-[var(--color-text-muted)]]="battleHubTab() !== 'all'">
+                  <span>{{ i18n.t('lobby.all_rooms_tab')() || '全部' }}</span>
+                  <span class="font-mono text-[10px] opacity-90">({{ liveRoom.totalRoomsCount() }})</span>
+                </button>
+                <button (click)="battleHubTab.set('waiting')"
+                        class="px-2 sm:px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer"
+                        [class.bg-gradient-to-r]="battleHubTab() === 'waiting'"
+                        [class.from-emerald-600]="battleHubTab() === 'waiting'"
+                        [class.to-teal-600]="battleHubTab() === 'waiting'"
+                        [class.text-white]="battleHubTab() === 'waiting'"
+                        [class.shadow-2xs]="battleHubTab() === 'waiting'"
+                        [class.text-[var(--color-text-muted)]]="battleHubTab() !== 'waiting'">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>{{ i18n.t('lobby.waiting_tab')() || '等待应战' }}</span>
+                  <span class="font-mono text-[10px] opacity-90">({{ liveRoom.waitingCount() }})</span>
+                </button>
+                <button (click)="battleHubTab.set('playing')"
+                        class="px-2 sm:px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer"
+                        [class.bg-gradient-to-r]="battleHubTab() === 'playing'"
+                        [class.from-rose-600]="battleHubTab() === 'playing'"
+                        [class.to-pink-600]="battleHubTab() === 'playing'"
+                        [class.text-white]="battleHubTab() === 'playing'"
+                        [class.shadow-2xs]="battleHubTab() === 'playing'"
+                        [class.text-[var(--color-text-muted)]]="battleHubTab() !== 'playing'">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping"></span>
+                  <span>{{ i18n.t('lobby.playing_tab')() || '激烈交锋' }}</span>
+                  <span class="font-mono text-[10px] opacity-90">({{ liveRoom.playingCount() }})</span>
+                </button>
+              </div>
             </div>
 
-            <button (click)="goToPkArena()" 
-                    class="text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 transition-colors cursor-pointer group">
-              <span>{{ i18n.t('lobby.view_all_rooms')() || '进入竞技场' }}</span>
-              <span class="group-hover:translate-x-0.5 transition-transform">→</span>
-            </button>
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center gap-2">
+              <button (click)="goToPkArena()" 
+                      class="text-[11px] sm:text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 transition-colors cursor-pointer group">
+                <span>{{ i18n.t('lobby.view_all_rooms')() || '进入完整竞技场' }}</span>
+                <span class="group-hover:translate-x-0.5 transition-transform">→</span>
+              </button>
+            </div>
           </div>
 
           <!-- Room Cards List (Horizontal scroll on mobile/tablet, responsive flex/grid) -->
           <div class="flex items-stretch gap-2.5 sm:gap-3 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-            @for (room of liveRoom.waitingRooms(); track room.id) {
-              <div class="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)]/95 border border-amber-500/30 hover:border-amber-500 shadow-xs transition-all shrink-0 w-[280px] sm:w-[320px] md:w-[340px] group">
+            @for (room of displayedBattleRooms(); track room.id) {
+              @let isPlaying = room.status === 'playing' || room.status === 'starting';
+              <div class="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-xl bg-[var(--color-bg-card)]/95 border shadow-xs transition-all shrink-0 w-[285px] sm:w-[325px] md:w-[345px] group"
+                   [class.border-rose-500/40]="isPlaying"
+                   [class.border-amber-500/30]="!isPlaying"
+                   [class.hover:border-rose-500]="isPlaying"
+                   [class.hover:border-amber-500]="!isPlaying">
+                
                 <!-- Left: Game & Room Info -->
                 <div class="flex items-center gap-2.5 min-w-0 flex-1">
                   <div class="w-10 h-10 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -67,11 +113,19 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[110px] sm:max-w-[130px]">
+                      <span class="font-black text-xs sm:text-sm text-[var(--color-text-main)] truncate max-w-[105px] sm:max-w-[125px]">
                         {{ liveRoom.getGameTitle(room.game) }}
                       </span>
-                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                        {{ liveRoom.getDifficultyLabel(room.game, room.difficulty) }}
+                      <span class="px-1.5 py-0.2 rounded text-[9px] font-bold"
+                            [class.bg-rose-500/15]="isPlaying"
+                            [class.text-rose-500]="isPlaying"
+                            [class.border-rose-500/20]="isPlaying"
+                            [class.bg-amber-500/15]="!isPlaying"
+                            [class.text-amber-600]="!isPlaying"
+                            [class.dark:text-amber-400]="!isPlaying"
+                            [class.border-amber-500/20]="!isPlaying"
+                            class="border">
+                        {{ isPlaying ? '🔥 激战中' : liveRoom.getDifficultyLabel(room.game, room.difficulty) }}
                       </span>
                       @if (room.bountyCoins && room.bountyCoins > 0) {
                         <span class="px-1 py-0.1 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
@@ -79,12 +133,23 @@
                         </span>
                       }
                     </div>
-                    <div class="flex items-center gap-1 text-[11px] text-[var(--color-text-secondary)] mt-0.5">
-                      <span class="truncate max-w-[90px] font-semibold text-[var(--color-text-main)]">👤 {{ room.host }}</span>
-                      <span>·</span>
-                      <span class="text-emerald-500 font-bold">
-                        {{ room.players }}/{{ liveRoom.getMaxPlayers(room.game) }} 人
-                      </span>
+
+                    <!-- Row 2: Match-up or Host -->
+                    <div class="flex items-center gap-1 text-[11px] text-[var(--color-text-secondary)] mt-0.5 truncate">
+                      @if (isPlaying && room.opponent) {
+                        <span class="truncate max-w-[70px] sm:max-w-[85px] font-bold text-blue-500">{{ room.host }}</span>
+                        <span class="text-[9px] font-black text-rose-500 px-1 py-0.2 rounded bg-rose-500/10 shrink-0">VS</span>
+                        <span class="truncate max-w-[70px] sm:max-w-[85px] font-bold text-amber-500">{{ room.opponent }}</span>
+                      } @else {
+                        <span class="truncate max-w-[90px] font-semibold text-[var(--color-text-main)]">👤 {{ room.host }}</span>
+                        <span>·</span>
+                        <span class="text-emerald-500 font-bold">
+                          {{ room.players }}/{{ liveRoom.getMaxPlayers(room.game) }} 人
+                        </span>
+                      }
+                      @if (isPlaying && room.spectators && room.spectators > 0) {
+                        <span class="text-[10px] font-mono text-amber-500 ml-1 shrink-0">👁️{{ room.spectators }}</span>
+                      }
                     </div>
                   </div>
                 </div>
@@ -92,12 +157,20 @@
                 <!-- Right: CTA Button -->
                 <div class="shrink-0">
                   @if (liveRoom.isUserInRoom(room)) {
-                    <button (click)="liveRoom.quickJoin(room)"
-                            class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1">
-                      <span>🏠</span>
-                      <span>{{ i18n.t('game.enter_my_room')() || '我的房间' }}</span>
+                    <button (click)="isPlaying ? liveRoom.reconnectMatch(room) : liveRoom.quickJoin(room)"
+                            class="px-3 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs active:scale-95 transition-all shadow-xs cursor-pointer flex items-center gap-1 animate-pulse ring-2 ring-emerald-400/40">
+                      <span>⚡</span>
+                      <span>{{ isPlaying ? (i18n.t('lobby.reconnect_match_btn')() || '返回对决') : (i18n.t('game.enter_my_room')() || '我的房间') }}</span>
+                    </button>
+                  } @else if (isPlaying) {
+                    <!-- 观战按钮：正在比赛中，外部玩家一键实时观战 -->
+                    <button (click)="liveRoom.quickSpectate(room)"
+                            class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-rose-500/15 via-pink-500/15 to-amber-500/15 hover:from-rose-500/25 hover:to-amber-500/25 border border-rose-500/40 text-rose-600 dark:text-rose-300 font-black text-xs active:scale-95 transition-all shadow-2xs cursor-pointer flex items-center gap-1">
+                      <span class="animate-pulse">👁️</span>
+                      <span>{{ i18n.t('lobby.spectate_btn')() || '实时观战' }}</span>
                     </button>
                   } @else {
+                    <!-- 参战按钮：等待中房间，外部玩家一键迎战 -->
                     <button (click)="liveRoom.quickJoin(room)"
                             class="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:brightness-110 active:scale-95 text-white font-black text-xs sm:text-sm transition-all shadow-md shadow-orange-500/30 ring-2 ring-amber-400/60 animate-pulse cursor-pointer flex items-center gap-1">
                       <span>⚡</span>
@@ -107,6 +180,37 @@
                 </div>
               </div>
             }
+          </div>
+        </div>
+      </section>
+    } @else {
+      <!-- ⚔️ 首页对决大厅常驻迎战入口 (Zero-room Standing Invitation Deck) -->
+      <section class="w-full animate-fade-in">
+        <div class="relative overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-amber-500/10 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-amber-950/20 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] flex items-center justify-center text-xl shrink-0 shadow-xs">
+              ⚔️
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)]">
+                  {{ i18n.t('lobby.battle_hub_title')() || '全网对决大厅 · 实时擂台' }}
+                </span>
+                <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/30 font-mono">
+                  PVP ARENA
+                </span>
+              </div>
+              <p class="text-[11px] text-[var(--color-text-secondary)] mt-0.5 truncate max-w-md sm:max-w-xl">
+                {{ i18n.t('lobby.battle_hub_desc')() || '与全服玩家展开高智力竞速交锋，支持即时观战与开房对弈' }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button (click)="goToPkArena()"
+                    class="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-rose-500 hover:brightness-110 text-white font-bold text-xs shadow-md active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
+              <span>⚡</span>
+              <span>{{ i18n.t('lobby.start_or_match')() || '发起挑战 / 随机匹配' }}</span>
+            </button>
           </div>
         </div>
       </section>

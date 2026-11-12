@@ -13,7 +13,11 @@ export interface WaitingRoom {
   id: string;
   game: string;
   host: string;
+  opponent?: string;
+  contestants?: string[];
   players: number;
+  maxPlayers?: number;
+  spectators?: number;
   mode: string;
   difficulty: string;
   status: string;
@@ -36,21 +40,34 @@ export class LiveRoomService {
 
   readonly currentUserId = computed(() => this.auth.currentUser()?.username || this.auth.guestId);
 
-  // Filter only valid waiting rooms (multiplayer, status=waiting)
-  readonly waitingRooms = computed<WaitingRoom[]>(() => {
+  // All active multiplayer rooms (waiting, starting, playing)
+  readonly activeRooms = computed<WaitingRoom[]>(() => {
     const raw = this.ws.activeRooms() || [];
     return raw
       .filter((r: any) => 
         r && 
-        r.status === 'waiting' && 
+        r.status !== 'finished' && 
         r.mode !== GameMode.Single && 
         ((r.players ?? 0) > 0 || (r.contestants && r.contestants.length > 0))
       )
       .sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
   });
 
+  // Filter only valid waiting rooms (multiplayer, status=waiting)
+  readonly waitingRooms = computed<WaitingRoom[]>(() => {
+    return this.activeRooms().filter((r: any) => r.status === 'waiting');
+  });
+
+  // Filter only in-battle rooms (multiplayer, status=playing or starting)
+  readonly playingRooms = computed<WaitingRoom[]>(() => {
+    return this.activeRooms().filter((r: any) => r.status === 'playing' || r.status === 'starting');
+  });
+
   readonly waitingCount = computed(() => this.waitingRooms().length);
+  readonly playingCount = computed(() => this.playingRooms().length);
+  readonly totalRoomsCount = computed(() => this.activeRooms().length);
   readonly hasWaitingRooms = computed(() => this.waitingCount() > 0);
+  readonly hasAnyRooms = computed(() => this.totalRoomsCount() > 0);
 
   // Popover state for navbar
   readonly isBeaconOpen = signal(false);
@@ -145,6 +162,56 @@ export class LiveRoomService {
       // If already on the target game page, the reactive crossGameJoin effect directly handles room joining
       return;
     }
+    this.router.navigate([targetUrl]);
+  }
+
+  quickSpectate(room: WaitingRoom) {
+    if (room.hasPassword) {
+      const lang = this.i18n.currentLang() || 'zh';
+      this.router.navigate([`/${lang}/pk-arena`], { queryParams: { room: room.id } });
+      return;
+    }
+
+    this.crossJoin.setPendingJoin({
+      game: room.game,
+      roomId: room.id,
+      mode: room.mode,
+      difficulty: room.difficulty,
+      host: room.host,
+      action: 'spectate',
+      spectate: true,
+    });
+
+    const lang = this.i18n.currentLang() || 'zh';
+    this.isBeaconOpen.set(false);
+    this.dismissAlert();
+
+    const gameTitle = this.getGameTitle(room.game);
+    const msg = this.i18n.t('lobby.entering_spectate')() || `进入观战: ${gameTitle}`;
+    this.toast.show(msg, 'info');
+
+    const targetUrl = `/${lang}/games/${room.game}`;
+    this.router.navigate([targetUrl]);
+  }
+
+  reconnectMatch(room: WaitingRoom) {
+    const lang = this.i18n.currentLang() || 'zh';
+    this.crossJoin.setPendingJoin({
+      game: room.game,
+      roomId: room.id,
+      mode: room.mode,
+      difficulty: room.difficulty,
+      host: room.host,
+      action: 'join',
+    });
+
+    this.isBeaconOpen.set(false);
+    this.dismissAlert();
+
+    const gameTitle = this.getGameTitle(room.game);
+    this.toast.show(`重返对决: ${gameTitle}`, 'info');
+
+    const targetUrl = `/${lang}/games/${room.game}`;
     this.router.navigate([targetUrl]);
   }
 

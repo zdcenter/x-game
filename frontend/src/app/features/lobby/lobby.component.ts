@@ -57,6 +57,18 @@ export class LobbyComponent implements OnInit, OnDestroy {
   gameRegistry = inject(GameRegistryService);
   liveRoom = inject(LiveRoomService);
 
+  battleHubTab = signal<'all' | 'waiting' | 'playing'>('all');
+  displayedBattleRooms = computed(() => {
+    const tab = this.battleHubTab();
+    if (tab === 'waiting') {
+      return this.liveRoom.waitingRooms();
+    }
+    if (tab === 'playing') {
+      return this.liveRoom.playingRooms();
+    }
+    return this.liveRoom.activeRooms();
+  });
+
   games = signal<BackendGameConfig[]>(
     GAME_DEFINITIONS.map(def => ({
       id: def.id, name: def.id, overview: '', rules: '', config: '',
