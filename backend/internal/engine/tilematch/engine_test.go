@@ -102,3 +102,54 @@ func TestTilematchEngine_StartAndMove(t *testing.T) {
 		t.Fatalf("expected 1 win for p1, got %d", eng.Wins["p1"])
 	}
 }
+
+func TestTilematchEngine_DifficultyTiers(t *testing.T) {
+	difficulties := []struct {
+		diff      string
+		total     int
+		minTypes  int
+	}{
+		{"easy", 18, 4},
+		{"medium", 60, 8},
+		{"hard", 96, 12},
+	}
+
+	for _, d := range difficulties {
+		cards := GenerateCards(d.total, d.diff, 55555)
+		if len(cards) != d.total {
+			t.Fatalf("[%s] expected %d cards, got %d", d.diff, d.total, len(cards))
+		}
+		typeCounts := make(map[string]int)
+		for _, c := range cards {
+			typeCounts[c.Type]++
+		}
+		if len(typeCounts) < d.minTypes {
+			t.Fatalf("[%s] expected at least %d types, got %d", d.diff, d.minTypes, len(typeCounts))
+		}
+		for typ, count := range typeCounts {
+			if count%3 != 0 {
+				t.Fatalf("[%s] type %s count %d is not a multiple of 3", d.diff, typ, count)
+			}
+		}
+
+		// In hard mode, verify that triples are distributed across layers (cross-layer interleaving)
+		if d.diff == "hard" {
+			typeLayers := make(map[string]map[int]bool)
+			for _, c := range cards {
+				if typeLayers[c.Type] == nil {
+					typeLayers[c.Type] = make(map[int]bool)
+				}
+				typeLayers[c.Type][c.Layer] = true
+			}
+			multiLayerTypes := 0
+			for _, layers := range typeLayers {
+				if len(layers) > 1 {
+					multiLayerTypes++
+				}
+			}
+			if multiLayerTypes == 0 {
+				t.Fatalf("[hard] expected types to be distributed across multiple layers")
+			}
+		}
+	}
+}

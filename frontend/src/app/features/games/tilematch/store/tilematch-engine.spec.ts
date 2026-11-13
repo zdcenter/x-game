@@ -65,6 +65,18 @@ describe('LocalTilematchEngine', () => {
       hardCoords.add(key);
     }
     expect(hardState.cards.filter(c => !c.isBlocked).length).toBeGreaterThanOrEqual(4);
+
+    // 验证困难模式下图案跨层交错分布 (非单层堆积)
+    const typeLayers: Record<string, Set<number>> = {};
+    for (const card of hardState.cards) {
+      if (!typeLayers[card.type]) typeLayers[card.type] = new Set<number>();
+      typeLayers[card.type].add(card.layer);
+    }
+    let multiLayerCount = 0;
+    for (const type of Object.keys(typeLayers)) {
+      if (typeLayers[type].size > 1) multiLayerCount++;
+    }
+    expect(multiLayerCount).toBeGreaterThan(0);
   });
 
   it('should accurately detect AABB overlapping occlusion between layers', () => {

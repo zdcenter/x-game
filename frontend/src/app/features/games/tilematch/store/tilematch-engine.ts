@@ -484,18 +484,21 @@ export class LocalTilematchEngine implements ILocalEngine<TilematchState, Tilema
       };
     }
 
-    // 1. 确定图案种类数 (简单: 4~6 种, 中等: 7~9 种, 困难: 10~14 种)
-    let typesCount = 4;
-    if (totalCards >= 96) {
-      typesCount = 12;
-    } else if (totalCards >= 60) {
-      typesCount = 8;
+    // 1. 确定图案种类数 (简单: 5~6 种, 中等: 8~9 种, 困难: 12~14 种)
+    let typesCount = 5;
+    const diffLower = (difficulty || '').toLowerCase();
+    if (diffLower === 'hard' || totalCards >= 96) {
+      typesCount = 13;
+    } else if (diffLower === 'medium' || totalCards >= 60) {
+      typesCount = 9;
     } else if (totalCards >= 36) {
-      typesCount = 6;
+      typesCount = 7;
     } else if (totalCards >= 24) {
+      typesCount = 6;
+    } else {
       typesCount = 5;
     }
-    const availableTypes = TILE_TYPES.slice(0, typesCount);
+    const availableTypes = TILE_TYPES.slice(0, Math.min(typesCount, TILE_TYPES.length));
 
     // 2. 生成多形态阵型拓扑 (确保总数恰好等于 totalCards，坐标唯一且各层错落有致)
     const rawSlots = this.generateProceduralSlots(totalCards, randomFn);
@@ -518,9 +521,8 @@ export class LocalTilematchEngine implements ILocalEngine<TilematchState, Tilema
       }
     }
 
-    // 4. 100% 保证有解算法 (Solvable Simulation Assignment)
-    // 模拟正向游戏流程：每次从当前完全暴露未遮挡的卡牌中拿牌消掉，确保有一条通关路径
-    const assignedTypes = this.solveAndAssignPatterns(rawSlots, blockedBy, blocks, availableTypes, randomFn);
+    // 4. 100% 保证有解逆向时间推演染色算法 (Reverse Simulation Assignment)
+    const assignedTypes = this.solveAndAssignPatterns(rawSlots, blockedBy, blocks, availableTypes, randomFn, difficulty);
 
     // 5. 实例化正式卡牌列表
     for (let i = 0; i < slotCount; i++) {
@@ -889,97 +891,202 @@ export class LocalTilematchEngine implements ILocalEngine<TilematchState, Tilema
   }
 
   /**
-   * 100% 必定可解图案分配算法 (Solvable Color Assignment)
-   * 正向模拟一个玩家在最大卡槽裕度 <= 5 格的情况下完整通关，将消除序列赋予卡槽
+   * 100% 必定可解且具备真实挑战性的逆向时间推演算法 (Reverse Time-Simulation Pattern Assignment)
+   * 1. 采用时间倒流法 (Time-Reversal): 从全盘消空的胜利状态逆序推演回开局
+   * 2. 跨层交错 (Cross-Layer Interleaving): 严禁相同图案在同一层或同一分支扎堆
+   * 3. 真实难度梯度 (Authentic Difficulty Tiers):
+   *    - 简单 (Easy): 最大虚拟卡槽裕度 <= 4，交错率低，温和易上手
+   *    - 中等 (Medium): 最大虚拟卡槽裕度 <= 5，适度交错，需要观察 2~3 步
+   *    - 困难 (Hard): 最大虚拟卡槽裕度 <= 6 (逼近 7 格红线)，高度交错与深层压牌，极富策略挑战
    */
   private solveAndAssignPatterns(
     slots: Array<{ x: number; y: number; layer: number }>,
     blockedBy: Set<number>[],
     blocks: Set<number>[],
     availableTypes: readonly string[],
-    randomFn: () => number
+    randomFn: () => number,
+    difficulty: string = 'easy'
   ): string[] {
     const n = slots.length;
     const assigned = new Array<string>(n).fill('');
-    const inDegrees = blockedBy.map(b => b.size); // 当前有多少牌压在上面
-    const cleared = new Array<boolean>(n).fill(false);
+    const placed = new Array<boolean>(n).fill(false);
 
-    // 统计每种图案的使用次数，力求均衡
+    // blocks[i] 是 i 所覆盖/压着的下方卡牌
+    // 在逆向放置过程中，卡牌 i 只有在其下方所有卡牌 (blocks[i]) 都已放置后，才能被放置
+    const coveredRemaining = blocks.map(b => b.size);
+    const eligible = new Set<number>();
+    for (let i = 0; i < n; i++) {
+      if (coveredRemaining[i] === 0) {
+        eligible.add(i);
+      }
+    }
+
+    // 根据难度确定虚拟卡槽缓冲区上限与交错概率
+    let maxSlotBuffer = 5;
+    let spawnProb = 0.45;
+    const diffLower = (difficulty || '').toLowerCase();
+    if (diffLower === 'hard' || n >= 96) {
+      maxSlotBuffer = 6;
+      spawnProb = 0.75;
+    } else if (diffLower === 'medium' || n >= 60) {
+      maxSlotBuffer = 5;
+      spawnProb = 0.45;
+    } else {
+      maxSlotBuffer = 4;
+      spawnProb = 0.20;
+    }
+
+    // 均摊规划所有图案的三消配对池
+    const totalTriples = Math.floor(n / 3);
+    const triplePool: string[] = [];
     const typeUsage: Record<string, number> = {};
     availableTypes.forEach(t => (typeUsage[t] = 0));
 
-    // 获取当前暴露（未遮挡）且未分配图案的槽位
-    const getAvailableSlots = () => {
-      const list: number[] = [];
-      for (let i = 0; i < n; i++) {
-        if (!cleared[i] && inDegrees[i] === 0) {
-          list.push(i);
-        }
-      }
-      return list;
-    };
-
-    let totalPairsNeeded = n / 3;
-    let virtualSlot: { id: number; type: string }[] = [];
-
-    // 正向模拟分配循环
-    for (let round = 0; round < totalPairsNeeded; round++) {
-      let free = getAvailableSlots();
-      if (free.length === 0) break;
-
-      // 挑选一个最合适的水果图案 (使用最少者优先，相同频次按名称字典序稳定排序)
+    for (let i = 0; i < totalTriples; i++) {
+      // 选取使用最少的图案
       const sortedTypes = [...availableTypes].sort((a, b) => {
         const diff = (typeUsage[a] || 0) - (typeUsage[b] || 0);
         if (diff !== 0) return diff;
         return a.localeCompare(b);
       });
-      const chosenType = sortedTypes[0];
-      typeUsage[chosenType] = (typeUsage[chosenType] || 0) + 3;
+      const chosen = sortedTypes[0];
+      typeUsage[chosen] = (typeUsage[chosen] || 0) + 1;
+      triplePool.push(chosen);
+    }
+    this.shuffleArray(triplePool, randomFn);
 
-      // 选 3 个槽位赋予该图案
-      const picked: number[] = [];
+    const virtualSlot: string[] = [];
+    let placedCount = 0;
 
-      // 1. 如果当前暴露的牌 >= 3，直接拿 3 张进行 3 消，零占用卡槽！
-      if (free.length >= 3) {
-        // 轻度打乱 free
-        this.shuffleArray(free, randomFn);
-        picked.push(free[0], free[1], free[2]);
-      } else {
-        // 暴露牌不足 3 张，依次取走暴露牌并释放下层，凑齐 3 张
-        while (picked.length < 3 && free.length > 0) {
-          const next = free.pop()!;
-          picked.push(next);
-          // 暂时释放它的遮挡，让下层露出来
-          cleared[next] = true;
-          for (const lower of blocks[next]) {
-            inDegrees[lower]--;
-          }
-          free = getAvailableSlots().filter(id => !picked.includes(id));
-        }
+    // 记录每种图案已放置的槽位坐标，用于空间与层级分散打分
+    const typePositions: Record<string, Array<{ x: number; y: number; layer: number }>> = {};
+    availableTypes.forEach(t => (typePositions[t] = []));
 
-        // 如果依然凑不足（极端情况），从任何未消除的槽位补足
-        if (picked.length < 3) {
-          for (let i = 0; i < n && picked.length < 3; i++) {
-            if (!cleared[i] && !picked.includes(i)) {
-              picked.push(i);
+    while (placedCount < n) {
+      const canSpawn = triplePool.length > 0 && virtualSlot.length + 3 <= maxSlotBuffer;
+      const canPlace = virtualSlot.length > 0 && eligible.size > 0;
+
+      let doSpawn = false;
+      if (virtualSlot.length === 0) {
+        doSpawn = true;
+      } else if (!canPlace) {
+        doSpawn = true;
+      } else if (canSpawn) {
+        // 当虚拟卡槽还有空间且可以生成新三连时，按难度概率交错生成
+        doSpawn = randomFn() < spawnProb;
+      }
+
+      if (doSpawn && canSpawn) {
+        // 逆向生成：将一组 3 消卡牌放入虚拟卡槽 (对应正向消除)
+        const newType = triplePool.pop()!;
+        virtualSlot.push(newType, newType, newType);
+        // 打乱虚拟卡槽顺序
+        this.shuffleArray(virtualSlot, randomFn);
+      } else if (canPlace) {
+        // 逆向放置：从虚拟卡槽选一张牌放入当前可放置的合法槽位
+        const eligibleArray = Array.from(eligible);
+        this.shuffleArray(eligibleArray, randomFn);
+
+        // 提取虚拟卡槽中去重的所有可用图案
+        const uniqueSlotTypes = Array.from(new Set(virtualSlot));
+        this.shuffleArray(uniqueSlotTypes, randomFn);
+
+        let bestScore = -Infinity;
+        let bestSlot = eligibleArray[0];
+        let bestType = uniqueSlotTypes[0];
+
+        // 寻找最优搭配 (若难度为 Easy 则随机或轻度优化，Medium/Hard 严格交错优化)
+        if (diffLower === 'easy') {
+          bestSlot = eligibleArray[Math.floor(randomFn() * eligibleArray.length)];
+          bestType = uniqueSlotTypes[Math.floor(randomFn() * uniqueSlotTypes.length)];
+        } else {
+          for (const sIdx of eligibleArray) {
+            const slotObj = slots[sIdx];
+            // 获取该槽位所压着的下层卡牌类型
+            const coveredTypes = new Set<string>();
+            for (const childIdx of blocks[sIdx]) {
+              if (assigned[childIdx]) {
+                coveredTypes.add(assigned[childIdx]);
+              }
+            }
+
+            for (const t of uniqueSlotTypes) {
+              let score = 0;
+
+              // 1. 垂直避让惩罚：严禁当前牌与正下方的牌同图案（避免一掀开就白送消除）
+              if (coveredTypes.has(t)) {
+                score -= 80;
+              }
+
+              // 2. 空间距离惩罚与层级分散：与已放置同图案卡牌拉开距离
+              const prevPos = typePositions[t];
+              if (prevPos.length > 0) {
+                let minDist = 999;
+                let sameLayerCount = 0;
+                for (const pos of prevPos) {
+                  const dist = Math.hypot(pos.x - slotObj.x, pos.y - slotObj.y);
+                  if (dist < minDist) minDist = dist;
+                  if (pos.layer === slotObj.layer) sameLayerCount++;
+                }
+                // 距离越近扣分越多（避免相邻扎堆）
+                if (minDist < 1.1) {
+                  score -= 50;
+                } else if (minDist < 2.0) {
+                  score -= 20;
+                } else {
+                  score += 20;
+                }
+
+                // 同层惩罚：同图案尽量分在不同层
+                if (sameLayerCount > 0) {
+                  score -= 25 * sameLayerCount;
+                }
+              }
+
+              // 3. 针对 Hard 模式：增加对高层和深层的纵深分散打分
+              if (diffLower === 'hard') {
+                score += (slotObj.layer % 3) * 5;
+              }
+
+              // 加入轻微随机扰动 (0 ~ 5)，增加牌局丰富度
+              score += randomFn() * 5;
+
+              if (score > bestScore) {
+                bestScore = score;
+                bestSlot = sIdx;
+                bestType = t;
+              }
             }
           }
         }
-      }
 
-      // 将这 3 张牌正式标记为消除并赋予图案
-      for (const idx of picked) {
-        assigned[idx] = chosenType;
-        if (!cleared[idx]) {
-          cleared[idx] = true;
-          for (const lower of blocks[idx]) {
-            inDegrees[lower]--;
+        // 落实分配
+        assigned[bestSlot] = bestType;
+        placed[bestSlot] = true;
+        placedCount++;
+        eligible.delete(bestSlot);
+        typePositions[bestType].push(slots[bestSlot]);
+
+        // 从虚拟卡槽中移除一张该图案
+        const removeIdx = virtualSlot.indexOf(bestType);
+        if (removeIdx !== -1) {
+          virtualSlot.splice(removeIdx, 1);
+        }
+
+        // 释放依赖：当 bestSlot (底层牌) 放置后，所有压在 bestSlot 上方的牌 (blockedBy[bestSlot]) 的未放置下层依赖数 -1
+        for (const parentIdx of blockedBy[bestSlot]) {
+          coveredRemaining[parentIdx]--;
+          if (coveredRemaining[parentIdx] === 0 && !placed[parentIdx]) {
+            eligible.add(parentIdx);
           }
         }
+      } else {
+        // 兜底防死锁
+        break;
       }
     }
 
-    // 保底：若有任何槽位未染上色，按 3 的倍数补充
+    // 保底检查：若有任何槽位未染上色，按 3 的倍数补充
     const unassigned: number[] = [];
     for (let i = 0; i < n; i++) {
       if (!assigned[i]) unassigned.push(i);

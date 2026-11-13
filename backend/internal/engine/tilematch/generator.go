@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"sort"
+	"strings"
 )
 
 var TileTypes = []string{
@@ -30,15 +31,18 @@ func GenerateCards(totalCards int, difficulty string, seed int64) []Card {
 
 	rng := rand.New(rand.NewSource(seed))
 
-	// 1. 确定图案种类数
-	typesCount := 4
-	if totalCards >= 96 {
-		typesCount = 12
-	} else if totalCards >= 60 {
-		typesCount = 8
+	// 1. 确定图案种类数 (简单: 5~6 种, 中等: 8~9 种, 困难: 12~14 种)
+	typesCount := 5
+	diffLower := strings.ToLower(difficulty)
+	if diffLower == "hard" || totalCards >= 96 {
+		typesCount = 13
+	} else if diffLower == "medium" || totalCards >= 60 {
+		typesCount = 9
 	} else if totalCards >= 36 {
-		typesCount = 6
+		typesCount = 7
 	} else if totalCards >= 24 {
+		typesCount = 6
+	} else {
 		typesCount = 5
 	}
 	if typesCount > len(TileTypes) {
@@ -72,8 +76,8 @@ func GenerateCards(totalCards int, difficulty string, seed int64) []Card {
 		}
 	}
 
-	// 4. 正向模拟染色赋予图案（确保 100% 必定有解且每种图案为 3 的倍数）
-	assignedTypes := solveAndAssignPatterns(slots, blockedBy, blocks, availableTypes, rng)
+	// 4. 逆向时间推演染色赋予图案（确保 100% 必定有解且难度真实生效）
+	assignedTypes := solveAndAssignPatterns(slots, blockedBy, blocks, availableTypes, rng, difficulty)
 
 	// 5. 组装正式卡牌数据
 	cards := make([]Card, slotCount)
@@ -363,106 +367,207 @@ func solveAndAssignPatterns(
 	blocks []map[int]bool,
 	availableTypes []string,
 	rng *rand.Rand,
+	difficulty string,
 ) []string {
 	n := len(slots)
 	assigned := make([]string, n)
-	inDegrees := make([]int, n)
-	for i := 0; i < n; i++ {
-		inDegrees[i] = len(blockedBy[i])
-	}
-	cleared := make([]bool, n)
+	placed := make([]bool, n)
 
+	// blocks[i] 是 i 所覆盖/压着的下方卡牌
+	// 在逆向放置过程中，卡牌 i 只有在其下方所有卡牌 (blocks[i]) 都已放置后，才能被放置
+	coveredRemaining := make([]int, n)
+	eligible := make(map[int]bool)
+	for i := 0; i < n; i++ {
+		coveredRemaining[i] = len(blocks[i])
+		if coveredRemaining[i] == 0 {
+			eligible[i] = true
+		}
+	}
+
+	maxSlotBuffer := 5
+	spawnProb := 0.45
+	diffLower := strings.ToLower(difficulty)
+	if diffLower == "hard" || n >= 96 {
+		maxSlotBuffer = 6
+		spawnProb = 0.75
+	} else if diffLower == "medium" || n >= 60 {
+		maxSlotBuffer = 5
+		spawnProb = 0.45
+	} else {
+		maxSlotBuffer = 4
+		spawnProb = 0.20
+	}
+
+	totalTriples := n / 3
+	triplePool := make([]string, 0, totalTriples)
 	typeUsage := make(map[string]int)
 	for _, t := range availableTypes {
 		typeUsage[t] = 0
 	}
 
-	getAvailableSlots := func() []int {
-		var list []int
-		for i := 0; i < n; i++ {
-			if !cleared[i] && inDegrees[i] == 0 {
-				list = append(list, i)
-			}
-		}
-		return list
-	}
-
-	totalPairs := n / 3
-	for round := 0; round < totalPairs; round++ {
-		free := getAvailableSlots()
-		if len(free) == 0 {
-			break
-		}
-
-		// 挑选最少使用的图案
+	for i := 0; i < totalTriples; i++ {
 		sortedTypes := make([]string, len(availableTypes))
 		copy(sortedTypes, availableTypes)
-		sort.SliceStable(sortedTypes, func(i, j int) bool {
-			ui, uj := typeUsage[sortedTypes[i]], typeUsage[sortedTypes[j]]
-			if ui != uj {
-				return ui < uj
+		sort.SliceStable(sortedTypes, func(a, b int) bool {
+			diff := typeUsage[sortedTypes[a]] - typeUsage[sortedTypes[b]]
+			if diff != 0 {
+				return diff < 0
 			}
-			return sortedTypes[i] < sortedTypes[j]
+			return sortedTypes[a] < sortedTypes[b]
 		})
-		chosenType := sortedTypes[0]
-		typeUsage[chosenType] += 3
+		chosen := sortedTypes[0]
+		typeUsage[chosen]++
+		triplePool = append(triplePool, chosen)
+	}
+	rng.Shuffle(len(triplePool), func(i, j int) {
+		triplePool[i], triplePool[j] = triplePool[j], triplePool[i]
+	})
 
-		var picked []int
-		if len(free) >= 3 {
-			rng.Shuffle(len(free), func(i, j int) {
-				free[i], free[j] = free[j], free[i]
-			})
-			picked = append(picked, free[0], free[1], free[2])
-		} else {
-			for len(picked) < 3 && len(free) > 0 {
-				next := free[len(free)-1]
-				free = free[:len(free)-1]
-				picked = append(picked, next)
-				cleared[next] = true
-				for lower := range blocks[next] {
-					inDegrees[lower]--
-				}
-				newFree := getAvailableSlots()
-				var filtered []int
-				for _, f := range newFree {
-					already := false
-					for _, p := range picked {
-						if p == f {
-							already = true
-							break
-						}
-					}
-					if !already {
-						filtered = append(filtered, f)
-					}
-				}
-				free = filtered
-			}
+	virtualSlot := make([]string, 0, maxSlotBuffer)
+	placedCount := 0
+	typePositions := make(map[string][]Slot)
+	for _, t := range availableTypes {
+		typePositions[t] = make([]Slot, 0)
+	}
 
-			if len(picked) < 3 {
-				for i := 0; i < n && len(picked) < 3; i++ {
-					already := false
-					for _, p := range picked {
-						if p == i {
-							already = true
-							break
-						}
-					}
-					if !cleared[i] && !already {
-						picked = append(picked, i)
-					}
-				}
-			}
+	for placedCount < n {
+		canSpawn := len(triplePool) > 0 && len(virtualSlot)+3 <= maxSlotBuffer
+		canPlace := len(virtualSlot) > 0 && len(eligible) > 0
+
+		doSpawn := false
+		if len(virtualSlot) == 0 {
+			doSpawn = true
+		} else if !canPlace {
+			doSpawn = true
+		} else if canSpawn {
+			doSpawn = rng.Float64() < spawnProb
 		}
 
-		for _, idx := range picked {
-			assigned[idx] = chosenType
-			if !cleared[idx] {
-				cleared[idx] = true
-				for lower := range blocks[idx] {
-					inDegrees[lower]--
+		if doSpawn && canSpawn {
+			newType := triplePool[len(triplePool)-1]
+			triplePool = triplePool[:len(triplePool)-1]
+			virtualSlot = append(virtualSlot, newType, newType, newType)
+			rng.Shuffle(len(virtualSlot), func(i, j int) {
+				virtualSlot[i], virtualSlot[j] = virtualSlot[j], virtualSlot[i]
+			})
+		} else if canPlace {
+			eligibleArray := make([]int, 0, len(eligible))
+			for k := range eligible {
+				eligibleArray = append(eligibleArray, k)
+			}
+			sort.Ints(eligibleArray)
+			rng.Shuffle(len(eligibleArray), func(i, j int) {
+				eligibleArray[i], eligibleArray[j] = eligibleArray[j], eligibleArray[i]
+			})
+
+			uniqueMap := make(map[string]bool)
+			var uniqueSlotTypes []string
+			for _, t := range virtualSlot {
+				if !uniqueMap[t] {
+					uniqueMap[t] = true
+					uniqueSlotTypes = append(uniqueSlotTypes, t)
 				}
 			}
+			rng.Shuffle(len(uniqueSlotTypes), func(i, j int) {
+				uniqueSlotTypes[i], uniqueSlotTypes[j] = uniqueSlotTypes[j], uniqueSlotTypes[i]
+			})
+
+			bestScore := -1e9
+			bestSlot := eligibleArray[0]
+			bestType := uniqueSlotTypes[0]
+
+			if diffLower == "easy" {
+				bestSlot = eligibleArray[rng.Intn(len(eligibleArray))]
+				bestType = uniqueSlotTypes[rng.Intn(len(uniqueSlotTypes))]
+			} else {
+				for _, sIdx := range eligibleArray {
+					slotObj := slots[sIdx]
+					coveredTypes := make(map[string]bool)
+					for childIdx := range blocks[sIdx] {
+						if assigned[childIdx] != "" {
+							coveredTypes[assigned[childIdx]] = true
+						}
+					}
+
+					for _, t := range uniqueSlotTypes {
+						score := 0.0
+
+						// 1. 垂直避让惩罚：严禁当前牌与正下方的牌同图案
+						if coveredTypes[t] {
+							score -= 80.0
+						}
+
+						// 2. 空间距离惩罚与层级分散
+						prevPos := typePositions[t]
+						if len(prevPos) > 0 {
+							minDist := 999.0
+							sameLayerCount := 0
+							for _, pos := range prevPos {
+								dist := math.Hypot(pos.X-slotObj.X, pos.Y-slotObj.Y)
+								if dist < minDist {
+									minDist = dist
+								}
+								if pos.Layer == slotObj.Layer {
+									sameLayerCount++
+								}
+							}
+							if minDist < 1.1 {
+								score -= 50.0
+							} else if minDist < 2.0 {
+								score -= 20.0
+							} else {
+								score += 20.0
+							}
+							if sameLayerCount > 0 {
+								score -= 25.0 * float64(sameLayerCount)
+							}
+						}
+
+						// 3. 针对 Hard 模式：纵深打分
+						if diffLower == "hard" {
+							score += float64((slotObj.Layer % 3) * 5)
+						}
+
+						score += rng.Float64() * 5.0
+
+						if score > bestScore {
+							bestScore = score
+							bestSlot = sIdx
+							bestType = t
+						}
+					}
+				}
+			}
+
+			// 落实分配
+			assigned[bestSlot] = bestType
+			placed[bestSlot] = true
+			placedCount++
+			delete(eligible, bestSlot)
+			typePositions[bestType] = append(typePositions[bestType], slots[bestSlot])
+
+			// 从 virtualSlot 移除一张 bestType
+			for i, t := range virtualSlot {
+				if t == bestType {
+					virtualSlot = append(virtualSlot[:i], virtualSlot[i+1:]...)
+					break
+				}
+			}
+
+			// 释放依赖：当 bestSlot (底层牌) 放置后，所有压在 bestSlot 上方的牌的未放置下层依赖数 -1
+			var parentIndices []int
+			for parentIdx := range blockedBy[bestSlot] {
+				parentIndices = append(parentIndices, parentIdx)
+			}
+			sort.Ints(parentIndices)
+			for _, parentIdx := range parentIndices {
+				coveredRemaining[parentIdx]--
+				if coveredRemaining[parentIdx] == 0 && !placed[parentIdx] {
+					eligible[parentIdx] = true
+				}
+			}
+		} else {
+			break
 		}
 	}
 
