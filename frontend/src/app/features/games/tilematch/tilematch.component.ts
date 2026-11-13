@@ -8,6 +8,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { GameId, GameMode, GameStatus } from "../../../core/models/game.model";
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { TILE_EMOJIS, TileCard } from './store/tilematch-engine';
+import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
+import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
 
 import { TileIconComponent } from './components/tile-icon/tile-icon.component';
 
@@ -41,7 +43,8 @@ export interface ClearingMatchEvent {
     CommonModule,
     GameLayoutComponent,
     GamePkHudComponent,
-    TileIconComponent
+    TileIconComponent,
+    DifficultySelectorComponent
   ],
   providers: [TilematchStore],
   templateUrl: './tilematch.component.html',
@@ -49,6 +52,12 @@ export interface ClearingMatchEvent {
 })
 export class TilematchComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(TilematchStore);
+
+  readonly difficulties: DifficultyOption[] = [
+    { id: 'easy', labelKey: 'game.diff_easy', desc: '18张 · 轻松' },
+    { id: 'medium', labelKey: 'game.diff_medium', desc: '60张 · 进阶' },
+    { id: 'hard', labelKey: 'game.diff_hard', desc: '96张 · 烧脑' },
+  ];
 
   readonly isImmersionActive = computed(() => {
     return this.deviceService.isHandheld() || this.zenService.isZenMode();
@@ -326,7 +335,12 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
       if (requestedDiff) {
         this.store.startLocalGame(requestedDiff);
       } else {
-        this.store.startLocalGame(this.store.currentLevel());
+        const savedDiff = getSavedDifficulty('tilematch', '');
+        if (savedDiff) {
+          this.store.startLocalGame(savedDiff);
+        } else {
+          this.store.startLocalGame(this.store.currentLevel());
+        }
         this.checkAndPromptResumeSession('tilematch');
       }
     }
@@ -341,7 +355,7 @@ export class TilematchComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   switchDifficulty(difficulty: string) {
-    if (this.store.currentDifficulty() === difficulty) return;
+    setSavedDifficulty('tilematch', difficulty);
     this.store.startLocalGame(difficulty);
     this.vibrateLight();
   }

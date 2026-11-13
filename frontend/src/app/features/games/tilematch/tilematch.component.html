@@ -68,9 +68,16 @@
             </button>
           </div>
 
-          <!-- 中间居中：田园白玉微立体关卡胶囊 (告别死黑色与时间日期干扰) -->
-          <div class="relative flex flex-col items-center">
-            <!-- 白玉胶囊主体 -->
+          <!-- 中间居中：🎯 难度规格抽屉选择器 + 田园白玉关卡胶囊 -->
+          <div class="relative flex items-center gap-1.5 sm:gap-2.5">
+            <!-- 🎯 难度规格微胶囊选择器 (简单 / 中等 / 困难 随心切换) -->
+            <app-difficulty-selector
+              [availableDifficulties]="difficulties"
+              [currentDifficulty]="store.currentDifficulty()"
+              (difficultyChange)="switchDifficulty($event)">
+            </app-difficulty-selector>
+
+            <!-- 白玉胶囊主体 (关卡与张数指示) -->
             <div
               (click)="toggleLevelPicker(); vibrateLight()"
               class="meadow-level-capsule cursor-pointer group hover:scale-105 active:scale-95 transition-all">
@@ -80,7 +87,6 @@
                 class="capsule-arrow left"
                 [title]="store.currentLevel() > 1 ? ('上一关 (第 ' + (store.currentLevel() - 1) + ' 关)') : '已是第一关'">◀</button>
               <div class="capsule-title">
-                {{ store.currentDifficulty() === GameDifficulty.Easy ? '🌱' : (store.currentDifficulty() === GameDifficulty.Medium ? '🐑' : '🔥') }}
                 第 {{ store.currentLevel() }} 关 · {{ store.totalCardsCount() }} 张
                 @if (store.winStreak() >= 2) {
                   <span class="text-amber-500 font-black ml-1 text-[11px]">🔥x{{ store.winStreak() }}</span>
@@ -104,22 +110,22 @@
                 <div class="flex flex-col gap-1 w-full">
                   <button
                     type="button"
-                    (click)="jumpToLevel(1); vibrateLight()"
-                    [class.active-level]="store.currentLevel() < 15"
+                    (click)="switchDifficulty('easy'); isLevelPickerOpen.set(false); vibrateLight()"
+                    [class.active-level]="store.currentDifficulty() === GameDifficulty.Easy"
                     class="level-item-btn">
                     <span>🌱 {{ i18n.t('tilematch.mode_easy')() }} (18~57张)</span>
                   </button>
                   <button
                     type="button"
-                    (click)="jumpToLevel(15); vibrateLight()"
-                    [class.active-level]="store.currentLevel() >= 15 && store.currentLevel() < 27"
+                    (click)="switchDifficulty('medium'); isLevelPickerOpen.set(false); vibrateLight()"
+                    [class.active-level]="store.currentDifficulty() === GameDifficulty.Medium"
                     class="level-item-btn">
                     <span>🐑 {{ i18n.t('tilematch.mode_medium')() }} (60~93张)</span>
                   </button>
                   <button
                     type="button"
-                    (click)="jumpToLevel(27); vibrateLight()"
-                    [class.active-level]="store.currentLevel() >= 27"
+                    (click)="switchDifficulty('hard'); isLevelPickerOpen.set(false); vibrateLight()"
+                    [class.active-level]="store.currentDifficulty() === GameDifficulty.Hard"
                     class="level-item-btn">
                     <span>🔥 {{ i18n.t('tilematch.mode_hard')() }} (96张+)</span>
                   </button>

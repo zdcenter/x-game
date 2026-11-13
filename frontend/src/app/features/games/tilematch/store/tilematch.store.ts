@@ -226,19 +226,23 @@ export class TilematchStore extends BaseGameStore {
     this.ws.disconnect(this.gameId);
 
     let level = this.currentLevel();
+    const d = typeof levelOrDiff === 'string' ? levelOrDiff.trim().toLowerCase() : '';
+
     if (typeof levelOrDiff === 'number') {
       level = Math.max(1, levelOrDiff);
       this.currentLevel.set(level);
-    } else if (levelOrDiff === GameDifficulty.Medium) {
-      level = 15; // 60 张
+    } else if (d === 'hard' || d === GameDifficulty.Hard) {
+      level = 27; // 96 张 (困难)
       this.currentLevel.set(level);
-    } else if (levelOrDiff === GameDifficulty.Hard) {
-      level = 27; // 96 张
+    } else if (d === 'medium' || d === GameDifficulty.Medium) {
+      level = 15; // 60 张 (中等)
       this.currentLevel.set(level);
-    } else if (levelOrDiff === GameDifficulty.Easy) {
-      level = 1; // 18 张
+    } else if (d === 'easy' || d === GameDifficulty.Easy) {
+      level = 1; // 18 张 (简单)
       this.currentLevel.set(level);
     }
+
+    this.saveProgress();
 
     const engine = new LocalTilematchEngine();
     engine.initGame({ level });

@@ -259,5 +259,25 @@ describe('LocalTilematchEngine', () => {
     expect(engine.cards[0].type).toBe('apple');
     expect(engine.cards[0].isBlocked).toBe(false);
   });
+
+  it('should regenerate different boards when switching difficulty between Easy, Medium and Hard', () => {
+    // Easy: 18 cards
+    engine.initGame({ difficulty: GameDifficulty.Easy });
+    expect(engine.totalCards).toBe(18);
+    expect(engine.cards.length).toBe(18);
+    expect(engine.difficulty).toBe(GameDifficulty.Easy);
+
+    // Medium: 60 cards
+    engine.initGame({ difficulty: GameDifficulty.Medium });
+    expect(engine.totalCards).toBe(60);
+    expect(engine.cards.length).toBe(60);
+    expect(engine.difficulty).toBe(GameDifficulty.Medium);
+
+    // Hard: 96 cards
+    engine.initGame({ difficulty: GameDifficulty.Hard });
+    expect(engine.totalCards).toBe(96);
+    expect(engine.cards.length).toBe(96);
+    expect(engine.difficulty).toBe(GameDifficulty.Hard);
+  });
 });
 
