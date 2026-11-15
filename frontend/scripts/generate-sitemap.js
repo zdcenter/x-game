@@ -40,6 +40,7 @@ const staticPaths = [
   ['legal/terms',  'monthly','0.3', today],
   ['legal/about',  'monthly','0.4', today],
   ['legal/contact','monthly','0.4', today],
+  ['legal/faq','monthly','0.6', today],
   ...games.map(g => [`games/${g}`, 'weekly', '0.9', today]),
   ...games.map(g => [`docs/${g}`,  'monthly','0.7', today]),
 ];
@@ -59,7 +60,7 @@ const allPaths = [...staticPaths, ...blogPostPaths];
 // These pages have little indexable text (pure dynamic data).
 // After AdSense approval, remove this filter to include all routes.
 // ──────────────────────────────────────────────────────────────────────
-const sitemapExclude = new Set(['leaderboard', 'daily']);
+const sitemapExclude = new Set([]);
 const sitemapPaths = allPaths.filter(([p]) => !sitemapExclude.has(p));
 
 // Routes that Angular SSG should prerender at build time.

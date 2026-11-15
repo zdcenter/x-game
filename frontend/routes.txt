@@ -18,6 +18,8 @@
 /zh/legal/about
 /en/legal/contact
 /zh/legal/contact
+/en/legal/faq
+/zh/legal/faq
 /en/games/block
 /zh/games/block
 /en/games/classic2048
@@ -132,3 +134,11 @@
 /zh/blog/lights-out-puzzle-guide
 /en/blog/sliding-puzzle-strategy
 /zh/blog/sliding-puzzle-strategy
+/en/blog/drop2048-strategy
+/zh/blog/drop2048-strategy
+/en/blog/math-behind-puzzles
+/zh/blog/math-behind-puzzles
+/en/blog/building-realtime-pk-system
+/zh/blog/building-realtime-pk-system
+/en/blog/best-online-puzzle-games-2026
+/zh/blog/best-online-puzzle-games-2026

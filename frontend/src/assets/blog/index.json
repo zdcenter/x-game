@@ -1676,5 +1676,125 @@
       "author": "Puzzle PK Team",
       "tags": ""
     }
+  },
+  {
+    "id": "drop2048-strategy",
+    "date": "2026-11-14",
+    "en": {
+      "title": "Drop 2048 Strategy Guide: Master the Gravity-Based Merge Puzzle",
+      "description": "Learn essential strategies for Drop 2048 — the gravity-based twist on the classic 2048 puzzle. Master drop placement, chain reactions, and advanced techniques.",
+      "keywords": "Drop 2048 strategy, Drop 2048 tips, gravity 2048, merge puzzle guide, Drop 2048 techniques",
+      "readTime": "8 min",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "strategy",
+        "2048",
+        "Drop 2048",
+        "guide"
+      ]
+    },
+    "zh": {
+      "title": "Drop 2048 策略指南：掌握重力合并谜题",
+      "description": "学习Drop 2048的核心策略——这款基于重力的经典2048变体。掌握放置技巧、连锁反应和高级技术。",
+      "keywords": "Drop 2048 策略, Drop 2048 技巧, 重力2048, 合并谜题攻略",
+      "readTime": "8 分钟",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "策略",
+        "2048",
+        "Drop 2048",
+        "攻略"
+      ]
+    }
+  },
+  {
+    "id": "math-behind-puzzles",
+    "date": "2026-11-15",
+    "en": {
+      "title": "The Beautiful Mathematics Behind Your Favorite Puzzle Games",
+      "description": "Discover the elegant mathematical concepts hidden inside popular puzzle games — from Latin squares in Sudoku to graph theory in Hashi, NP-hardness in Sokoban, and probability in Minesweeper.",
+      "keywords": "puzzle math, Sudoku Latin squares, Sokoban NP-hard, Nonogram discrete tomography, game theory Gomoku, Minesweeper probability, 2048 Markov chain",
+      "readTime": "12 min",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "mathematics",
+        "puzzle theory",
+        "education",
+        "game design"
+      ]
+    },
+    "zh": {
+      "title": "你最爱的益智游戏背后的数学之美",
+      "description": "探索隐藏在热门益智游戏中的优美数学概念——从数独中的拉丁方阵到桥梁谜题中的图论，从推箱子的NP困难性到扫雷中的概率论。",
+      "keywords": "益智游戏数学, 数独拉丁方阵, 推箱子NP困难, 数织离散层析, 五子棋博弈论, 扫雷概率",
+      "readTime": "15 分钟",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "数学",
+        "益智理论",
+        "教育",
+        "游戏设计"
+      ]
+    }
+  },
+  {
+    "id": "building-realtime-pk-system",
+    "date": "2026-11-15",
+    "en": {
+      "title": "How We Built a Real-Time Multiplayer PK System for Puzzle Games",
+      "description": "A developer deep-dive into building Puzzle PK's real-time multiplayer system — covering WebSocket architecture, game state synchronization, room management, anti-cheat measures, and scaling strategies.",
+      "keywords": "real-time multiplayer, WebSocket game, puzzle PK system, game state sync, multiplayer architecture, online puzzle multiplayer",
+      "readTime": "14 min",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "engineering",
+        "multiplayer",
+        "WebSocket",
+        "game development"
+      ]
+    },
+    "zh": {
+      "title": "我们是如何为益智游戏构建实时多人PK系统的",
+      "description": "深入解析 Puzzle PK 实时多人PK系统的技术实现——涵盖WebSocket架构、游戏状态同步、房间管理、反作弊措施和扩容策略。",
+      "keywords": "实时多人游戏, WebSocket游戏, PK系统, 游戏状态同步, 多人游戏架构",
+      "readTime": "16 分钟",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "技术",
+        "多人对战",
+        "WebSocket",
+        "游戏开发"
+      ]
+    }
+  },
+  {
+    "id": "best-online-puzzle-games-2026",
+    "date": "2026-11-15",
+    "en": {
+      "title": "10 Best Free Online Puzzle Games to Play in 2026",
+      "description": "Discover the 10 best free online puzzle games you can play right now in 2026 — from classic Sudoku and Minesweeper to innovative multiplayer PK battles.",
+      "keywords": "best online puzzle games 2026, free puzzle games, browser puzzle games, Sudoku online, Minesweeper online, Tetris online",
+      "readTime": "11 min",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "game reviews",
+        "puzzle games",
+        "2026",
+        "recommendations"
+      ]
+    },
+    "zh": {
+      "title": "2026年十大最佳免费在线益智游戏推荐",
+      "description": "发现2026年你可以立即玩的十大最佳免费在线益智游戏——从经典数独和扫雷到创新的多人PK对战。",
+      "keywords": "2026最佳在线益智游戏, 免费益智游戏, 浏览器益智游戏, 在线数独",
+      "readTime": "13 分钟",
+      "author": "Puzzle PK Team",
+      "tags": [
+        "游戏推荐",
+        "益智游戏",
+        "2026",
+        "排行榜"
+      ]
+    }
   }
 ]
