@@ -84,6 +84,11 @@ import { I18nService } from '../../i18n/i18n.service';
                 </a>
               </li>
               <li>
+                <a [routerLink]="['/', i18n.currentLang(), 'legal', 'faq']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
+                  {{ i18n.t('legal.faq.title')() || 'FAQ' }}
+                </a>
+              </li>
+              <li>
                 <a [routerLink]="['/', i18n.currentLang(), 'legal', 'privacy']" class="hover:underline transition-colors" style="color: var(--color-text-secondary)">
                   {{ i18n.t('legal.privacy.title')() || 'Privacy Policy' }}
                 </a>

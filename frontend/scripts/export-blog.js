@@ -31,22 +31,23 @@ function get(url) {
 async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
+  // Load existing index.json to preserve any local static posts not yet in DB
+  const indexPath = path.join(OUT_DIR, 'index.json');
+  let existingIndex = [];
+  if (fs.existsSync(indexPath)) {
+    try { existingIndex = JSON.parse(fs.readFileSync(indexPath, 'utf-8')); } catch (e) { existingIndex = []; }
+  }
+  const indexMap = new Map(existingIndex.map(p => [p.id, p]));
+
   console.log(`Fetching post list from ${API_BASE}/blog/posts ...`);
   const posts = await get(`${API_BASE}/blog/posts`);
   if (!Array.isArray(posts)) throw new Error('Unexpected API response: ' + JSON.stringify(posts));
-
-  const index = [];
 
   for (const p of posts) {
     const slug = p.id_slug;
     console.log(`  Fetching ${slug} ...`);
     const detail = await get(`${API_BASE}/blog/posts/${slug}`);
 
-    // Full post file (with content)
-    // Gap-fill protection: the production DB is the source of truth, but the
-    // admin panel may not have content for every language yet. Never let an
-    // empty DB field wipe an existing local translation — keep the local value
-    // until the DB is properly filled (non-empty DB values always win).
     const LOCAL_FIELDS = ['title', 'description', 'keywords', 'readTime', 'author', 'tags', 'content'];
     const BLOG_LANGS = ['en', 'zh', 'es', 'ja', 'ko', 'pt', 'fr', 'de'];
     let local = {};
@@ -61,24 +62,25 @@ async function main() {
       const obj = {};
       for (const f of LOCAL_FIELDS) {
         const v = api[f];
-        obj[f] = (v !== undefined && v !== null && v !== '') ? v : (loc[f] ?? '');
+        // If local has longer/richer content, protect local content from being overwritten by a shorter stub
+        if (f === 'content' && loc[f] && typeof loc[f] === 'string' && loc[f].length > (typeof v === 'string' ? v.length : 0)) {
+          obj[f] = loc[f];
+        } else {
+          obj[f] = (v !== undefined && v !== null && v !== '') ? v : (loc[f] ?? '');
+        }
       }
-      // Skip languages with no content at all — the frontend then falls back to
-      // the English version (`raw[lang] || raw.en`). An object of empty strings
-      // would be truthy and render a blank page instead.
       if (!obj.content) continue;
       postData[lang] = obj;
     }
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.json`), JSON.stringify(postData, null, 2), 'utf-8');
 
-    // Index entry (no content). Languages skipped above (no content) fall back
-    // to undefined meta — the blog list renders them from the English version.
     const langMeta = (obj) => {
       if (!obj || !obj.content) return undefined;
       const { content, ...meta } = obj;
       return meta;
     };
-    index.push({
+
+    indexMap.set(slug, {
       id: slug,
       date: postData.date,
       en: langMeta(postData.en),
@@ -92,8 +94,11 @@ async function main() {
     });
   }
 
-  fs.writeFileSync(path.join(OUT_DIR, 'index.json'), JSON.stringify(index, null, 2), 'utf-8');
-  console.log(`\nDone: ${posts.length} posts exported to ${OUT_DIR}`);
+  // Combine and sort by date descending
+  const finalIndex = Array.from(indexMap.values()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  fs.writeFileSync(indexPath, JSON.stringify(finalIndex, null, 2), 'utf-8');
+  console.log(`\nDone: ${finalIndex.length} posts exported and merged into ${OUT_DIR}`);
 }
 
 main().catch(e => {

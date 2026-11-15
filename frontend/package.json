@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "node scripts/generate-docs-chunks.js && node scripts/generate-version.js && ng serve --port 4201 --host 0.0.0.0",
-    "build": "node scripts/export-blog.js && node scripts/generate-docs-chunks.js && node scripts/generate-version.js && node scripts/generate-sitemap.js && ng build",
+    "build": "node scripts/generate-docs-chunks.js && node scripts/generate-version.js && node scripts/generate-sitemap.js && ng build",
+    "export:blog": "node scripts/export-blog.js",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:unit": "vitest run",

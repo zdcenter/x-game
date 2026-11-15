@@ -920,20 +920,254 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/en/blog/gomoku-strategy-guide</loc>
-    <lastmod>2026-06-16</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
+    <loc>https://www.puzzlepk.com/en/blog/math-behind-puzzles</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/math-behind-puzzles"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide</loc>
-    <lastmod>2026-06-16</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
+    <loc>https://www.puzzlepk.com/zh/blog/math-behind-puzzles</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/math-behind-puzzles"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/building-realtime-pk-system</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/building-realtime-pk-system"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/building-realtime-pk-system</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/building-realtime-pk-system"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026</loc>
+    <lastmod>2026-11-15</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/drop2048-strategy</loc>
+    <lastmod>2026-11-14</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/drop2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/drop2048-strategy</loc>
+    <lastmod>2026-11-14</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/drop2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/idiom-battle-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/idiom-battle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/idiom-battle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/idiom-battle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/idiom-battle-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/idiom-battle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/idiom-battle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/idiom-battle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/connect-colors-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/connect-colors-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/connect-colors-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/connect-colors-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/connect-colors-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/connect-colors-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/connect-colors-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/connect-colors-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/tents-puzzle-guide</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/tents-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/tents-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/tents-puzzle-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/tents-puzzle-guide</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/tents-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/tents-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/tents-puzzle-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/tilematch-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/tilematch-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/tilematch-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/tilematch-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/tilematch-strategy</loc>
+    <lastmod>2026-10-31</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/tilematch-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/tilematch-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/tilematch-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/block-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/block-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/classic2048-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/classic2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/classic2048-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/classic2048-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/hashi-bridges-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy</loc>
+    <lastmod>2026-08-26</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -952,6 +1186,24 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/nonogram-strategy"/>
     <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/nonogram-strategy"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/nonogram-strategy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/en/blog/gomoku-strategy-guide</loc>
+    <lastmod>2026-06-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide</loc>
+    <lastmod>2026-06-16</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/gomoku-strategy-guide"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/gomoku-strategy-guide"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1114,186 +1366,6 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
     <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/benefits-of-multiplayer-educational-games"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/benefits-of-multiplayer-educational-games"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/block-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/block-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/block-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/block-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/classic2048-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/classic2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/classic2048-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/classic2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/classic2048-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/hashi-bridges-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hashi-bridges-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hashi-bridges-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/hexa-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/hexa-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/lights-out-puzzle-guide"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/lights-out-puzzle-guide"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy</loc>
-    <lastmod>2026-08-26</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/sliding-puzzle-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/sliding-puzzle-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/drop2048-strategy</loc>
-    <lastmod>2026-11-14</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/drop2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/drop2048-strategy</loc>
-    <lastmod>2026-11-14</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/drop2048-strategy"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/drop2048-strategy"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/math-behind-puzzles</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/math-behind-puzzles"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/math-behind-puzzles</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/math-behind-puzzles"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/math-behind-puzzles"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/building-realtime-pk-system</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/building-realtime-pk-system"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/building-realtime-pk-system</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/building-realtime-pk-system"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/building-realtime-pk-system"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026</loc>
-    <lastmod>2026-11-15</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://www.puzzlepk.com/zh/blog/best-online-puzzle-games-2026"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.puzzlepk.com/en/blog/best-online-puzzle-games-2026"/>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
