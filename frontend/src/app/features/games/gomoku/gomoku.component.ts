@@ -298,6 +298,14 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     return [...line].sort((a, b) => (a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1]));
   });
 
+  canUndo = computed(() => {
+    return this.isSingleMode() &&
+           this.isMyTurn &&
+           this.gameStatus() === GameStatus.Playing &&
+           !this.isReplaying() &&
+           this.history().length > 0;
+  });
+
   // Calculate SVG line percentage coordinates from first stone to last stone
   readonly winningLineCoords = computed<{ x1: number; y1: number; x2: number; y2: number } | null>(() => {
     if (this.isReplaying() && this.replayStep() !== this.history().length) {
@@ -399,6 +407,13 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     }
   }
 
+  onUndo() {
+    if (!this.canUndo()) return;
+    this.hintMove.set(null);
+    this.store.undo();
+    this.audio.playClick();
+  }
+
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(e: KeyboardEvent) {
     if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
@@ -411,6 +426,11 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
       if (this.isSingleMode()) {
         e.preventDefault();
         this.getHint();
+      }
+    } else if (e.key === 'u' || e.key === 'U' || (e.key === 'z' && (e.ctrlKey || e.metaKey))) {
+      if (this.isSingleMode() && this.canUndo()) {
+        e.preventDefault();
+        this.onUndo();
       }
     }
   }

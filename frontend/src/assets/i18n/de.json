@@ -2174,5 +2174,6 @@
   "game.walkover_win_subtitle": "Alle Gegner haben das Spiel verlassen. Glückwunsch zum Sieg!",
   "game.walkover_solo_practice": "Als Einzelspiel fortsetzen",
   "game.walkover_wait_new_opponent": "Auf neuen Gegner warten",
-  "game.walkover_toast": "Alle Gegner haben verlassen. Sie haben gewonnen!"
+  "game.walkover_toast": "Alle Gegner haben verlassen. Sie haben gewonnen!",
+  "gomoku.undo": "Rückgängig"
 }

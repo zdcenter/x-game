@@ -2174,5 +2174,6 @@
   "game.walkover_win_subtitle": "対戦相手が全員退出したため、あなたの勝利となりました！",
   "game.walkover_solo_practice": "一人練習に切り替え",
   "game.walkover_wait_new_opponent": "新たな挑戦者を待つ",
-  "game.walkover_toast": "相手が全員退出したため、あなたの勝利となりました！"
+  "game.walkover_toast": "相手が全員退出したため、あなたの勝利となりました！",
+  "gomoku.undo": "待った"
 }

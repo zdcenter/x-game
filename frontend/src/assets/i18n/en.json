@@ -1267,6 +1267,7 @@
   "gomoku.diff.medium": "AI Level: Advanced",
   "gomoku.exit_replay": "Exit Review",
   "gomoku.hint": "Hint",
+  "gomoku.undo": "Undo",
   "gomoku.mode.same_pk_classic": "Multiplayer PvP",
   "gomoku.mode.single": "Play vs AI",
   "gomoku.move_count": "Move {{count}}",

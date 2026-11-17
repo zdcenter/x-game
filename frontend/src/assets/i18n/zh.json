@@ -1267,6 +1267,7 @@
   "gomoku.diff.medium": "AI智商: 进阶",
   "gomoku.exit_replay": "退出复盘",
   "gomoku.hint": "提示",
+  "gomoku.undo": "悔棋",
   "gomoku.mode.same_pk_classic": "联机对战",
   "gomoku.mode.single": "单机挑战",
   "gomoku.move_count": "第 {{count}} 手",

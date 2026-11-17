@@ -61,8 +61,19 @@
           </span>
         </div>
 
-        <!-- 单机提示按钮 -->
+        <!-- 单机辅助控制按钮 -->
         @if (isSingleMode() && gameStatus() === GameStatus.Playing) {
+          <!-- 悔棋 -->
+          <button
+            type="button"
+            (click)="onUndo()"
+            [disabled]="!canUndo()"
+            class="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/40 text-sky-500 font-bold text-xs active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            [title]="(i18n.t('gomoku.undo')() || '悔棋') + ' (U)'"
+          >
+            ↩️
+          </button>
+
           <button
             type="button"
             (click)="getHint()"
@@ -127,10 +138,18 @@
                   </span>
                 </div>
 
-                <!-- Single Player Hint Button (H) -->
+                <!-- Single Player Action Controls (Undo / Hint / Restart) -->
                 @if (isSingleMode() && gameStatus() === GameStatus.Playing) {
+                  <!-- Undo Button (U) -->
+                  <button type="button" (click)="onUndo()" [disabled]="!canUndo()"
+                          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-sky-500 font-black text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+                          [title]="(i18n.t('gomoku.undo')() || '悔棋') + ' (U)'">
+                    <span class="text-sm">↩️</span>
+                    <span class="hidden sm:inline">{{ i18n.t('gomoku.undo')() || '悔棋' }}</span>
+                  </button>
+
                   <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
-                          class="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+                          class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-500 font-black text-xs sm:text-sm transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
                           [title]="i18n.t('gomoku.hint')() + ' (H)'">
                     <span class="text-sm">💡</span>
                     <span class="hidden sm:inline">{{ i18n.t('gomoku.hint')() }}</span>
@@ -289,15 +308,23 @@
 
             <!-- Ergonomic Mobile Bottom Action Bar (Thumb Zone - Single Mode Only) -->
             @if (isSingleMode() && gameStatus() === GameStatus.Playing && !isReplaying()) {
-              <div class="w-full flex sm:hidden items-center justify-center gap-3 mt-3 px-2"
+              <div class="w-full flex sm:hidden items-center justify-center gap-2 mt-3 px-2"
                    [style.max-width]="boardSizePx()">
+                <!-- 悔棋 -->
+                <button type="button" (click)="onUndo()" [disabled]="!canUndo()"
+                        class="flex-1 py-2.5 px-2 rounded-2xl bg-sky-500/15 hover:bg-sky-500/25 active:scale-95 border border-sky-500/40 text-sky-500 font-black text-sm flex items-center justify-center gap-1 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                  <span class="text-base">↩️</span>
+                  <span>{{ i18n.t('gomoku.undo')() || '悔棋' }}</span>
+                </button>
+                <!-- 提示 -->
                 <button type="button" (click)="getHint()" [disabled]="!isMyTurn"
-                        class="flex-1 py-2.5 px-3 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-500/40 text-amber-500 font-black text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                        class="flex-1 py-2.5 px-2 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 active:scale-95 border border-amber-500/40 text-amber-500 font-black text-sm flex items-center justify-center gap-1 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <span class="text-base">💡</span>
                   <span>{{ i18n.t('gomoku.hint')() }}</span>
                 </button>
+                <!-- 重新开始 -->
                 <button type="button" (click)="onRestart()"
-                        class="py-2.5 px-4 rounded-2xl bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] active:scale-95 border border-[var(--color-border-card)] text-[var(--color-text-main)] font-bold text-sm flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                        class="py-2.5 px-3.5 rounded-2xl bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] active:scale-95 border border-[var(--color-border-card)] text-[var(--color-text-main)] font-bold text-sm flex items-center justify-center gap-1 transition-all shadow-sm cursor-pointer">
                   <span class="text-base">🔄</span>
                   <span>{{ i18n.t('gomoku.restart')() }}</span>
                 </button>

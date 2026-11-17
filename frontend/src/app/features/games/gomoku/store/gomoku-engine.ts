@@ -4,12 +4,14 @@ import { GomokuAI, GomokuColor } from './gomoku-ai';
 
 export enum GomokuActionType {
   Move = 'move',
-  Surrender = 'surrender'
+  Surrender = 'surrender',
+  Undo = 'undo'
 }
 
 export type GomokuAction =
   | { type: GomokuActionType.Move, y: number, x: number }
-  | { type: GomokuActionType.Surrender };
+  | { type: GomokuActionType.Surrender }
+  | { type: GomokuActionType.Undo };
 
 export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
   board: GomokuColor[][] = [];
@@ -21,6 +23,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
   history: { y: number; x: number; color: GomokuColor }[] = [];
   players: string[] = [];
   playerColors: Record<string, GomokuColor> = {};
+  private moveSeq = 0;
 
   private ai: GomokuAI | null = null;
   private aiDifficulty: string = GameDifficulty.Medium;
@@ -73,10 +76,43 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
       return;
     }
 
+    if (action.type === GomokuActionType.Undo) {
+      if (this.status !== GameStatus.Playing || this.history.length === 0) return;
+      // Invalidate any in-flight AI computation
+      this.moveSeq++;
+
+      // If last move was AI (color === 2), pop it first
+      if (this.history.length > 0 && this.history[this.history.length - 1].color === 2) {
+        const aiMove = this.history.pop()!;
+        this.board[aiMove.y][aiMove.x] = 0;
+      }
+
+      // Pop the player's move (color === 1)
+      if (this.history.length > 0 && this.history[this.history.length - 1].color === 1) {
+        const playerMove = this.history.pop()!;
+        this.board[playerMove.y][playerMove.x] = 0;
+      }
+
+      // Restore lastMove indicator to previous move if available
+      if (this.history.length > 0) {
+        const prev = this.history[this.history.length - 1];
+        this.lastMove = [prev.y, prev.x];
+      } else {
+        this.lastMove = null;
+      }
+
+      this.winningLine = null;
+      this.currentTurn = this.playerId;
+      if (this.onStateChange) this.onStateChange();
+      return;
+    }
+
     if (action.type === GomokuActionType.Move) {
       if (this.currentTurn !== this.playerId) return;
       const { y, x } = action;
       if (this.board[y][x] !== 0) return;
+
+      const currentSeq = ++this.moveSeq;
 
       // Player move
       const pColor = this.playerColors[this.playerId];
@@ -105,7 +141,7 @@ export class LocalGomokuEngine implements ILocalEngine<any, GomokuAction> {
       
       // AI Move: offloaded to Web Worker to keep main UI thread locked at 60fps
       this.computeBestMove(this.board).then(([aiY, aiX]) => {
-        if (this.status !== GameStatus.Playing) return;
+        if (this.status !== GameStatus.Playing || this.moveSeq !== currentSeq) return;
 
         if (aiY !== -1) {
           const aiColor = this.playerColors['AI'];

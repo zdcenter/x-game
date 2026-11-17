@@ -241,6 +241,15 @@ export class GomokuStore extends BaseGameStore {
     }
   }
 
+  undo() {
+    if (this.currentRoomMode() !== GameMode.Single) return;
+    const engine = this.localEngine();
+    if (engine && engine.status === GameStatus.Playing && engine.history.length > 0) {
+      engine.handleAction({ type: GomokuActionType.Undo });
+      this.tick.set(this.tick() + 1);
+    }
+  }
+
   makeMove(y: number, x: number) {
     if (this.status() !== GameStatus.Playing) return;
     

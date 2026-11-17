@@ -2174,5 +2174,6 @@
   "game.walkover_win_subtitle": "Todos los oponentes han salido. ¡Felicidades por tu victoria!",
   "game.walkover_solo_practice": "Continuar como práctica individual",
   "game.walkover_wait_new_opponent": "Esperar nuevo oponente",
-  "game.walkover_toast": "Todos los oponentes salieron. ¡Has ganado la partida!"
+  "game.walkover_toast": "Todos los oponentes salieron. ¡Has ganado la partida!",
+  "gomoku.undo": "Deshacer"
 }
