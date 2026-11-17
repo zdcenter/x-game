@@ -2175,5 +2175,15 @@
   "game.walkover_solo_practice": "Als Einzelspiel fortsetzen",
   "game.walkover_wait_new_opponent": "Auf neuen Gegner warten",
   "game.walkover_toast": "Alle Gegner haben verlassen. Sie haben gewonnen!",
-  "gomoku.undo": "Rückgängig"
+  "gomoku.undo": "Rückgängig",
+  "gomoku.ai_level_select": "KI-Agentenstufe auswählen",
+  "gomoku.ai_easy": "Anfänger-KI (Training)",
+  "gomoku.ai_easy_desc": "1-Zug-Vorausschau · Grundlegende Taktik",
+  "gomoku.ai_medium": "Fortgeschrittene KI (Taktiker)",
+  "gomoku.ai_medium_desc": "2-Züge Alpha-Beta-Suche · Ausgewogen",
+  "gomoku.ai_hard": "Meister-KI (Tiefensuche)",
+  "gomoku.ai_hard_desc": "4-Züge Spielbaumsuche · Höchste Stufe",
+  "gomoku.ai_opponent_easy": "🤖 Anfänger-KI (1-Ply)",
+  "gomoku.ai_opponent_medium": "🤖 Fortgeschrittene KI (2-Ply)",
+  "gomoku.ai_opponent_hard": "🧠 Meister-KI (4-Ply)"
 }

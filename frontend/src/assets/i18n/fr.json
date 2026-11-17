@@ -2175,5 +2175,15 @@
   "game.walkover_solo_practice": "Continuer en solo",
   "game.walkover_wait_new_opponent": "Attendre un adversaire",
   "game.walkover_toast": "Tous les adversaires sont partis. Vous avez gagné !",
-  "gomoku.undo": "Annuler"
+  "gomoku.undo": "Annuler",
+  "gomoku.ai_level_select": "Niveau de l'Agent IA",
+  "gomoku.ai_easy": "IA Débutante (Entraînement)",
+  "gomoku.ai_easy_desc": "Anticipation 1 coup · Attaque/Défense de base",
+  "gomoku.ai_medium": "IA Avancée (Tactique)",
+  "gomoku.ai_medium_desc": "Anticipation 2 coups Alpha-Beta · Équilibrée",
+  "gomoku.ai_hard": "IA Maître (Recherche Profonde)",
+  "gomoku.ai_hard_desc": "Arbre de jeu à 4 coups · Niveau professionnel",
+  "gomoku.ai_opponent_easy": "🤖 IA Débutante (1-Ply)",
+  "gomoku.ai_opponent_medium": "🤖 IA Avancée (2-Ply)",
+  "gomoku.ai_opponent_hard": "🧠 IA Maître (4-Ply)"
 }

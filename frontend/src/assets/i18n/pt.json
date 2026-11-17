@@ -2175,5 +2175,15 @@
   "game.walkover_solo_practice": "Continuar no treino solo",
   "game.walkover_wait_new_opponent": "Aguardar novo oponente",
   "game.walkover_toast": "Todos os oponentes saíram. Você venceu a partida!",
-  "gomoku.undo": "Desfazer"
+  "gomoku.undo": "Desfazer",
+  "gomoku.ai_level_select": "Nível do Agente IA",
+  "gomoku.ai_easy": "IA Iniciante (Treino)",
+  "gomoku.ai_easy_desc": "Antecipação de 1 jogada · Ataque/defesa básicos",
+  "gomoku.ai_medium": "IA Avançada (Tática)",
+  "gomoku.ai_medium_desc": "Poda Alpha-Beta de 2 jogadas · Equilibrada",
+  "gomoku.ai_hard": "IA Mestre (Busca Profunda)",
+  "gomoku.ai_hard_desc": "Árvore de 4 jogadas · Nível profissional",
+  "gomoku.ai_opponent_easy": "🤖 IA Iniciante (1-Ply)",
+  "gomoku.ai_opponent_medium": "🤖 IA Avançada (2-Ply)",
+  "gomoku.ai_opponent_hard": "🧠 IA Mestre (4-Ply)"
 }

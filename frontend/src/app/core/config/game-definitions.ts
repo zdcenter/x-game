@@ -179,9 +179,9 @@ export const GAME_DEFINITIONS: GameRouteDef[] = [
       { id: GameMode.Battle, labelKey: 'game.same_pk_classic', descKey: 'game.same_pk_classic_desc', icon: '⚔️', desc: 'Classic 1v1 PvP' }
     ],
     difficulties: [
-      { id: 'easy', labelKey: 'game.diff_easy', descKey: 'game.diff_gomoku_easy', desc: 'Easy AI (15x15)' },
-      { id: GameDifficulty.Medium, labelKey: 'game.diff_medium', descKey: 'game.diff_gomoku_medium', desc: 'Medium AI (15x15)' },
-      { id: GameDifficulty.Hard, labelKey: 'game.diff_hard', descKey: 'game.diff_gomoku_hard', desc: 'Hard AI (15x15)' }
+      { id: 'easy', labelKey: 'gomoku.ai_easy', descKey: 'gomoku.ai_easy_desc', desc: 'Novice AI · 1-Ply Lookahead' },
+      { id: GameDifficulty.Medium, labelKey: 'gomoku.ai_medium', descKey: 'gomoku.ai_medium_desc', desc: 'Advanced AI · 2-Ply Alpha-Beta' },
+      { id: GameDifficulty.Hard, labelKey: 'gomoku.ai_hard', descKey: 'gomoku.ai_hard_desc', desc: 'Master AI · 4-Ply Deep Search' }
     ],
     recommendations: ['codebreaker', 'minesweeper'],
     finishFlow: { winAction: 'modal', loseAction: 'modal', autoNextAdFreq: -1, autoNextDelayMs: 2500 },

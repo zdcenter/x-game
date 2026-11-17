@@ -2175,5 +2175,15 @@
   "game.walkover_solo_practice": "一人練習に切り替え",
   "game.walkover_wait_new_opponent": "新たな挑戦者を待つ",
   "game.walkover_toast": "相手が全員退出したため、あなたの勝利となりました！",
-  "gomoku.undo": "待った"
+  "gomoku.undo": "待った",
+  "gomoku.ai_level_select": "対戦AIエージェントの選択",
+  "gomoku.ai_easy": "初級 AI (練習用)",
+  "gomoku.ai_easy_desc": "1手先読み · 基本的な攻防 · 気軽に対局",
+  "gomoku.ai_medium": "中級 AI (戦術派)",
+  "gomoku.ai_medium_desc": "2手Alpha-Beta探索 · 攻守バランス · 堅実な防守",
+  "gomoku.ai_hard": "名人級 AI (深層推論)",
+  "gomoku.ai_hard_desc": "4手深層ゲーム木探索 · 詰め筋の予判 · 圧倒的実力",
+  "gomoku.ai_opponent_easy": "🤖 初級 AI (1-Ply)",
+  "gomoku.ai_opponent_medium": "🤖 中級 AI (2-Ply)",
+  "gomoku.ai_opponent_hard": "🧠 名人 AI (4-Ply)"
 }

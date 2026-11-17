@@ -37,8 +37,8 @@ export interface DifficultyOption {
               type="button"
               (click)="toggleDropdown($event)"
               class="flex items-center gap-1 sm:gap-1.5 bg-[var(--color-bg-card)]/95 border border-[var(--color-border-card)] hover:border-amber-500/60 text-[var(--color-text-main)] px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-xs hover:shadow-md active:scale-95 transition-all backdrop-blur-md select-none cursor-pointer group"
-              [title]="i18n.t('game.difficulty')() || '选择难度规格'">
-        <span class="text-xs sm:text-sm shrink-0">🎯</span>
+              [title]="titleText">
+        <span class="text-xs sm:text-sm shrink-0">{{ triggerIcon }}</span>
         <!-- 仅展示极简核心文字（如“简单”、“中等”），不展示冗长的 5x5、10x10 等规格 -->
         <span class="truncate font-bold text-xs sm:text-sm">{{ currentLabelShort }}</span>
         <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 transition-transform duration-200 shrink-0"
@@ -68,8 +68,8 @@ export interface DifficultyOption {
           <!-- 顶头小标题栏 -->
           <div class="flex items-center justify-between px-2 py-1 border-b border-[var(--color-border-card)]/60 text-xs font-black text-[var(--color-text-muted)]">
             <span class="flex items-center gap-1.5">
-              <span>🎯</span>
-              <span>{{ i18n.t('game.difficulty')() || '选择难度规格' }}</span>
+              <span>{{ triggerIcon }}</span>
+              <span>{{ headerText }}</span>
             </span>
             <button type="button"
                     (click)="closeDropdown()"
@@ -124,6 +124,7 @@ export class DifficultySelectorComponent implements OnInit, OnDestroy {
 
   @Input({ required: true }) availableDifficulties: DifficultyOption[] = [];
   @Input({ required: true }) currentDifficulty: string = '';
+  @Input() gameId: string = '';
   @Output() difficultyChange = new EventEmitter<string>();
 
   readonly isOpen = signal<boolean>(false);
@@ -181,9 +182,36 @@ export class DifficultySelectorComponent implements OnInit, OnDestroy {
     return this.availableDifficulties.find(d => d.id === this.currentDifficulty) || this.availableDifficulties[0];
   }
 
+  get triggerIcon(): string {
+    if (this.gameId === 'gomoku') {
+      return (this.currentDifficulty === 'hard' || this.currentDifficulty === 'master') ? '🧠' : '🤖';
+    }
+    return '🎯';
+  }
+
+  get titleText(): string {
+    if (this.gameId === 'gomoku') {
+      return this.i18n.t('gomoku.ai_level_select')() || '选择对弈 AI 智能体';
+    }
+    return this.i18n.t('game.difficulty')() || '选择难度规格';
+  }
+
+  get headerText(): string {
+    if (this.gameId === 'gomoku') {
+      return this.i18n.t('gomoku.ai_level_select')() || '选择对弈 AI 智能体';
+    }
+    return this.i18n.t('game.difficulty')() || '选择难度规格';
+  }
+
   get currentLabelShort(): string {
     const item = this.currentDiffItem;
-    return item ? this.i18n.t(item.labelKey)() : '';
+    if (!item) return '';
+    const full = this.i18n.t(item.labelKey)();
+    const parenIndex = full.indexOf('(');
+    if (parenIndex > 0) {
+      return full.substring(0, parenIndex).trim();
+    }
+    return full;
   }
 
   toggleDropdown(event?: MouseEvent) {
@@ -238,6 +266,7 @@ export class DifficultySelectorComponent implements OnInit, OnDestroy {
   }
 
   getDifficultyEmoji(diff: string): string {
+    if (this.gameId === 'gomoku' && (diff === 'hard' || diff === 'master')) return '🧠';
     const d = (diff || '').toLowerCase();
     if (d.includes('easy') || d === 'simple' || d === 'beginner') return '🌱';
     if (d.includes('medium') || d === 'normal' || d === 'standard') return '⚡';

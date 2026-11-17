@@ -114,6 +114,7 @@ import { JuiceService } from '../../../core/services/juice.service';
                 <app-difficulty-selector 
                   [availableDifficulties]="availableDifficulties"
                   [currentDifficulty]="effectiveDifficulty()"
+                  [gameId]="gameId"
                   (difficultyChange)="onDifficultyChange($event)">
                 </app-difficulty-selector>
               </div>
@@ -212,8 +213,8 @@ import { JuiceService } from '../../../core/services/juice.service';
             <div class="rounded-2xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)]/95 backdrop-blur-md p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
               <div class="flex items-center justify-between pb-2.5 border-b border-[var(--color-border-card)]/60">
                 <span class="cockpit-card-title flex items-center gap-2">
-                  <span class="text-lg">🎯</span>
-                  <span>{{ i18n.t('game.difficulty')() || '难度规格' }}</span>
+                  <span class="text-lg">{{ gameId === 'gomoku' ? (effectiveDifficulty() === 'hard' ? '🧠' : '🤖') : '🎯' }}</span>
+                  <span>{{ gameId === 'gomoku' ? (i18n.t('gomoku.ai_level_select')() || '对弈 AI 智能等级') : (i18n.t('game.difficulty')() || '难度规格') }}</span>
                 </span>
                 <span class="badge-safe font-mono font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20">
                   {{ getDifficultyLabel(effectiveDifficulty()) }}
@@ -230,9 +231,9 @@ import { JuiceService } from '../../../core/services/juice.service';
                       <span class="text-lg">{{ getDifficultyEmoji(diff.id) }}</span>
                       <span class="cockpit-item-title">{{ diff.labelKey ? (i18n.t(diff.labelKey)() || diff.id) : diff.id }}</span>
                     </div>
-                    @if (diff.desc || diff.descKey) {
+                    @if (diff.descKey || diff.desc) {
                       <span class="text-xs xl:text-sm font-mono opacity-85 font-semibold" [title]="diff.descKey ? (i18n.t(diff.descKey)() || diff.desc || '') : (diff.desc || '')">
-                        {{ diff.desc || (diff.descKey ? (i18n.t(diff.descKey)()) : '') }}
+                        {{ diff.descKey ? (i18n.t(diff.descKey)()) : diff.desc }}
                       </span>
                     }
                   </button>

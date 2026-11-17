@@ -164,7 +164,13 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   // Opponent name for HUD
   readonly opponentName = computed(() => {
     if (this.isSingleMode()) {
-      return 'AI ' + this.i18n.t('game.bot')();
+      const diff = this.currentDifficulty();
+      if (diff === 'easy') {
+        return this.i18n.t('gomoku.ai_opponent_easy')() || '🤖 初级 AI (1-Ply)';
+      } else if (diff === 'hard') {
+        return this.i18n.t('gomoku.ai_opponent_hard')() || '🧠 大师 AI (4-Ply)';
+      }
+      return this.i18n.t('gomoku.ai_opponent_medium')() || '🤖 进阶 AI (2-Ply)';
     }
     const players = this.mappedPlayers;
     const opponent = players.find(p => p.id !== this.myPlayerId());
