@@ -1,5 +1,5 @@
 import { GameStatus } from "../../../../../core/models/game.model";
-import { Component, HostListener, computed, inject, signal, Input } from '@angular/core';
+import { Component, HostListener, computed, inject, signal, Input, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SokobanStore } from '../../store/sokoban.store';
 import { HapticService } from '../../../../../core/services/haptic.service';
@@ -154,9 +154,11 @@ import { HapticService } from '../../../../../core/services/haptic.service';
          style="-webkit-touch-callout: none;"
          (contextmenu)="$event.preventDefault()"
          (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
          (touchend)="onTouchEnd($event)">
       
-      <div class="grid relative bg-[#3b82f6]"
+      <div #boardGrid
+           class="grid relative bg-[#3b82f6]"
            style="box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 4px 4px 10px rgba(0,0,0,0.6), inset -2px -2px 5px rgba(255,255,255,0.2); background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\' width=\\'60\\' height=\\'60\\'%3E%3Cline x1=\\'0\\' y1=\\'25\\' x2=\\'100\\' y2=\\'25\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'0\\' y1=\\'50\\' x2=\\'100\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'0\\' y1=\\'75\\' x2=\\'100\\' y2=\\'75\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'50\\' y1=\\'0\\' x2=\\'50\\' y2=\\'25\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'25\\' y1=\\'25\\' x2=\\'25\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'75\\' y1=\\'25\\' x2=\\'75\\' y2=\\'50\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'50\\' y1=\\'50\\' x2=\\'50\\' y2=\\'75\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'25\\' y1=\\'75\\' x2=\\'25\\' y2=\\'100\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3Cline x1=\\'75\\' y1=\\'75\\' x2=\\'75\\' y2=\\'100\\' stroke=\\'%231e3a8a\\' stroke-width=\\'3\\'/%3E%3C/svg%3E');"
            [style.grid-template-columns]="'repeat(' + cols() + ', minmax(0, 1fr))'"
            [style.grid-template-rows]="'repeat(' + rows() + ', minmax(0, 1fr))'"
@@ -166,6 +168,8 @@ import { HapticService } from '../../../../../core/services/haptic.service';
         @for (row of activeBoard(); track $index; let r = $index) {
           @for (cell of row; track $index; let c = $index) {
             <div class="flex items-center justify-center w-full h-full relative overflow-hidden cursor-pointer"
+                 [attr.data-r]="r"
+                 [attr.data-c]="c"
                  [ngClass]="getFloorClass(r, c)"
                  (click)="onCellClick(r, c)">
               
@@ -430,7 +434,8 @@ import { HapticService } from '../../../../../core/services/haptic.service';
     </div>
   `
 })
-export class SokobanBoardComponent {
+export class SokobanBoardComponent implements OnDestroy {
+  @ViewChild('boardGrid') boardGridRef?: ElementRef<HTMLDivElement>;
   GameStatus = GameStatus;
   @Input() boardData: string[][] | undefined;
   @Input() readonly: boolean = false;
@@ -444,6 +449,14 @@ export class SokobanBoardComponent {
   playerAction = signal<'idle' | 'walk' | 'push'>('idle');
   private actionTimeout: any;
   private pathfindingInterval: any;
+
+  ngOnDestroy() {
+    this.clearPathfinding();
+    if (this.actionTimeout) {
+      clearTimeout(this.actionTimeout);
+      this.actionTimeout = null;
+    }
+  }
 
   clearPathfinding() {
     if (this.pathfindingInterval) {
@@ -532,6 +545,8 @@ export class SokobanBoardComponent {
 
   private touchStartX = 0;
   private touchStartY = 0;
+  private touchStartTime = 0;
+  private lastTouchEndTime = 0;
 
   getFloorClass(r: number, c: number): string {
     return (r + c) % 2 === 0 ? 'bg-white/5' : 'bg-black/10';
@@ -612,12 +627,14 @@ export class SokobanBoardComponent {
         break;
       case 'z':
       case 'Z':
+        this.clearPathfinding();
         this.store.undo();
         event.preventDefault();
         break;
       case 'r':
       case 'R':
         if (!event.ctrlKey && !event.metaKey) {
+          this.clearPathfinding();
           this.store.restart();
           event.preventDefault();
         }
@@ -628,38 +645,89 @@ export class SokobanBoardComponent {
   onTouchStart(event: TouchEvent) {
     if (this.readonly || this.store.isSpectator()) return;
     if (event.cancelable) event.preventDefault();
-    if (event.touches.length > 0) {
+    if (event.touches.length === 1) {
       this.touchStartX = event.touches[0].clientX;
       this.touchStartY = event.touches[0].clientY;
+      this.touchStartTime = Date.now();
     }
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (this.readonly || this.store.isSpectator()) return;
+    if (event.cancelable) event.preventDefault();
   }
 
   onTouchEnd(event: TouchEvent) {
     if (this.readonly || this.store.isSpectator()) return;
-    if (event.changedTouches.length > 0) {
-      const touchEndX = event.changedTouches[0].clientX;
-      const touchEndY = event.changedTouches[0].clientY;
-      
-      const dx = touchEndX - this.touchStartX;
-      const dy = touchEndY - this.touchStartY;
-      
+    if (event.cancelable) event.preventDefault();
+    if (event.changedTouches.length === 0) return;
+
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+    
+    const dx = touchEndX - this.touchStartX;
+    const dy = touchEndY - this.touchStartY;
+    const dist = Math.hypot(dx, dy);
+    const duration = Date.now() - this.touchStartTime;
+
+    this.lastTouchEndTime = Date.now();
+
+    // 1. Swipe detection (movement > 25px)
+    if (dist > 25) {
       if (Math.abs(dx) > Math.abs(dy)) {
-        if (Math.abs(dx) > 30) {
-          this.triggerMove(dx > 0 ? 'right' : 'left');
-          event.preventDefault();
-        }
+        this.triggerMove(dx > 0 ? 'right' : 'left');
       } else {
-        if (Math.abs(dy) > 30) {
-          this.triggerMove(dy > 0 ? 'down' : 'up');
-          event.preventDefault();
-        }
+        this.triggerMove(dy > 0 ? 'down' : 'up');
       }
+      return;
+    }
+
+    // 2. Tap detection (displacement <= 25px and short duration < 500ms)
+    if (dist <= 25 && duration < 500) {
+      this.handleTapAt(touchEndX, touchEndY);
     }
   }
 
-  onCellClick(targetR: number, targetC: number) {
+  private handleTapAt(x: number, y: number) {
+    let targetR = -1;
+    let targetC = -1;
+
+    // 1. Try DOM elementFromPoint lookup
+    const targetEl = document.elementFromPoint(x, y);
+    const cellEl = targetEl?.closest('[data-r]');
+    if (cellEl) {
+      const rAttr = cellEl.getAttribute('data-r');
+      const cAttr = cellEl.getAttribute('data-c');
+      if (rAttr !== null && cAttr !== null) {
+        targetR = parseInt(rAttr, 10);
+        targetC = parseInt(cAttr, 10);
+      }
+    }
+
+    // 2. Fallback to geometric grid calculation
+    if ((targetR < 0 || targetC < 0) && this.boardGridRef?.nativeElement) {
+      const rect = this.boardGridRef.nativeElement.getBoundingClientRect();
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        const colWidth = rect.width / this.cols();
+        const rowHeight = rect.height / this.rows();
+        targetC = Math.floor((x - rect.left) / colWidth);
+        targetR = Math.floor((y - rect.top) / rowHeight);
+        targetC = Math.min(this.cols() - 1, Math.max(0, targetC));
+        targetR = Math.min(this.rows() - 1, Math.max(0, targetR));
+      }
+    }
+
+    if (targetR >= 0 && targetC >= 0) {
+      this.onCellClick(targetR, targetC, true);
+    }
+  }
+
+  onCellClick(targetR: number, targetC: number, isFromTouch = false) {
     if (this.readonly || this.store.isSpectator()) return;
     if (this.store.status() !== GameStatus.Playing || this.store.isDead()) return;
+
+    // Prevent duplicate triggers from synthetic mouse clicks following a touch
+    if (!isFromTouch && Date.now() - this.lastTouchEndTime < 400) return;
 
     this.clearPathfinding();
 
@@ -722,10 +790,11 @@ export class SokobanBoardComponent {
     }
 
     if (finalPath && finalPath.length > 0) {
+      this.haptic.vibrateLight();
       let step = 0;
       // Start auto walking
       this.pathfindingInterval = setInterval(() => {
-        if (step >= finalPath!.length || this.store.status() !== GameStatus.Playing) {
+        if (step >= finalPath!.length || this.store.status() !== GameStatus.Playing || this.store.isDead()) {
           this.clearPathfinding();
           return;
         }
