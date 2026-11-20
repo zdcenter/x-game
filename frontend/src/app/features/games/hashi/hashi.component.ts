@@ -1,5 +1,5 @@
 import { GameMode, GameStatus } from "../../../core/models/game.model";
-import { getSavedDifficulty, setSavedDifficulty } from "../../../core/utils/browser.util";
+import { getSavedDifficulty, setSavedDifficulty, isBrowser } from "../../../core/utils/browser.util";
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, HostListener } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,10 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
+import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
+import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
+import { HASHI_TUTORIAL_STEPS, HashiTutorialStep, HashiTutorialBridgeTarget } from './store/hashi-tutorial';
 
 @Component({
   selector: 'app-hashi',
@@ -27,7 +31,10 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
     HashiLobbyComponent,
     GameLayoutComponent,
     GamePkHudComponent,
-    GameHandheldHeaderComponent
+    GameHandheldHeaderComponent,
+    InteractiveTutorialBoardComponent,
+    InteractiveTutorialPointerComponent,
+    InteractiveTutorialSuccessComponent
   ],
   providers: [HashiStore],
   templateUrl: './hashi.component.html'
@@ -43,6 +50,79 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   // Interaction state
   selectedIsland = signal<{r: number, c: number} | null>(null);
   touchStartIsland = signal<{r: number, c: number} | null>(null);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 新手 4 步互动速成教程 (Interactive Step-by-Step Tutorial)
+  // ═══════════════════════════════════════════════════════════════════
+  isTutorialActive = signal(false);
+  tutorialStep = signal(0);
+  hasCompletedTutorial = signal(false);
+  tutorialDismissed = signal(false);
+  readonly isTutorialFinished = computed(() => this.tutorialStep() >= HASHI_TUTORIAL_STEPS.length);
+
+  readonly currentTutorialStepInfo = computed<HashiTutorialStep | null>(() => {
+    if (!this.isTutorialActive()) return null;
+    const step = this.tutorialStep();
+    return HASHI_TUTORIAL_STEPS[step] || null;
+  });
+
+  readonly currentTutorialBubbleReason = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.descKey)() || info.defaultDesc || '';
+  });
+
+  readonly currentTutorialBubbleAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.actionKey)() || info.defaultAction || '';
+  });
+
+  readonly currentTutorialMicroAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    const microKey = info.microActionKey;
+    const defaultMicro = info.defaultMicroAction || '';
+    if (!microKey) return defaultMicro;
+    return this.i18n.t(microKey)() || defaultMicro;
+  });
+
+  // 当前步骤中尚未达成 requiredCount 的首个连桥目标
+  readonly currentTutorialTargetBridge = computed<HashiTutorialBridgeTarget | null>(() => {
+    const stepInfo = this.currentTutorialStepInfo();
+    if (!stepInfo) return null;
+    const bridges = this.store.bridges();
+    for (const target of stepInfo.bridgeTargets) {
+      const norm = this.normalizeCoords(target.r1, target.c1, target.r2, target.c2);
+      const existing = bridges.find(b => b.r1 === norm.r1 && b.c1 === norm.c1 && b.r2 === norm.r2 && b.c2 === norm.c2);
+      const count = existing ? existing.count : 0;
+      if (count < target.requiredCount) {
+        return target;
+      }
+    }
+    return null;
+  });
+
+  readonly tutorialPointerCoords = computed(() => {
+    const target = this.currentTutorialTargetBridge();
+    if (!target) return null;
+    const gw = this.gridWidth();
+    const gh = this.gridHeight();
+    const totalW = gw + 0.4;
+    const totalH = gh + 0.4;
+    const midX = (target.c1 + target.c2) / 2;
+    const midY = (target.r1 + target.r2) / 2;
+    const leftPercent = ((midX + 0.7) / totalW) * 100;
+    const topPercent = ((midY + 0.7) / totalH) * 100;
+    return {
+      left: `${leftPercent}%`,
+      top: `${topPercent}%`,
+      direction: topPercent < 35 ? 'up' : 'down' as 'up' | 'down'
+    };
+  });
 
   readonly gridWidth = computed(() => {
     const grid = this.store.boardGrid();
@@ -198,6 +278,10 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override ngOnInit() {
     super.ngOnInit();
+    if (isBrowser()) {
+      const completed = localStorage.getItem('hashi_tutorial_completed') === 'true';
+      this.hasCompletedTutorial.set(completed);
+    }
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       if (pending.isCreate) {
@@ -233,16 +317,15 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   }
 
   startLevel(event: { id: string, puzzle: string, difficulty: string, levelIndex: number }) {
+    this.isTutorialActive.set(false);
     this.view.set('play');
     this.store.startSinglePlayer(event.id, event.puzzle, event.difficulty, event.levelIndex);
     this.selectedIsland.set(null);
   }
 
-  async onDifficultyChange(event: Event | string) {
-    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
-    if (diff === this.store.currentDifficulty()) return;
+  async loadFirstLevelOf(diff: string) {
+    this.store.currentDifficulty.set(diff);
     setSavedDifficulty('hashi', diff);
-    
     try {
       const levelsRes = await lastValueFrom(this.http.get<any>(`${environment.apiUrl}/hashi/levels/${diff}`));
       const firstLevel = levelsRes[0];
@@ -253,16 +336,27 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         this.selectedIsland.set(null);
       }
     } catch (e) {
-      console.error('Failed to switch difficulty', e);
+      console.error('Failed to load level', e);
     }
   }
 
+  async onDifficultyChange(event: Event | string) {
+    const diff = typeof event === 'string' ? event : (event.target as HTMLSelectElement).value;
+    if (diff === this.store.currentDifficulty()) return;
+    await this.loadFirstLevelOf(diff);
+  }
+
   goToLobby() {
+    this.isTutorialActive.set(false);
     this.store.stopTimer();
     this.view.set('lobby');
   }
 
   override goBack(): void {
+    if (this.isTutorialActive()) {
+      this.exitTutorial();
+      return;
+    }
     if (this.view() === 'lobby' && this.store.currentRoomMode() === GameMode.Single) {
       super.goBack();
     } else if (this.store.currentRoomMode() !== GameMode.Single) {
@@ -353,9 +447,126 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     return `${this.i18n.t('game.timer')()}: ${this.formatTime(this.getElapsedMs(0))}`;
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 Tutorial Helper & Interaction Methods
+  // ═══════════════════════════════════════════════════════════════════
+
+  normalizeCoords(r1: number, c1: number, r2: number, c2: number) {
+    if (r1 > r2 || c1 > c2) {
+      return { r1: r2, c1: c2, r2: r1, c2: c1 };
+    }
+    return { r1, c1, r2, c2 };
+  }
+
+  isTutorialTargetIsland(r: number, c: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const target = this.currentTutorialTargetBridge();
+    if (!target) return false;
+    return (r === target.r1 && c === target.c1) || (r === target.r2 && c === target.c2);
+  }
+
+  private checkTutorialStepProgress() {
+    if (!this.isTutorialActive()) return;
+    const stepInfo = this.currentTutorialStepInfo();
+    if (!stepInfo) return;
+    const bridges = this.store.bridges();
+    const allSatisfied = stepInfo.bridgeTargets.every(target => {
+      const norm = this.normalizeCoords(target.r1, target.c1, target.r2, target.c2);
+      const existing = bridges.find(b => b.r1 === norm.r1 && b.c1 === norm.c1 && b.r2 === norm.r2 && b.c2 === norm.c2);
+      const count = existing ? existing.count : 0;
+      return count >= target.requiredCount;
+    });
+
+    if (allSatisfied) {
+      const nextStep = this.tutorialStep() + 1;
+      this.tutorialStep.set(nextStep);
+      if (nextStep >= HASHI_TUTORIAL_STEPS.length) {
+        this.vibrateSuccess();
+        this.celebrateVictory();
+        this.hasCompletedTutorial.set(true);
+        if (isBrowser()) {
+          localStorage.setItem('hashi_tutorial_completed', 'true');
+        }
+      } else {
+        this.vibrateMedium();
+      }
+    }
+  }
+
+  private executeTutorialBridge(r1: number, c1: number, r2: number, c2: number, target: HashiTutorialBridgeTarget) {
+    const norm = this.normalizeCoords(r1, c1, r2, c2);
+    const bridges = this.store.bridges();
+    const existing = bridges.find(b => b.r1 === norm.r1 && b.c1 === norm.c1 && b.r2 === norm.r2 && b.c2 === norm.c2);
+    const currentCount = existing ? existing.count : 0;
+
+    if (currentCount < target.requiredCount) {
+      this.store.toggleBridge(r1, c1, r2, c2);
+      this.vibrateSnap();
+      this.checkTutorialStepProgress();
+    } else {
+      this.vibrateLight();
+    }
+  }
+
+  onBridgeClick(r1: number, c1: number, r2: number, c2: number) {
+    if (this.store.localStatus() !== GameStatus.Playing || this.store.isSpectator()) return;
+
+    if (!this.isTutorialActive()) {
+      this.store.toggleBridge(r1, c1, r2, c2);
+      this.vibrateSnap();
+      return;
+    }
+
+    const target = this.currentTutorialTargetBridge();
+    if (!target) return;
+    const normClick = this.normalizeCoords(r1, c1, r2, c2);
+    const normTarget = this.normalizeCoords(target.r1, target.c1, target.r2, target.c2);
+    if (normClick.r1 === normTarget.r1 && normClick.c1 === normTarget.c1 &&
+        normClick.r2 === normTarget.r2 && normClick.c2 === normTarget.c2) {
+      this.executeTutorialBridge(normClick.r1, normClick.c1, normClick.r2, normClick.c2, target);
+    } else {
+      this.vibrateError();
+    }
+  }
+
   // Handle island click for drawing bridges
   onIslandClick(r: number, c: number) {
     if (this.store.localStatus() !== GameStatus.Playing || this.store.isSpectator()) return;
+
+    if (this.isTutorialActive()) {
+      const current = this.selectedIsland();
+      if (!current) {
+        const target = this.currentTutorialTargetBridge();
+        if (!target) return;
+        const isPartOfTarget = (r === target.r1 && c === target.c1) || (r === target.r2 && c === target.c2);
+        if (!isPartOfTarget) {
+          this.vibrateError();
+          return;
+        }
+        this.selectedIsland.set({ r, c });
+        this.vibrateLight();
+      } else {
+        if (current.r === r && current.c === c) {
+          this.selectedIsland.set(null);
+        } else {
+          const target = this.currentTutorialTargetBridge();
+          if (!target) {
+            this.selectedIsland.set(null);
+            return;
+          }
+          const normClick = this.normalizeCoords(current.r, current.c, r, c);
+          const normTarget = this.normalizeCoords(target.r1, target.c1, target.r2, target.c2);
+          if (normClick.r1 === normTarget.r1 && normClick.c1 === normTarget.c1 &&
+              normClick.r2 === normTarget.r2 && normClick.c2 === normTarget.c2) {
+            this.executeTutorialBridge(normClick.r1, normClick.c1, normClick.r2, normClick.c2, target);
+          } else {
+            this.vibrateError();
+          }
+          this.selectedIsland.set(null);
+        }
+      }
+      return;
+    }
 
     const current = this.selectedIsland();
     if (!current) {
@@ -369,7 +580,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
         // Try to draw bridge
         this.store.toggleBridge(current.r, current.c, r, c);
         this.vibrateSnap();
-        this.selectedIsland.set(null); // Keep or deselect based on UX preference
+        this.selectedIsland.set(null);
       }
     }
   }
@@ -407,12 +618,62 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
        if (endR !== null && endC !== null) {
           if (endR !== start.r || endC !== start.c) {
              // Swiped to a different island!
-             this.store.toggleBridge(start.r, start.c, endR, endC);
-             this.vibrateSnap();
+             if (this.isTutorialActive()) {
+               const tutTarget = this.currentTutorialTargetBridge();
+               if (tutTarget) {
+                 const normClick = this.normalizeCoords(start.r, start.c, endR, endC);
+                 const normTarget = this.normalizeCoords(tutTarget.r1, tutTarget.c1, tutTarget.r2, tutTarget.c2);
+                 if (normClick.r1 === normTarget.r1 && normClick.c1 === normTarget.c1 &&
+                     normClick.r2 === normTarget.r2 && normClick.c2 === normTarget.c2) {
+                   this.executeTutorialBridge(normClick.r1, normClick.c1, normClick.r2, normClick.c2, tutTarget);
+                 } else {
+                   this.vibrateError();
+                 }
+               }
+             } else {
+               this.store.toggleBridge(start.r, start.c, endR, endC);
+               this.vibrateSnap();
+             }
              event.preventDefault();
           }
        }
     }
+  }
+
+  startTutorial() {
+    this.vibrateLight();
+    this.view.set('play');
+    this.tutorialStep.set(0);
+    this.isTutorialActive.set(true);
+    this.selectedIsland.set(null);
+    this.store.startTutorialPuzzle();
+  }
+
+  restartTutorial() {
+    this.vibrateLight();
+    this.tutorialStep.set(0);
+    this.selectedIsland.set(null);
+    this.store.startTutorialPuzzle();
+  }
+
+  exitTutorial() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.goToLobby();
+  }
+
+  async completeTutorialAndPlay() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    if (isBrowser()) {
+      localStorage.setItem('hashi_tutorial_completed', 'true');
+    }
+    await this.loadFirstLevelOf('easy');
+  }
+
+  dismissTutorialCapsule() {
+    this.tutorialDismissed.set(true);
   }
 
   playPreviousLevel() {

@@ -9,6 +9,7 @@ import { AudioService } from '../../../../core/services/audio.service';
 import { I18nService } from '../../../../core/i18n/i18n.service';
 import { AdService } from '../../../../core/services/ad.service';
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
+import { HASHI_TUTORIAL_PUZZLE } from './hashi-tutorial';
 
 @Injectable()
 export class HashiStore extends BaseGameStore {
@@ -19,6 +20,8 @@ export class HashiStore extends BaseGameStore {
   private i18n = inject(I18nService);
   private adService = inject(AdService);
   private resumeService = inject(ResumeGameService);
+
+  readonly isTutorialMode = signal<boolean>(false);
 
   // 本地引擎
   engine = new HashiEngine();
@@ -37,7 +40,12 @@ export class HashiStore extends BaseGameStore {
 
   private timer: any;
 
-  readonly singlePlayerStatus = computed(() => this.localStatus());
+  readonly singlePlayerStatus = computed(() => {
+    if (this.isTutorialMode()) {
+      return GameStatus.Playing;
+    }
+    return this.localStatus();
+  });
   override readonly singlePlayerWinners = computed(() => []);
   override readonly singlePlayerList = computed(() => [{ id: this.playerId() }]);
 
@@ -112,6 +120,7 @@ export class HashiStore extends BaseGameStore {
 
   // 开始单机关卡
   startSinglePlayer(puzzleId: string, content: string, difficulty: string, levelIndex: number) {
+    this.isTutorialMode.set(false);
     this.joinRoom('', GameMode.Single, difficulty, this.playerId());
     this.currentPuzzleId.set(puzzleId);
     this.currentPuzzleContent.set(content);
@@ -125,6 +134,22 @@ export class HashiStore extends BaseGameStore {
     this.syncEngineToState();
 
     this.startTimer();
+  }
+
+  // 🎓 开启新手互动教学关卡
+  startTutorialPuzzle() {
+    this.isTutorialMode.set(true);
+    this.joinRoom('', GameMode.Single, 'easy', this.playerId());
+    this.currentPuzzleId.set('hashi_tutorial');
+    this.currentPuzzleContent.set(JSON.stringify(HASHI_TUTORIAL_PUZZLE));
+    this.localLevelIndex.set(0);
+    this.timeSpent.set(0);
+    this.isFinishing = false;
+    this.localStatus.set(GameStatus.Playing);
+    this.stopTimer();
+
+    this.engine.initGame(HASHI_TUTORIAL_PUZZLE.grid);
+    this.syncEngineToState();
   }
 
   private startTimer() {
@@ -150,51 +175,55 @@ export class HashiStore extends BaseGameStore {
     this.syncEngineToState();
 
     if (this.engine.isSolved()) {
-      this.resumeService.clearSession('hashi');
-      this.isFinishing = true;
-      this.stopTimer();
-      
-      setTimeout(() => {
-        this.localStatus.set(GameStatus.Finished);
-        this.isFinishing = false;
+      if (!this.isTutorialMode()) {
+        this.resumeService.clearSession('hashi');
+        this.isFinishing = true;
+        this.stopTimer();
         
-        // 提交到后端 (单机模式)
-        if (this.currentRoomMode() === GameMode.Single) {
-          this.http.post<{ isNewRecord: boolean }>(`${environment.apiUrl}/hashi/puzzle/${this.currentPuzzleId()}/finish`, {
-            time_spent: this.timeSpent(),
-            stars: 3,
-            difficulty: this.currentDifficulty()
-          }).subscribe();
-        } else {
-          // PK 模式直接告诉服务器我完成了
-          this.submitPKFinish();
-        }
-      }, 500); 
+        setTimeout(() => {
+          this.localStatus.set(GameStatus.Finished);
+          this.isFinishing = false;
+          
+          // 提交到后端 (单机模式)
+          if (this.currentRoomMode() === GameMode.Single) {
+            this.http.post<{ isNewRecord: boolean }>(`${environment.apiUrl}/hashi/puzzle/${this.currentPuzzleId()}/finish`, {
+              time_spent: this.timeSpent(),
+              stars: 3,
+              difficulty: this.currentDifficulty()
+            }).subscribe();
+          } else {
+            // PK 模式直接告诉服务器我完成了
+            this.submitPKFinish();
+          }
+        }, 500);
+      }
     } else if (this.currentRoomMode() === GameMode.Single && this.engine.bridges.length > 0) {
-      let placed = 0;
-      for (const b of this.engine.bridges) {
-        placed += b.count;
-      }
-      let targetTotal = 0;
-      for (const isl of this.engine.islands) {
-        targetTotal += isl.value;
-      }
-      const requiredBridges = Math.max(1, Math.floor(targetTotal / 2));
-      const progress = Math.min(99, Math.round((placed / requiredBridges) * 100));
-      this.resumeService.saveSession('hashi', {
-        difficulty: this.currentDifficulty(),
-        difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'hashi'),
-        progressPercent: progress,
-        moves: placed,
-        timeElapsed: this.timeSpent(),
-        data: {
-          puzzleId: this.currentPuzzleId(),
-          puzzleContent: this.currentPuzzleContent(),
-          difficulty: this.currentDifficulty(),
-          timeSpent: this.timeSpent(),
-          bridges: this.engine.exportBridges()
+      if (!this.isTutorialMode()) {
+        let placed = 0;
+        for (const b of this.engine.bridges) {
+          placed += b.count;
         }
-      });
+        let targetTotal = 0;
+        for (const isl of this.engine.islands) {
+          targetTotal += isl.value;
+        }
+        const requiredBridges = Math.max(1, Math.floor(targetTotal / 2));
+        const progress = Math.min(99, Math.round((placed / requiredBridges) * 100));
+        this.resumeService.saveSession('hashi', {
+          difficulty: this.currentDifficulty(),
+          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'hashi'),
+          progressPercent: progress,
+          moves: placed,
+          timeElapsed: this.timeSpent(),
+          data: {
+            puzzleId: this.currentPuzzleId(),
+            puzzleContent: this.currentPuzzleContent(),
+            difficulty: this.currentDifficulty(),
+            timeSpent: this.timeSpent(),
+            bridges: this.engine.exportBridges()
+          }
+        });
+      }
     }
   }
 
@@ -253,6 +282,7 @@ export class HashiStore extends BaseGameStore {
 
   override leaveRoom() {
     super.leaveRoom();
+    this.isTutorialMode.set(false);
     this.stopTimer();
     this.localStatus.set(GameStatus.Waiting);
   }

@@ -53,12 +53,21 @@ interface LevelResponse {
           </div>
 
           @if (!loading() && levels().length > 0) {
-            <button 
-              (click)="playNextOrFirstLevel()"
-              class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer shrink-0">
-              <span>⚡</span>
-              <span>{{ i18n.t('game.quick_start')() || '快速开始' }} ({{ i18n.t('game.level')() }} {{ getNextOrFirstLevelIndex() | number:'3.0-0' }})</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button 
+                type="button"
+                (click)="startTutorial.emit()"
+                class="px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black text-xs sm:text-sm flex items-center gap-1 shadow-xs active:scale-95 transition-all cursor-pointer shrink-0">
+                <span>🎓</span>
+                <span>{{ i18n.t('tutorial.interactive.btn_tutorial')() || '新手教程' }}</span>
+              </button>
+              <button 
+                (click)="playNextOrFirstLevel()"
+                class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md shadow-amber-500/20 active:scale-95 transition-all cursor-pointer shrink-0">
+                <span>⚡</span>
+                <span>{{ i18n.t('game.quick_start')() || '快速开始' }} ({{ i18n.t('game.level')() }} {{ getNextOrFirstLevelIndex() | number:'3.0-0' }})</span>
+              </button>
+            </div>
           }
         </div>
         <div class="flex-1 px-3 sm:px-6 pb-12 sm:pb-6 overflow-y-auto custom-scrollbar min-h-0" style="touch-action: pan-y !important; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;">
@@ -141,6 +150,7 @@ export class HashiLobbyComponent implements OnInit {
   private http = inject(HttpClient);
 
   @Output() levelSelect = new EventEmitter<{ id: string, puzzle: string, difficulty: string, levelIndex: number }>();
+  @Output() startTutorial = new EventEmitter<void>();
 
   @Input() set currentDifficulty(val: string | undefined) {
     const valid = this.sanitizeDifficulty(val);
