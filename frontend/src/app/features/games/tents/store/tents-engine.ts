@@ -195,9 +195,9 @@ export class LocalTentsEngine implements ILocalEngine<any, TentsAction> {
         next = explicitState;
       }
     } else {
-      // 默认直觉二态切换：空白 ➔ 帐篷；再点一次直接变回空白！(彻底终结三态循环困惑)
+      // 🌟 自然三态循环切换：空白 ➔ 帐篷 ➔ 草地 ➔ 空白 (帐篷与草顺畅切换)
       if (current === TentsCellState.Empty) next = TentsCellState.Tent;
-      else if (current === TentsCellState.Tent) next = TentsCellState.Empty;
+      else if (current === TentsCellState.Tent) next = TentsCellState.Grass;
       else next = TentsCellState.Empty;
     }
 

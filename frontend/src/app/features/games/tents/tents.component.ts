@@ -346,6 +346,7 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this.cancelTouchTimer();
     this.store.leaveRoom();
   }
 
@@ -375,8 +376,21 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
     this.store.nextLevel();
   }
 
+  // ── 移动端长按出草丛与 PC 右键交互 ─────────────────────────────────
+  private touchTimeout: any = null;
+  private isLongPressTriggered = false;
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private lastTouchTime = 0;
+
   onCellClick(r: number, c: number): void {
     if (this.store.isSpectator()) return;
+
+    // 触控长按抬手产生的合成 click 或短时间内重复触发，直接忽略
+    if (this.isLongPressTriggered || (Date.now() - this.lastTouchTime < 350 && this.isLongPressTriggered)) {
+      this.isLongPressTriggered = false;
+      return;
+    }
 
     // 🎓 Tutorial mode interception
     if (this.isTutorialActive()) {
@@ -399,19 +413,98 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
   onCellContextMenu(event: MouseEvent, r: number, c: number): void {
     event.preventDefault();
+    event.stopPropagation();
     if (this.store.isSpectator()) return;
 
-    // 🎓 Tutorial mode: if target is Grass, allow context menu to place it too
-    if (this.isTutorialActive()) {
-      this.onCellClick(r, c);
+    // 过滤移动端长按抬手后浏览器模拟派发的 contextmenu
+    if (Date.now() - this.lastTouchTime < 450) {
       return;
     }
 
+    this.toggleCellGrass(r, c);
+  }
+
+  onCellTouchStart(event: TouchEvent, r: number, c: number): void {
+    this.lastTouchTime = Date.now();
+    this.cancelTouchTimer();
+    this.isLongPressTriggered = false;
+
+    if (event.touches.length > 1) {
+      return;
+    }
+
+    if (event.touches.length > 0) {
+      this.touchStartX = event.touches[0].clientX;
+      this.touchStartY = event.touches[0].clientY;
+    }
+
+    // 300ms 移动端长按判定：手指按着不动直接铺设草丛 🌿
+    this.touchTimeout = setTimeout(() => {
+      this.isLongPressTriggered = true;
+      this.lastTouchTime = Date.now();
+      this.cancelTouchTimer();
+      this.toggleCellGrass(r, c);
+    }, 300);
+  }
+
+  onCellTouchMove(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      const dx = Math.abs(event.touches[0].clientX - this.touchStartX);
+      const dy = Math.abs(event.touches[0].clientY - this.touchStartY);
+      // 滑动超过 10px 判定为玩家在滚动页面或拖拽，取消长按判定
+      if (dx > 10 || dy > 10) {
+        this.cancelTouchTimer();
+      }
+    }
+  }
+
+  onCellTouchEnd(event: TouchEvent, r: number, c: number): void {
+    this.lastTouchTime = Date.now();
+    const wasLongPress = this.isLongPressTriggered;
+    this.cancelTouchTimer();
+
+    if (wasLongPress) {
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+      return;
+    }
+  }
+
+  onCellTouchCancel(): void {
+    this.cancelTouchTimer();
+    this.isLongPressTriggered = false;
+  }
+
+  private cancelTouchTimer(): void {
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
+  }
+
+  private toggleCellGrass(r: number, c: number): void {
     const current = this.store.grid()[r]?.[c];
     if (current === TentsCellState.Tree) return;
-    const next = current === TentsCellState.Grass ? TentsCellState.Empty : TentsCellState.Grass;
-    this.store.setCell(r, c, next);
-    this.vibrateLight();
+
+    // 🎓 教学模式：如果当前步骤需要的是草丛，或者右键/长按击中了目标格
+    if (this.isTutorialActive()) {
+      const stepInfo = this.currentTutorialStepInfo();
+      if (!stepInfo) return;
+      const isTarget = stepInfo.targets.some(t => t.y === r && t.x === c);
+      if (!isTarget) {
+        this.vibrateError();
+        return;
+      }
+      this.store.setCell(r, c, stepInfo.requiredState);
+      this.vibrateSnap();
+      this.checkTutorialStepProgress();
+      return;
+    }
+
+    // 正常模式：在草丛 🌿 与 空白 之间快速切换
+    this.store.setCell(r, c, TentsCellState.Grass);
+    this.vibrateSnap();
   }
 
   onRowClueClick(r: number): void {

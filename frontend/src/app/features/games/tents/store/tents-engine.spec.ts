@@ -36,7 +36,11 @@ describe('LocalTentsEngine', () => {
     engine.handleAction({ type: 'set_cell', row: tr, col: tc });
     expect(engine.grid[tr][tc]).toBe(TentsCellState.Tent);
 
-    // 再点一下直接变回空格 (绝不在中间硬塞草丛折磨用户)
+    // 再点一下变草丛 (帐篷 ➔ 草丛)
+    engine.handleAction({ type: 'set_cell', row: tr, col: tc });
+    expect(engine.grid[tr][tc]).toBe(TentsCellState.Grass);
+
+    // 再点一下变回空白 (草丛 ➔ 空格)
     engine.handleAction({ type: 'set_cell', row: tr, col: tc });
     expect(engine.grid[tr][tc]).toBe(TentsCellState.Empty);
 

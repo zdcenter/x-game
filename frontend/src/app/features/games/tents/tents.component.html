@@ -75,11 +75,11 @@
       </div>
       <div class="space-y-2.5">
         <div class="flex items-center justify-between">
-          <span class="cockpit-stat-label">左键单击</span>
+          <span class="cockpit-stat-label">左键单击 / 触屏点按</span>
           <kbd class="cockpit-kbd">空格 ➔ ⛺ ➔ 🌿</kbd>
         </div>
         <div class="flex items-center justify-between">
-          <span class="cockpit-stat-label">右键单击</span>
+          <span class="cockpit-stat-label">右键 / 触屏长按</span>
           <kbd class="cockpit-kbd">快速铺草 🌿</kbd>
         </div>
         <div class="flex items-center justify-between">
@@ -314,7 +314,11 @@
               @for (cell of row; track trackByCol($index); let c = $index) {
                 <div (click)="onCellClick(r, c)"
                      (contextmenu)="onCellContextMenu($event, r, c)"
-                     class="tents-tile relative"
+                     (touchstart)="onCellTouchStart($event, r, c)"
+                     (touchmove)="onCellTouchMove($event)"
+                     (touchend)="onCellTouchEnd($event, r, c)"
+                     (touchcancel)="onCellTouchCancel()"
+                     class="tents-tile relative select-none"
                      [class.overflow-visible]="isFirstTutorialTarget(r, c)"
                      [class.!overflow-visible]="isFirstTutorialTarget(r, c)"
                      [class.ring-3]="isTutorialTargetCell(r, c)"
@@ -486,14 +490,15 @@
 
         <!-- 底部核心工具栏 -->
         <div class="flex items-center justify-between p-1.5 sm:p-2 rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-md">
-          <!-- 画笔模式选择 (默认放置帐篷；支持草丛排除标记) -->
+          <!-- 画笔模式选择 (默认自由循环；支持锁定帐篷/草丛排除标记) -->
           <div class="flex items-center gap-1.5">
             <button type="button"
                     (click)="store.toggleBrushMode(CellState.Tent)"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                    [ngClass]="store.brushMode() === CellState.Tent || store.brushMode() === null
-                      ? 'bg-amber-500 text-white shadow-xs'
-                      : 'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
+                    [ngClass]="store.brushMode() === CellState.Tent
+                      ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-400/40'
+                      : 'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'"
+                    title="点击锁定只放帐篷（再次点击解锁三态循环）">
               <span class="text-sm">⛺</span>
               <span>帐篷</span>
             </button>
@@ -501,9 +506,9 @@
                     (click)="store.toggleBrushMode(CellState.Grass)"
                     class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
                     [ngClass]="store.brushMode() === CellState.Grass
-                      ? 'bg-emerald-500 text-white shadow-xs'
+                      ? 'bg-emerald-500 text-white shadow-xs ring-2 ring-emerald-400/40'
                       : 'bg-[var(--color-bg-main)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'"
-                    title="标记排除草地 (非通关必须，仅辅助排除)">
+                    title="点击锁定只标草地（再次点击解锁三态循环）">
               <span class="text-sm">🌿</span>
               <span>标记排除</span>
             </button>
