@@ -1260,6 +1260,7 @@
   "game.you_lose": "YOU LOSE!",
   "game.you_win": "YOU WIN!",
   "game.zen_mode": "Zen Focus Mode",
+  "game.zen_mode_short": "Theater",
   "game.zen_mode_exit": "Exit Zen Mode",
   "game.streamer_mode": "OBS Streamer Mode",
   "gomoku.diff.easy": "AI Agent: Novice (1-Ply)",

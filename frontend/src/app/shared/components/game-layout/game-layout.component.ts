@@ -176,6 +176,15 @@ import { JuiceService } from '../../../core/services/juice.service';
                   <span class="hidden sm:inline">{{ i18n.t('game.switch_pk_game_short')() || '换游戏' }}</span>
                 </button>
               }
+
+              <!-- Theater / Zen Mode Toggle (Quick-access in header) -->
+              <button (click)="zenService.toggle()"
+                      type="button"
+                      class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-sub)]/80 hover:border-amber-400 text-[var(--color-text-secondary)] hover:text-amber-500 transition-all text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 group shrink-0 cursor-pointer"
+                      [title]="zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注最大化 (剧场模式)')">
+                <span class="group-hover:scale-110 transition-transform">⛶</span>
+                <span class="hidden md:inline">{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '恢复') : (i18n.t('game.zen_mode_short')() || '最大化') }}</span>
+              </button>
             </div>
           </ng-container>
         </app-game-header>
@@ -205,7 +214,7 @@ import { JuiceService } from '../../../core/services/juice.service';
          [class.overflow-hidden]="isImmersiveEffective()">
 
       <!-- Left Cockpit Wing (PC Wide Screen: xl+) -->
-      @if (!isImmersiveEffective()) {
+      @if (!isImmersiveEffective() && !zenService.isZenMode()) {
         <aside class="hidden xl:flex flex-col gap-4 w-72 xl:w-80 2xl:w-88 shrink-0 animate-fade-in self-start sticky top-20">
           
           <!-- Card 1: 🎯 难度规格 / 游戏等级 (Game Difficulty Card, Standardized for all games; hidden during level-select lobby to prevent duplicate controls) -->
@@ -329,7 +338,10 @@ import { JuiceService } from '../../../core/services/juice.service';
       }
 
       <!-- Center Cockpit Stage (Main Arena) -->
-      <div class="flex-1 min-w-0 max-w-4xl flex flex-col items-center justify-start self-stretch"
+      <div class="flex-1 min-w-0 flex flex-col items-center justify-start self-stretch transition-all duration-300"
+           [class.max-w-4xl]="!zenService.isZenMode()"
+           [class.max-w-none]="zenService.isZenMode()"
+           [class.w-full]="zenService.isZenMode()"
            [class.h-full]="isImmersiveEffective()"
            [class.max-h-full]="isImmersiveEffective()"
            [class.overflow-hidden]="isImmersiveEffective()">
@@ -498,7 +510,7 @@ import { JuiceService } from '../../../core/services/juice.service';
       </div>
 
       <!-- Right Cockpit Wing (PC Wide Screen: xl+) -->
-      @if (!isLobbyEffective() && !isImmersiveEffective()) {
+      @if (!isLobbyEffective() && !isImmersiveEffective() && !zenService.isZenMode()) {
         <aside class="hidden xl:flex flex-col gap-4 w-72 xl:w-80 2xl:w-88 shrink-0 animate-fade-in self-start sticky top-20">
           <ng-content select="[cockpit-right]"></ng-content>
           <!-- Desktop Hotkey & Pro Cheatsheet Card -->
