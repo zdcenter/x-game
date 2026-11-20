@@ -55,6 +55,7 @@ export class NonogramStore extends BaseGameStore {
   private i18n = inject(I18nService);
 
   private localState = signal<LocalNonogramState | null>(null);
+  readonly isTutorialMode = signal<boolean>(false);
   readonly history = signal<NonogramHistoryEntry[]>([]);
   readonly moveHistory = signal<NonogramReplayMove[]>([]);
   
@@ -252,10 +253,10 @@ export class NonogramStore extends BaseGameStore {
       }
     });
 
-    // Submit stats when game finishes in single mode
+    // Submit stats when game finishes in single mode (exclude tutorial)
     effect(() => {
       const s = this.status();
-      if (s === GameStatus.Finished && this.currentRoomMode() === GameMode.Single) {
+      if (s === GameStatus.Finished && this.currentRoomMode() === GameMode.Single && !this.isTutorialMode()) {
         this.submitSingleStat({ time: this.timeSpent(), won: true, usedHint: this.hintsUsed() > 0 }).subscribe();
       }
     });
@@ -556,7 +557,7 @@ export class NonogramStore extends BaseGameStore {
           }
         }
 
-        if (totalPlacedCells > 0) {
+        if (totalPlacedCells > 0 && !this.isTutorialMode()) {
           const progress = targetTotalFilled > 0 ? Math.min(99, Math.round((currentCorrectFilled / targetTotalFilled) * 100)) : 0;
           this.resumeService.saveSession('nonogram', {
             difficulty: this.currentDifficulty(),
@@ -654,6 +655,11 @@ export class NonogramStore extends BaseGameStore {
     if (this.status() !== GameStatus.Playing || this.isSpectator()) return;
     if (this.currentRoomMode() === GameMode.Steal) return;
     
+    if (this.isTutorialMode()) {
+      this.startTutorialPuzzle();
+      return;
+    }
+
     const state = this.localState();
     if (!state) return;
 
@@ -735,6 +741,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   startNewSingleGame(difficulty?: string) {
+    this.isTutorialMode.set(false);
     const diff = difficulty || (this.currentDifficulty() as string) || GameDifficulty.Easy;
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(diff);
@@ -747,6 +754,10 @@ export class NonogramStore extends BaseGameStore {
   }
 
   playAgain() {
+    if (this.isTutorialMode()) {
+      this.startTutorialPuzzle();
+      return;
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       this.startNewSingleGame(this.currentDifficulty() as string);
     } else {
@@ -755,14 +766,23 @@ export class NonogramStore extends BaseGameStore {
   }
 
   protected override onSinglePlayerRestart(): void {
+    if (this.isTutorialMode()) {
+      this.startTutorialPuzzle();
+      return;
+    }
     this.startNewSingleGame(this.currentDifficulty() as string);
   }
 
   protected override onSinglePlayerStart(): void {
+    if (this.isTutorialMode()) {
+      this.startTutorialPuzzle();
+      return;
+    }
     this.startNewSingleGame(this.currentDifficulty() as string);
   }
 
   private initSinglePlayer(difficulty?: string) {
+    this.isTutorialMode.set(false);
     this.hintsUsed.set(0);
     if (!difficulty) {
       const savedDiff = typeof localStorage !== 'undefined'
@@ -805,6 +825,7 @@ export class NonogramStore extends BaseGameStore {
   }
 
   startTutorialPuzzle() {
+    this.isTutorialMode.set(true);
     this.hintsUsed.set(0);
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(GameDifficulty.Easy);

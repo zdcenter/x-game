@@ -97,6 +97,9 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   changeSingleDifficulty(diff: string) {
     if (this.store.roomId() || this.store.isSpectator() || this.store.currentRoomMode() !== GameMode.Single) return;
+    if (this.isTutorialActive()) {
+      this.isTutorialActive.set(false);
+    }
     this.store.currentDifficulty.set(diff);
     setSavedDifficulty('nonogram', diff);
     this.store.playAgain();
@@ -224,11 +227,21 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   exitTutorial() {
     this.vibrateLight();
     this.isTutorialActive.set(false);
+    this.tutorialStep.set(0);
     this.store.startNewSingleGame(this.store.currentDifficulty() as string);
   }
 
   restartTutorial() {
     this.startTutorial();
+  }
+
+  onClearOrRestartClick() {
+    this.vibrateLight();
+    if (this.isTutorialActive()) {
+      this.restartTutorial();
+      return;
+    }
+    this.store.clearBoard();
   }
 
   completeTutorialAndPlay() {
@@ -1109,10 +1122,18 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   }
 
   override handleRematch() {
+    if (this.isTutorialActive()) {
+      this.restartTutorial();
+      return;
+    }
     this.store.playAgain();
   }
 
   override handleRestart() {
+    if (this.isTutorialActive()) {
+      this.restartTutorial();
+      return;
+    }
     this.store.playAgain();
   }
 
