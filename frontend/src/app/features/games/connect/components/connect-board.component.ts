@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit } from "@angular/core";
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, AfterViewInit, inject } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { ConnectEngine, Position } from '../connect-engine';
+import { HapticService } from '../../../../core/services/haptic.service';
 
 @Component({
   selector: 'app-connect-board',
@@ -86,6 +87,8 @@ import { ConnectEngine, Position } from '../connect-engine';
   `
 })
 export class ConnectBoardComponent implements AfterViewInit {
+  private haptic = inject(HapticService);
+
   @Input() engine!: ConnectEngine;
   @Input() disabled = false;
   @Input() highlightUnfilled = false;
@@ -221,6 +224,7 @@ export class ConnectBoardComponent implements AfterViewInit {
     // Check if clicking on an existing pipe or endpoint
     const color = this.engine.startDragFrom(pos.r, pos.c);
     if (color !== null) {
+      this.haptic.vibrateLight();
       this.activeColor = color;
       this.boardChange.emit();
     }
@@ -248,8 +252,11 @@ export class ConnectBoardComponent implements AfterViewInit {
     const dc = pos.c - head.c;
     if (dr === 0 && dc === 0) return;
 
+    const prevConnected = this.engine.getConnectedFlowsCount();
+
     if (Math.abs(dr) + Math.abs(dc) === 1) {
       this.engine.drawTo(pos.r, pos.c, this.activeColor);
+      this.checkAndTriggerFeedback(prevConnected);
       this.boardChange.emit();
       return;
     }
@@ -279,13 +286,26 @@ export class ConnectBoardComponent implements AfterViewInit {
         this.engine.drawTo(currR, currC, this.activeColor);
       }
     }
+    this.checkAndTriggerFeedback(prevConnected);
     this.boardChange.emit();
+  }
+
+  private checkAndTriggerFeedback(prevConnected: number) {
+    const nowConnected = this.engine.getConnectedFlowsCount();
+    if (nowConnected > prevConnected) {
+      if (this.engine.isSolved()) {
+        this.haptic.vibrateSuccess();
+      } else {
+        this.haptic.vibrateSnap();
+      }
+    }
   }
 
   onPointerUp() {
     // If user tapped/clicked on an endpoint that already had a path without dragging away, clear it
     if (!this.hasMoved && this.downEndpointColor !== null && this.downEndpointHadPath) {
       this.engine.clearColor(this.downEndpointColor);
+      this.haptic.vibrateLight();
     }
 
     if (this.activeColor !== null || this.downEndpointColor !== null) {

@@ -412,9 +412,15 @@ export class SlidingComponent extends BaseGameComponent {
     this.hintTarget.set(null);
     const board = this.store.myBoard();
     if (!board) return;
+    const emptyRow = Math.floor(board.emptyIdx / board.size);
+    const emptyCol = board.emptyIdx % board.size;
+    if (tile.row !== emptyRow && tile.col !== emptyCol) {
+      this.haptic.vibrateError();
+      return;
+    }
     const idx = tile.row * tile.size + tile.col;
     this.store.dispatch({ type: SlidingActionType.Move, index: idx });
-    this.haptic.vibrateSwipe();
+    this.haptic.vibrateSnap();
   }
 
   private touchStartX = 0;
@@ -477,7 +483,7 @@ export class SlidingComponent extends BaseGameComponent {
     if (targetRow >= 0 && targetRow < size && targetCol >= 0 && targetCol < size) {
       const idx = targetRow * size + targetCol;
       this.store.dispatch({ type: SlidingActionType.Move, index: idx });
-      this.haptic.vibrateSwipe();
+      this.haptic.vibrateSnap();
     }
   }
 

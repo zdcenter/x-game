@@ -11,7 +11,8 @@ import { XPResult } from '../../../core/services/game-stats.service';
 import { ShareService } from '../../../core/services/share.service';
 import { TextShareService } from "../../../core/services/text-share.service";
 import { StreakService } from '../../../core/services/streak.service';
-import { getOrigin } from '../../../core/utils/browser.util';
+import { getOrigin, isBrowser } from '../../../core/utils/browser.util';
+import { DailyQuestService } from '../../../core/services/daily-quest.service';
 import { AdsenseComponent } from '../adsense/adsense.component';
 import { GhostChallengeService } from '../../../core/services/ghost-challenge.service';
 import { CoinService } from '../../../core/services/coin.service';
@@ -109,6 +110,8 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   private liveActivityService = inject(LiveActivityService);
   private gameSwitchService = inject(GameSwitchService);
   private posterService = inject(PosterService);
+  dailyQuestService = inject(DailyQuestService);
+  readonly Math = Math;
 
   readonly costRevive = computed(() => this.settingsService.coinEconomy().costRevive);
   readonly canAffordRevive = computed(() => this.coinService.canAfford(this.costRevive()));
@@ -131,6 +134,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   closeTimelapseModal() {
     this.showTimelapseModal.set(false);
+  }
+
+  goToDaily() {
+    this.haptic.vibrateLight();
+    this.audio.playClick();
+    this.router.navigate(['/', this.i18n.currentLang(), 'daily']);
   }
 
   @Input() currentGameId?: string;
@@ -325,6 +334,11 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   ngOnInit() {
     this.playEffect();
     this.loadRecommendations();
+    if (isBrowser()) {
+      this.dailyQuestService.getTodayQuests().subscribe({
+        error: () => {}
+      });
+    }
     const isWin = this.status === GameResult.Win;
     if (this.currentGameId) {
       this.streak.set(this.streakService.recordResult(this.currentGameId, isWin));

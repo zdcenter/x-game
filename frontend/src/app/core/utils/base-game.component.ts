@@ -548,7 +548,7 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Esc: close rules modal or close mobile sidebar
+    // Esc: close rules modal, mobile sidebar, overlay, or exit zen mode
     if (event.key === 'Escape') {
       if (this.showRules()) {
         this.showRules.set(false);
@@ -558,6 +558,18 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       }
       if (this.isMobileSidebarOpen()) {
         this.isMobileSidebarOpen.set(false);
+        event.preventDefault();
+        return;
+      }
+      if (this.zenService.isZenMode()) {
+        this.zenService.setPreference(false, true);
+        this.vibrateLight();
+        event.preventDefault();
+        return;
+      }
+      if (this.showOverlay()) {
+        this.showOverlay.set(false);
+        this.vibrateLight();
         event.preventDefault();
         return;
       }
@@ -575,19 +587,23 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // R: Restart game
+    // R: Quick restart game in single player
     if ((event.key === 'r' || event.key === 'R') && !event.ctrlKey && !event.metaKey && !event.altKey) {
       if (this.store && this.store.currentRoomMode() === GameMode.Single) {
         this.vibrateLight();
+        if (this.triggerRestart()) {
+          event.preventDefault();
+          return;
+        }
         this.handleTitleClick();
         event.preventDefault();
         return;
       }
     }
 
-    // Ctrl+Z or U: Undo
-    const isUndo = ((event.key === 'z' || event.key === 'Z') && (event.ctrlKey || event.metaKey)) ||
-                   ((event.key === 'u' || event.key === 'U') && !event.ctrlKey && !event.metaKey);
+    // Z or Ctrl+Z or Cmd+Z or U: Universal Undo
+    const isUndo = ((event.key === 'z' || event.key === 'Z') && !event.altKey) ||
+                   ((event.key === 'u' || event.key === 'U') && !event.ctrlKey && !event.metaKey && !event.altKey);
     if (isUndo) {
       if (this.triggerUndo()) {
         event.preventDefault();
@@ -617,6 +633,46 @@ export abstract class BaseGameComponent implements OnInit, OnDestroy {
         return;
       }
     }
+  }
+
+  /**
+   * 触发通用快速重新开局动作（支持快捷键 R 与按钮）
+   */
+  public triggerRestart(): boolean {
+    const compAny = this as any;
+    const storeAny = this.store as any;
+
+    if (typeof compAny.restart === 'function') {
+      this.vibrateLight();
+      compAny.restart();
+      return true;
+    }
+    if (typeof compAny.handleRestart === 'function' && compAny.handleRestart !== BaseGameComponent.prototype.handleRestart) {
+      this.vibrateLight();
+      compAny.handleRestart();
+      return true;
+    }
+    if (typeof compAny.restartGame === 'function') {
+      this.vibrateLight();
+      compAny.restartGame();
+      return true;
+    }
+    if (typeof storeAny?.restartGame === 'function') {
+      this.vibrateLight();
+      storeAny.restartGame();
+      return true;
+    }
+    if (typeof storeAny?.playAgain === 'function') {
+      this.vibrateLight();
+      storeAny.playAgain();
+      return true;
+    }
+    if (typeof storeAny?.startGame === 'function') {
+      this.vibrateLight();
+      storeAny.startGame();
+      return true;
+    }
+    return false;
   }
 
   /**

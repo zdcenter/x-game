@@ -352,6 +352,10 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   onCellClick(r: number, c: number) {
+    if (this.store.status() !== GameStatus.Playing || this.store.isSpectator()) {
+      this.haptic.vibrateError();
+      return;
+    }
     this.hintCell.set(null);
     this.keyboardCursor.set({ row: r, col: c });
     this.haptic.vibrateLight();

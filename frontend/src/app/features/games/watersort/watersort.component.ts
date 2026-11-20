@@ -433,6 +433,7 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
               const toTube = this.myTubes()[toIndex];
               if (toTube && toTube.colors.length === 4 && toTube.colors.every((c: string) => c === toTube.colors[0])) {
                 this.audioService.playWaterSort('bottle_full');
+                this.vibrateCombo();
               }
               this.pouringState = null;
               this.cdr.markForCheck();
