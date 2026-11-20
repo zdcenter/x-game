@@ -104,8 +104,13 @@
         (rules)="showRules.set(true)"
         (pk)="navigateToPkArena()">
 
-        <!-- Center: 难度选择抽屉 + 帐篷收集进度条 + 步数 / PK 模式指示 -->
-        @if (store.currentRoomMode() === GameMode.Single) {
+        <!-- Center: 难度选择抽屉 + 帐篷收集进度条 + 步数 / PK 模式指示 / 🎓 教程指示 -->
+        @if (isTutorialActive()) {
+          <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-2xs">
+            <span>🎓</span>
+            <span>{{ t('tutorial.interactive.mode_badge')() || '新手速成教学' }}</span>
+          </div>
+        } @else if (store.currentRoomMode() === GameMode.Single) {
           <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
             <!-- 难度抽屉选择器 (移动端紧凑微胶囊 + 底部自适应抽屉) -->
             <app-difficulty-selector
@@ -139,14 +144,21 @@
     <!-- 顶部状态 (单人模式，仅在 PC 桌面非专注模式时展示，手持端与专注模式已优雅整合入上方一体化顶梁) -->
     @if (!isHandheld() && !zenService.isZenMode() && store.currentRoomMode() === GameMode.Single) {
       <div class="w-full flex items-center justify-between px-2 mb-2">
-        <!-- 关卡与章节标题 -->
+        <!-- 关卡与章节标题 / 教程徽标 -->
         <div class="flex items-center gap-2">
-          <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            {{ store.currentLevel()?.chapter || '第一章 晨光森林' }}
-          </span>
-          <span class="text-sm font-black text-[var(--color-text-main)]">
-            {{ store.currentLevel()?.name || '第 1 关' }}
-          </span>
+          @if (isTutorialActive()) {
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-2xs">
+              <span>🎓</span>
+              <span>{{ t('tutorial.interactive.mode_badge')() || '新手速成教学' }}</span>
+            </div>
+          } @else {
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+              {{ store.currentLevel()?.chapter || '第一章 晨光森林' }}
+            </span>
+            <span class="text-sm font-black text-[var(--color-text-main)]">
+              {{ store.currentLevel()?.name || '第 1 关' }}
+            </span>
+          }
         </div>
 
         <!-- 帐篷收集进度条 (✓ ⛺ 4/5，按用户要求保留) -->
@@ -177,6 +189,45 @@
           [roundFormat]="store.room()?.roundFormat || 'BO3'"
         ></app-game-pk-hud>
       </div>
+    }
+
+    <!-- 🎓 教程引导卡片 / 邀请横幅 -->
+    @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && store.currentRoomMode() === GameMode.Single) {
+      <div class="w-full max-w-md mb-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-teal-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 shadow-xs animate-fade-in select-none">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="text-base sm:text-lg animate-bounce">⛺</span>
+          <span class="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-200 truncate">
+            {{ t('tutorial.tents.prompt')() || '第一次玩帐篷与树？30秒互动教学带你轻松玩懂' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button (click)="startTutorial()" 
+                  type="button"
+                  class="px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
+            {{ t('tutorial.interactive.start')() || '开始教学' }}
+          </button>
+          <button (click)="dismissTutorialCapsule()" 
+                  type="button"
+                  class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer text-xs"
+                  title="关闭">
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- 🎓 教程顶部指引面板 -->
+    @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
+      <app-interactive-tutorial-board
+        [stepInfo]="stepInfo"
+        [currentStep]="tutorialStep()"
+        [totalSteps]="4"
+        [title]="t(stepInfo.titleKey)() || stepInfo.defaultTitle"
+        [reasonText]="currentTutorialBubbleReason()"
+        [actionText]="currentTutorialBubbleAction()"
+        [skipText]="t('tutorial.interactive.skip')() || '跳过教程'"
+        (skip)="exitTutorial()">
+      </app-interactive-tutorial-board>
     }
 
     <!-- 智能提示浮条 -->
@@ -212,7 +263,12 @@
           @for (clue of store.colClues(); track trackByCol($index); let c = $index) {
             <button type="button"
                     (click)="onColClueClick(c)"
-                    class="tents-clue-btn h-8 sm:h-12"
+                    class="tents-clue-btn h-8 sm:h-12 relative"
+                    [class.ring-4]="isTutorialColHighlighted(c)"
+                    [class.ring-emerald-400]="isTutorialColHighlighted(c)"
+                    [class.animate-pulse]="isTutorialColHighlighted(c)"
+                    [class.scale-110]="isTutorialColHighlighted(c)"
+                    [class.z-20]="isTutorialColHighlighted(c)"
                     [ngClass]="{
                       'tents-clue-over': store.colOver()[c],
                       'tents-clue-satisfied': store.colSatisfied()[c] && !store.colOver()[c] && clue > 0,
@@ -221,6 +277,7 @@
                     }"
                     [title]="store.colSatisfied()[c] ? '该列达标，点击自动填充草丛' : '该列需 ' + clue + ' 顶帐篷'">
               {{ clue }}
+              <span *ngIf="isTutorialColHighlighted(c)" class="absolute -bottom-1 text-[9px] font-black text-cyan-500 animate-bounce leading-none">▼</span>
             </button>
           }
         </div>
@@ -233,7 +290,12 @@
             <!-- 左侧行提示数字 (100% 对齐图1：超粗饱满大圆体) -->
             <button type="button"
                     (click)="onRowClueClick(r)"
-                    class="tents-clue-btn w-8 sm:w-12 h-8 sm:h-12 shrink-0 mr-1.5 sm:mr-2"
+                    class="tents-clue-btn w-8 sm:w-12 h-8 sm:h-12 shrink-0 mr-1.5 sm:mr-2 relative"
+                    [class.ring-4]="isTutorialRowHighlighted(r)"
+                    [class.ring-emerald-400]="isTutorialRowHighlighted(r)"
+                    [class.animate-pulse]="isTutorialRowHighlighted(r)"
+                    [class.scale-110]="isTutorialRowHighlighted(r)"
+                    [class.z-20]="isTutorialRowHighlighted(r)"
                     [ngClass]="{
                       'tents-clue-over': store.rowOver()[r],
                       'tents-clue-satisfied': store.rowSatisfied()[r] && !store.rowOver()[r] && store.rowClues()[r] > 0,
@@ -242,6 +304,7 @@
                     }"
                     [title]="store.rowSatisfied()[r] ? '该行达标，点击自动填充草丛' : '该行需 ' + store.rowClues()[r] + ' 顶帐篷'">
               {{ store.rowClues()[r] }}
+              <span *ngIf="isTutorialRowHighlighted(r)" class="absolute -right-1 text-[9px] font-black text-cyan-500 animate-bounce leading-none">▶</span>
             </button>
 
             <!-- 棋盘行单元格 (100% 像素级对齐图1：纯净象牙方砖、饱满松树、水灵草丛、南瓜橙帐篷) -->
@@ -250,7 +313,15 @@
               @for (cell of row; track trackByCol($index); let c = $index) {
                 <div (click)="onCellClick(r, c)"
                      (contextmenu)="onCellContextMenu($event, r, c)"
-                     class="tents-tile"
+                     class="tents-tile relative"
+                     [class.overflow-visible]="isFirstTutorialTarget(r, c)"
+                     [class.!overflow-visible]="isFirstTutorialTarget(r, c)"
+                     [class.ring-3]="isTutorialTargetCell(r, c)"
+                     [class.ring-amber-500]="isTutorialTargetCell(r, c)"
+                     [class.dark:ring-amber-400]="isTutorialTargetCell(r, c)"
+                     [class.shadow-[0_0_12px_rgba(245,158,11,0.6)]]="isTutorialTargetCell(r, c)"
+                     [class.z-30]="isFirstTutorialTarget(r, c)"
+                     [class.z-20]="isTutorialTargetCell(r, c) && !isFirstTutorialTarget(r, c)"
                      [ngClass]="{
                        'tents-tile-empty': cell === CellState.Empty,
                        'tents-tile-tree': cell === CellState.Tree,
@@ -259,6 +330,13 @@
                        'tents-tile-conflict': cell === CellState.Tent && store.tentConflicts().has(r + ',' + c),
                        'ring-2 ring-emerald-500/80 scale-105 z-20': store.activeHint()?.r === r && store.activeHint()?.c === c
                      }">
+                  
+                  <!-- 👆 Guided Action Micro-Pill & Pointer -->
+                  <app-interactive-tutorial-pointer
+                    *ngIf="isFirstTutorialTarget(r, c)"
+                    [text]="currentTutorialMicroAction()"
+                    [direction]="r === 0 ? 'up' : 'down'">
+                  </app-interactive-tutorial-pointer>
 
                   <!-- 树木 (🌲 100% 像素级对齐图1：肥美茂密、宽大饱满的卡通松树) -->
                   @if (cell === CellState.Tree) {
@@ -430,32 +508,45 @@
             </button>
           </div>
 
-          <!-- 核心操作按键 (撤销、智能提示、重开、下一关) -->
+          <!-- 核心操作按键 (撤销、智能提示、重开、教程、下一关) -->
           <div class="flex items-center gap-1.5 sm:gap-2">
             <!-- 撤销 -->
             <button type="button"
                     (click)="store.undo(); vibrateLight()"
-                    class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] text-sm shadow-xs active:scale-95 transition-all cursor-pointer"
+                    [disabled]="isTutorialActive()"
+                    class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] text-sm shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     title="撤销上一步">
               ↺
             </button>
             <!-- 智能提示 (精准纠错与点亮帐篷) -->
             <button type="button"
                     (click)="store.hint(); vibrateLight()"
-                    class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-black text-xs shadow-xs active:scale-95 transition-all flex items-center gap-1 cursor-pointer border border-amber-500/30"
+                    [disabled]="isTutorialActive()"
+                    class="px-2.5 sm:px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-black text-xs shadow-xs active:scale-95 transition-all flex items-center gap-1 cursor-pointer border border-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed"
                     title="点亮一个正确帐篷或纠正错误">
               <span class="text-sm">💡</span>
-              <span>提示</span>
+              <span class="hidden xs:inline">提示</span>
             </button>
-            <!-- 重开本关 -->
+            <!-- 重开本关 / 重置教程 -->
             <button type="button"
-                    (click)="store.restartGame(); vibrateLight()"
+                    (click)="handleRestart(); vibrateLight()"
                     class="p-2 sm:px-2.5 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-main)] text-sm shadow-xs active:scale-95 transition-all cursor-pointer"
-                    title="重置当前盘面走法">
+                    [title]="isTutorialActive() ? (t('tutorial.interactive.btn_restart')() || '重置教程') : '重置当前盘面走法'">
               🔄
+            </button>
+            <!-- 教程 -->
+            <button type="button"
+                    (click)="startTutorial()"
+                    class="px-2.5 sm:px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black text-xs shadow-xs active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+                    [class.ring-2]="isTutorialActive()"
+                    [class.ring-emerald-500]="isTutorialActive()"
+                    [title]="t('tutorial.interactive.btn_tutorial')() || '教程'">
+              <span class="text-sm">🎓</span>
+              <span>教程</span>
             </button>
             <!-- 下一关 -->
             <button type="button"
+                    *ngIf="!isTutorialActive()"
                     (click)="store.nextLevel(); vibrateLight()"
                     class="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs shadow-md active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
                     title="进入下一关新棋盘">
@@ -467,4 +558,16 @@
       </div>
     }
   </div>
+
+  <!-- 🎓 Tutorial Completion Celebration Modal -->
+  @if (isTutorialActive() && isTutorialFinished()) {
+    <app-interactive-tutorial-success
+      [title]="t('tutorial.tents.win_title')() || '🎉 恭喜！你已完全掌握帐篷与树解谜秘诀！'"
+      [desc]="t('tutorial.tents.win_desc')() || '从零数全草、孤树唯一到帐篷不挨，你已学会了露营大师的核心法则。现在开始探索真正的森林吧！'"
+      [playBtnText]="t('tutorial.tents.btn_play')() || '🌟 开始正式挑战 (简单 6x6)'"
+      [retryBtnText]="t('tutorial.interactive.btn_retry')() || '🔄 再复习一遍'"
+      (play)="completeTutorialAndPlay()"
+      (retry)="restartTutorial()">
+    </app-interactive-tutorial-success>
+  }
 </app-game-layout>

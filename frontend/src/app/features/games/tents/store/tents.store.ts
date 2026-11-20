@@ -3,7 +3,7 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalTentsEngine, TentsCellState } from './tents-engine';
-import { TentsPuzzle } from './tents-levels';
+import { TentsPuzzle, TENTS_TUTORIAL_PUZZLE } from './tents-levels';
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
 @Injectable()
@@ -11,6 +11,7 @@ export class TentsStore extends BaseGameStore {
   readonly gameId = GameId.Tents;
   private resumeService = inject(ResumeGameService);
 
+  readonly isTutorialMode = signal<boolean>(false);
   localEngine = signal<LocalTentsEngine | null>(null);
   tick = signal<number>(0);
 
@@ -156,7 +157,28 @@ export class TentsStore extends BaseGameStore {
     });
   }
 
+  startTutorialPuzzle() {
+    this.isTutorialMode.set(true);
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(GameDifficulty.Easy);
+    this.ws.disconnect(this.gameId);
+    this.resumeService.clearSession('tents');
+
+    const engine = new LocalTentsEngine();
+    engine.initGame({
+      difficulty: 'easy',
+      puzzle: TENTS_TUTORIAL_PUZZLE,
+      onSound: (s) => this.audioService.playTents(s)
+    });
+    this.localEngine.set(engine);
+    this.tick.set(this.tick() + 1);
+  }
+
   protected override onResetLocalGameState(): void {
+    if (this.isTutorialMode()) {
+      this.startTutorialPuzzle();
+      return;
+    }
     const eng = this.localEngine();
     if (eng) {
       eng.initGame({
@@ -169,6 +191,7 @@ export class TentsStore extends BaseGameStore {
   }
 
   startLocalGame(difficulty?: string, levelIndex: number = 0) {
+    this.isTutorialMode.set(false);
     this.currentRoomMode.set(GameMode.Single);
     const targetDiff = difficulty || this.restoreSavedDifficulty(GameDifficulty.Easy);
     this.currentDifficulty.set(targetDiff);
@@ -188,6 +211,10 @@ export class TentsStore extends BaseGameStore {
   override startGame() {
     super.startGame();
     if (this.currentRoomMode() === GameMode.Single) {
+      if (this.isTutorialMode()) {
+        this.startTutorialPuzzle();
+        return;
+      }
       if (this.singlePlayerStatus() === GameStatus.Finished) {
         this.nextLevel();
       } else {
@@ -199,6 +226,10 @@ export class TentsStore extends BaseGameStore {
   override restartGame() {
     super.restartGame();
     if (this.currentRoomMode() === GameMode.Single) {
+      if (this.isTutorialMode()) {
+        this.startTutorialPuzzle();
+        return;
+      }
       const eng = this.localEngine();
       if (eng) {
         eng.handleAction({ type: 'reset' });
@@ -222,24 +253,28 @@ export class TentsStore extends BaseGameStore {
 
     if (this.currentRoomMode() === GameMode.Single) {
       if (eng.status === GameStatus.Finished) {
-        this.resumeService.clearSession('tents');
-        this.submitSingleStat({ score: eng.score, won: true }).subscribe();
+        if (!this.isTutorialMode()) {
+          this.resumeService.clearSession('tents');
+          this.submitSingleStat({ score: eng.score, won: true }).subscribe();
+        }
       } else if (eng.status === GameStatus.Playing && (eng.placedTentsCount > 0 || eng.moves > 0)) {
-        const progress = Math.min(99, Math.round((eng.placedTentsCount / Math.max(1, eng.totalTrees)) * 100));
-        this.resumeService.saveSession('tents', {
-          difficulty: this.currentDifficulty(),
-          difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'tents'),
-          progressPercent: progress,
-          moves: eng.moves,
-          timeElapsed: 0,
-          data: {
+        if (!this.isTutorialMode()) {
+          const progress = Math.min(99, Math.round((eng.placedTentsCount / Math.max(1, eng.totalTrees)) * 100));
+          this.resumeService.saveSession('tents', {
             difficulty: this.currentDifficulty(),
-            levelIndex: this.currentLevelIndex(),
-            size: eng.size,
+            difficultyLabel: this.resumeService.getDifficultyLabel(this.currentDifficulty(), 'tents'),
+            progressPercent: progress,
             moves: eng.moves,
-            board: eng.exportBoardState()
-          }
-        });
+            timeElapsed: 0,
+            data: {
+              difficulty: this.currentDifficulty(),
+              levelIndex: this.currentLevelIndex(),
+              size: eng.size,
+              moves: eng.moves,
+              board: eng.exportBoardState()
+            }
+          });
+        }
       }
     }
 

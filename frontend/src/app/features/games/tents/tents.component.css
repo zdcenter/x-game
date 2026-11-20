@@ -74,6 +74,10 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
+.tents-tile.overflow-visible {
+  overflow: visible !important;
+}
+
 .tents-tile:active {
   transform: scale(0.95);
 }

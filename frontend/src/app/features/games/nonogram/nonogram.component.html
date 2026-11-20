@@ -193,49 +193,18 @@
         </div>
       }
 
-      <!-- 🎓 Plan A: Refined Top Guidance Board (Integrated, Light-Mode Crisp & Dark-Mode Glowing) -->
+      <!-- 🎓 Plan A: Reusable Top Guidance Board -->
       @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
-        <div class="w-full max-w-[500px] mb-2 p-3 sm:p-3.5 rounded-2xl bg-[var(--color-bg-card)] border-2 border-blue-500/30 dark:border-blue-400/30 shadow-[0_8px_24px_rgba(37,99,235,0.08)] flex flex-col gap-2 relative z-30 transition-all select-none">
-          
-          <!-- Top Row: Step Title & Dots & Skip -->
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm shadow-xs tracking-wide">
-                {{ t(stepInfo.titleKey)() || stepInfo.defaultTitle }}
-              </span>
-              <!-- 4 Step Dots -->
-              <div class="flex items-center gap-1.5">
-                @for (s of [0, 1, 2, 3]; track s) {
-                  <span class="w-2.5 h-2.5 rounded-full transition-all"
-                        [ngClass]="tutorialStep() === s ? 'bg-blue-600 dark:bg-blue-400 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.6)]' : (tutorialStep() > s ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700')">
-                  </span>
-                }
-              </div>
-            </div>
-
-            <button (click)="exitTutorial()"
-                    class="text-xs font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors cursor-pointer px-2 py-0.5 rounded-lg hover:bg-rose-500/10">
-              {{ t('tutorial.interactive.skip')() || '跳过教程' }} ›
-            </button>
-          </div>
-
-          <!-- Formula Pill & Badge (Visual Rule) -->
-          <div class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 flex items-center justify-between gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
-            <span class="font-mono text-xs sm:text-sm tracking-wide font-black truncate">{{ stepInfo.formula }}</span>
-            <span class="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:text-blue-300 text-[11px] font-extrabold uppercase tracking-wider shrink-0 whitespace-nowrap">{{ stepInfo.formulaBadge }}</span>
-          </div>
-
-          <!-- The "Why" / Detailed Deduction Reason (Comfortable, high-contrast, beautiful typography) -->
-          <p class="text-xs sm:text-[13px] text-[var(--color-text-main)] font-medium leading-relaxed">
-            {{ currentTutorialBubbleReason() }}
-          </p>
-
-          <!-- The "Action" Instruction -->
-          <div class="px-2.5 py-1.5 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-blue-800 dark:text-blue-200 text-xs font-bold flex items-center gap-1.5">
-            <span class="animate-bounce shrink-0">👉</span>
-            <span class="leading-snug">{{ currentTutorialBubbleAction() }}</span>
-          </div>
-        </div>
+        <app-interactive-tutorial-board
+          [stepInfo]="stepInfo"
+          [currentStep]="tutorialStep()"
+          [totalSteps]="4"
+          [title]="t(stepInfo.titleKey)() || stepInfo.defaultTitle"
+          [reasonText]="currentTutorialBubbleReason()"
+          [actionText]="currentTutorialBubbleAction()"
+          [skipText]="t('tutorial.interactive.skip')() || '跳过教程'"
+          (skip)="exitTutorial()">
+        </app-interactive-tutorial-board>
       }
 
       <div class="nonogram-board prevent-select"
@@ -344,23 +313,12 @@
                          [class.cell-crosshair-center]="!store.isSpectator() && hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
-                      <!-- 👆 Plan A: Guided Action Micro-Pill & Pointer for first tutorial target (Light & Dark matching, NEVER obscures) -->
-                      <ng-container *ngIf="isFirstTutorialTarget(x, y)">
-                        <!-- Hand pointer: ALWAYS mathematically centered on this cell! -->
-                        <div class="absolute left-1/2 -translate-x-1/2 pointer-events-none z-50 select-none drop-shadow-md text-base sm:text-lg animate-bounce"
-                             [ngClass]="y === 0 ? 'top-full mt-0.5' : 'bottom-full mb-0.5'">
-                          {{ y === 0 ? '👆' : '👇' }}
-                        </div>
-
-                        <!-- Refined Action Micro-Pill (Clean white in light mode, deep slate in dark mode) -->
-                        <div class="absolute left-1/2 -translate-x-1/2 pointer-events-none z-50 whitespace-nowrap animate-fade-in"
-                             [ngClass]="y === 0 ? 'top-full mt-6' : 'bottom-full mb-6'">
-                          <div class="px-2.5 py-0.5 sm:py-1 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-blue-500/50 text-blue-700 dark:text-blue-300 text-[10px] sm:text-[11px] font-black shadow-[0_4px_12px_rgba(37,99,235,0.2)] flex items-center gap-1 backdrop-blur-xs">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
-                            <span>{{ currentTutorialMicroAction() }}</span>
-                          </div>
-                        </div>
-                      </ng-container>
+                      <!-- 👆 Guided Action Micro-Pill & Pointer -->
+                      <app-interactive-tutorial-pointer
+                        *ngIf="isFirstTutorialTarget(x, y)"
+                        [text]="currentTutorialMicroAction()"
+                        [direction]="y === 0 ? 'up' : 'down'">
+                      </app-interactive-tutorial-pointer>
 
                       <!-- Crossed 2 -->
                       <div *ngIf="cell === 2" class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center" [style.font-size.px]="cellSize() * 0.72">✕</div>
@@ -498,31 +456,14 @@
       </div>
   <!-- 🎓 Tutorial Completion Celebration Modal -->
   @if (isTutorialActive() && isTutorialFinished()) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-fade-in">
-      <div class="w-full max-w-sm rounded-3xl bg-[var(--color-bg-card)] border-2 border-blue-500/40 p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col items-center gap-3.5 relative overflow-hidden animate-scale-up">
-        
-        <div class="text-5xl animate-bounce">❤️</div>
-
-        <h3 class="text-lg sm:text-xl font-black text-[var(--color-text-main)]">
-          {{ t('tutorial.interactive.win_title')() || '🎉 恭喜！你已完全掌握数织解谜秘诀！' }}
-        </h3>
-
-        <p class="text-sm text-[var(--color-text-secondary)] leading-relaxed font-medium">
-          {{ t('tutorial.interactive.win_desc')() || '你用清晰的逻辑推导，亲手拼出了一颗像素爱心 ❤️！从全满行、打叉排除到数字间隔，你已学会了数织大师的核心法则。' }}
-        </p>
-
-        <div class="w-full flex flex-col gap-2.5 mt-2">
-          <button (click)="completeTutorialAndPlay()"
-                  class="w-full py-3.5 rounded-2xl font-black text-sm sm:text-base bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
-            {{ t('tutorial.interactive.btn_play')() || '🌟 开始正式挑战 (简单 5x5)' }}
-          </button>
-          <button (click)="restartTutorial()"
-                  class="w-full py-2.5 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] hover:border-blue-500/40 transition-all cursor-pointer active:scale-95">
-            {{ t('tutorial.interactive.btn_retry')() || '🔄 再复习一遍' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-interactive-tutorial-success
+      [title]="t('tutorial.interactive.win_title')() || '🎉 恭喜！你已完全掌握数织解谜秘诀！'"
+      [desc]="t('tutorial.interactive.win_desc')() || '你用清晰的逻辑推导，亲手拼出了一颗像素爱心 ❤️！从全满行、打叉排除到数字间隔，你已学会了数织大师的核心法则。'"
+      [playBtnText]="t('tutorial.interactive.btn_play')() || '🌟 开始正式挑战 (简单 5x5)'"
+      [retryBtnText]="t('tutorial.interactive.btn_retry')() || '🔄 再复习一遍'"
+      (play)="completeTutorialAndPlay()"
+      (retry)="restartTutorial()">
+    </app-interactive-tutorial-success>
   }
 </app-game-layout>
 

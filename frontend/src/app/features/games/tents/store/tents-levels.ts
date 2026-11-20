@@ -10,6 +10,26 @@ export interface TentsPuzzle {
   solution: { r: number; c: number }[];
 }
 
+export const TENTS_TUTORIAL_PUZZLE: TentsPuzzle = {
+  id: 'tents_tutorial_1',
+  name: '露营新手特训营',
+  chapter: '特训：从零玩懂帐篷与树',
+  difficulty: 'easy',
+  size: 4,
+  rowClues: [1, 0, 1, 1],
+  colClues: [0, 2, 0, 1],
+  trees: [
+    { r: 0, c: 0 },
+    { r: 2, c: 3 },
+    { r: 3, c: 1 }
+  ],
+  solution: [
+    { r: 0, c: 1 },
+    { r: 2, c: 1 },
+    { r: 3, c: 3 }
+  ]
+};
+
 export const TENTS_LEVELS: TentsPuzzle[] = [
   {
     "id": "easy_1",

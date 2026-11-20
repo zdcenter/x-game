@@ -22,6 +22,11 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
+import {
+  InteractiveTutorialBoardComponent,
+  InteractiveTutorialPointerComponent,
+  InteractiveTutorialSuccessComponent
+} from '../../../shared/components/interactive-tutorial';
 
 @Component({
   selector: 'app-nonogram',
@@ -35,7 +40,10 @@ import { TimelapseModalComponent } from '../../../shared/components/timelapse-mo
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
     GameStatusHudComponent,
-    TimelapseModalComponent
+    TimelapseModalComponent,
+    InteractiveTutorialBoardComponent,
+    InteractiveTutorialPointerComponent,
+    InteractiveTutorialSuccessComponent
   ],
   templateUrl: './nonogram.component.html',
   styleUrls: ['./nonogram.component.css'],
