@@ -410,30 +410,40 @@ export class Classic2048Component extends BaseGameComponent implements OnInit, O
   @HostListener('touchstart', ['$event'])
   onTouchStart(event: TouchEvent) {
     if (this.store.isSpectator() || this.store.status() !== GameStatus.Playing) return;
-    this.touchStartX = event.changedTouches[0].screenX;
-    this.touchStartY = event.changedTouches[0].screenY;
+    const touch = event.changedTouches[0];
+    this.touchStartX = touch.clientX ?? touch.screenX;
+    this.touchStartY = touch.clientY ?? touch.screenY;
+  }
+
+  @HostListener('touchmove', ['$event'])
+  onTouchMove(event: TouchEvent) {
+    if (this.store.status() === GameStatus.Playing && event.cancelable) {
+      event.preventDefault();
+    }
   }
 
   @HostListener('touchend', ['$event'])
   onTouchEnd(event: TouchEvent) {
     if (this.store.status() !== GameStatus.Playing) return;
-    const touchEndX = event.changedTouches[0].screenX;
-    const touchEndY = event.changedTouches[0].screenY;
+    if (event.cancelable) event.preventDefault();
+    const touch = event.changedTouches[0];
+    const touchEndX = touch.clientX ?? touch.screenX;
+    const touchEndY = touch.clientY ?? touch.screenY;
     
     const dx = touchEndX - this.touchStartX;
     const dy = touchEndY - this.touchStartY;
     
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
-    if (absDx < 25 && absDy < 25) return; // Ignore small movements
+    if (absDx < 22 && absDy < 22) return; // Ignore micro twitches
     
-    // Require dominant axis (ratio > 1.3) to prevent accidental diagonal swipes from ruining high-score boards
-    if (absDx > absDy * 1.3) {
+    // Require dominant axis (ratio > 1.25) to prevent accidental diagonal swipes
+    if (absDx > absDy * 1.25) {
       if (dx > 0) this.store.move('right');
       else this.store.move('left');
       this.audio.playDrop2048('move');
       this.haptic.vibrateSwipe();
-    } else if (absDy > absDx * 1.3) {
+    } else if (absDy > absDx * 1.25) {
       if (dy > 0) this.store.move('down');
       else this.store.move('up');
       this.audio.playDrop2048('move');

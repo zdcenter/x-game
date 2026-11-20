@@ -23,6 +23,8 @@ export class LocalCodebreakerEngine implements ILocalEngine<any, CodebreakerActi
   private onWin?: () => void;
   private onWrong?: () => void;
 
+  private revealedHintPositions = new Set<number>();
+
   initGame(config: { playerId: string, difficulty: string, digitLength: number, onWin?: () => void, onWrong?: () => void }) {
     this.playerId = config.playerId;
     this.difficulty = config.difficulty;
@@ -33,6 +35,7 @@ export class LocalCodebreakerEngine implements ILocalEngine<any, CodebreakerActi
     this.guesses = [];
     this.finished = false;
     this.status = GameStatus.Playing;
+    this.revealedHintPositions.clear();
     this.secretCode = this.generateSecret(this.digitLength);
   }
 
@@ -80,7 +83,17 @@ export class LocalCodebreakerEngine implements ILocalEngine<any, CodebreakerActi
     if (this.status !== GameStatus.Playing) {
       return { success: false, message: 'game.hint_unavailable' };
     }
-    const idx = Math.floor(Math.random() * this.digitLength);
+    const unrevealed: number[] = [];
+    for (let i = 0; i < this.digitLength; i++) {
+      if (!this.revealedHintPositions.has(i)) {
+        unrevealed.push(i);
+      }
+    }
+    if (unrevealed.length === 0) {
+      return { success: false, message: 'game.no_solution' };
+    }
+    const idx = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+    this.revealedHintPositions.add(idx);
     const val = this.secretCode[idx];
     return { success: true, pos: idx, val, message: 'game.hint_result' };
   }

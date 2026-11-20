@@ -509,34 +509,34 @@
 
             <!-- Mobile Virtual On-Screen Controller or Spectator Director Bar -->
             @if (!store.isSpectator()) {
-              <div class="flex md:hidden items-center justify-center gap-2 sm:gap-3 w-full max-w-[360px] px-2 py-1.5 shrink-0 z-20">
+              <div class="flex md:hidden items-center justify-center gap-2 sm:gap-3 w-full max-w-[360px] px-2 py-1.5 shrink-0 z-20 touch-manipulation select-none">
                 <!-- Left Move Button -->
-                <button (click)="store.moveLeft()"
-                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                <button (click)="store.moveLeft(); haptic.vibrateLight()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none touch-manipulation cursor-pointer"
                         title="Left">
                   ◀
                 </button>
                 <!-- Rotate Button -->
-                <button (click)="store.rotate()"
-                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-lg flex items-center justify-center text-base active:scale-90 transition-all select-none"
+                <button (click)="store.rotate(); haptic.vibrateLight()"
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-lg flex items-center justify-center text-lg active:scale-90 transition-all select-none touch-manipulation cursor-pointer font-bold"
                         title="Rotate">
                   ↻
                 </button>
                 <!-- Soft Drop Button -->
-                <button (click)="store.softDrop()"
-                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-amber-500/20 transition-all select-none"
+                <button (click)="store.softDrop(); haptic.vibrateLight()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-amber-500/20 transition-all select-none touch-manipulation cursor-pointer"
                         title="Soft Drop">
                   ▼
                 </button>
                 <!-- Right Move Button -->
-                <button (click)="store.moveRight()"
-                        class="w-11 h-11 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-base active:scale-90 active:bg-cyan-500/20 transition-all select-none"
+                <button (click)="store.moveRight(); haptic.vibrateLight()"
+                        class="w-12 h-12 rounded-xl bg-[var(--color-bg-card)]/90 border border-[var(--color-border-card)] shadow-md flex items-center justify-center text-lg active:scale-90 active:bg-cyan-500/20 transition-all select-none touch-manipulation cursor-pointer"
                         title="Right">
                   ▶
                 </button>
                 <!-- Hard Drop Button -->
-                <button (click)="store.hardDrop()"
-                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-sm font-black active:scale-90 transition-all select-none"
+                <button (click)="store.hardDrop(); haptic.vibrateImpact()"
+                        class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-lg flex items-center justify-center text-base font-black active:scale-90 transition-all select-none touch-manipulation cursor-pointer"
                         title="Hard Drop">
                   ⚡
                 </button>

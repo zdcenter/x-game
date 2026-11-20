@@ -51,26 +51,20 @@ export class SlidingComponent extends BaseGameComponent {
 
   readonly boardSizePx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
-    const size = this.store.myBoard()?.size || 4;
-    
     const isPk = this.currentRoomMode() !== GameMode.Single;
-    const chromeH = isPk
-      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
-      : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
+    const isZen = this.zenService.isZenMode() || (typeof document !== 'undefined' && !!document?.body?.classList?.contains?.('zen-mode-active'));
+
+    const chromeH = isZen
+      ? Math.min(vw < 640 ? 120 : 90, vh * 0.15)
+      : (isPk
+          ? (vw < 640 ? 230 : vw < 1024 ? 260 : 280)
+          : (vw < 640 ? 145 : vw < 1024 ? 180 : 200));
     const availH = Math.max(260, vh - chromeH);
 
-    // Padding inside layout:
-    // Mobile (<640): ~24px
-    // Tablet (640-1024): ~48px
-    // Desktop (>=1024): ~64px
-    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
+    const padW = vw < 640 ? 12 : vw < 1024 ? 32 : (isZen ? 40 : 64);
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
-    // Dynamic max board dimension:
-    // Mobile: up to 440px
-    // Tablet (iPad): up to 720px (allows tiles and board to be large, immersive and easy to operate without vast empty side space)
-    // Desktop: up to 760px
-    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
+    const maxDim = vw < 640 ? 500 : (vw < 1024 ? 740 : (isZen ? 960 : 780));
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
