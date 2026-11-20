@@ -53,24 +53,24 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
   readonly boardDimPx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
     const board = this.store.myBoard();
-    const rows = board?.length || 8;
-    const cols = board?.[0]?.length || 8;
-    const maxGrid = Math.max(rows, cols);
     const isPk = this.store.currentRoomMode() !== GameMode.Single;
+    const isZen = this.zenService.isZenMode() || (typeof document !== 'undefined' && !!document?.body?.classList?.contains?.('zen-mode-active'));
 
-    const chromeH = isPk
-      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
-      : (vw < 640 ? 190 : vw < 1024 ? 210 : 230);
+    const chromeH = isZen
+      ? Math.min(vw < 640 ? 130 : 90, vh * 0.15)
+      : (isPk
+          ? (vw < 640 ? 220 : vw < 1024 ? 250 : 270)
+          : (vw < 640 ? 145 : vw < 1024 ? 180 : 200));
     const availH = Math.max(260, vh - chromeH);
 
-    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
+    const padW = vw < 640 ? 12 : vw < 1024 ? 32 : (isZen ? 40 : 64);
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
     // Dynamic max board dimension:
-    // Mobile: up to 440px
-    // Tablet (iPad): up to 720px (allows sokoban warehouse to be large and clear)
-    // Desktop: up to 760px
-    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
+    // Mobile: up to 500px (fills screen width)
+    // Tablet (iPad): up to 740px
+    // Desktop: up to 960px in Zen mode, 800px normal
+    const maxDim = vw < 640 ? 500 : (vw < 1024 ? 740 : (isZen ? 960 : 800));
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;

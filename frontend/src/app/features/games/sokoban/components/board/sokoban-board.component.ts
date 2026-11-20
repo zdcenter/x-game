@@ -149,7 +149,7 @@ import { HapticService } from '../../../../../core/services/haptic.service';
     }
   `],
   template: `
-    <div class="relative w-full h-full bg-sky-200 rounded-xl border-[4px] border-slate-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center touch-none select-none"
+    <div class="relative w-full h-full bg-sky-200 rounded-xl border-2 sm:border-[4px] border-slate-700 shadow-[inset_0_0_30px_rgba(0,0,0,0.3)] overflow-hidden flex items-center justify-center touch-none select-none"
          [class.animate-shake]="store.isShaking()"
          style="-webkit-touch-callout: none;"
          (contextmenu)="$event.preventDefault()"
@@ -672,8 +672,14 @@ export class SokobanBoardComponent implements OnDestroy {
 
     this.lastTouchEndTime = Date.now();
 
-    // 1. Swipe detection (movement > 25px)
-    if (dist > 25) {
+    // 1. Quick tap detection: short duration (< 350ms) and moderate displacement (<= 35px)
+    if (duration < 350 && dist <= 35) {
+      this.handleTapAt(touchEndX, touchEndY);
+      return;
+    }
+
+    // 2. Swipe detection (deliberate flick / drag > 22px)
+    if (dist > 22) {
       if (Math.abs(dx) > Math.abs(dy)) {
         this.triggerMove(dx > 0 ? 'right' : 'left');
       } else {
@@ -682,8 +688,8 @@ export class SokobanBoardComponent implements OnDestroy {
       return;
     }
 
-    // 2. Tap detection (displacement <= 25px and short duration < 500ms)
-    if (dist <= 25 && duration < 500) {
+    // 3. Fallback for slower tap (< 650ms, displacement <= 22px)
+    if (dist <= 22 && duration < 650) {
       this.handleTapAt(touchEndX, touchEndY);
     }
   }
@@ -735,8 +741,9 @@ export class SokobanBoardComponent implements OnDestroy {
     if (targetR < 0 || targetR >= board.length || targetC < 0 || targetC >= board[targetR].length) return;
     
     const targetCell = board[targetR][targetC];
-    // Cannot move directly if target is wall or box
-    if (targetCell === '#' || targetCell === '$' || targetCell === '*') return;
+
+    // Cannot move directly into a wall
+    if (targetCell === '#') return;
 
     let pr = -1, pc = -1;
     for (let r = 0; r < board.length; r++) {
@@ -747,6 +754,25 @@ export class SokobanBoardComponent implements OnDestroy {
     }
     if (pr === -1) return;
     if (pr === targetR && pc === targetC) return;
+
+    // Tactile Feature: If player is directly adjacent to a box and taps that box, trigger an intuitive push!
+    if (targetCell === '$' || targetCell === '*') {
+      const dr = targetR - pr;
+      const dc = targetC - pc;
+      if (Math.abs(dr) + Math.abs(dc) === 1) {
+        let pushDir: 'up' | 'down' | 'left' | 'right' | null = null;
+        if (dr === -1) pushDir = 'up';
+        else if (dr === 1) pushDir = 'down';
+        else if (dc === -1) pushDir = 'left';
+        else if (dc === 1) pushDir = 'right';
+        if (pushDir) {
+          this.triggerMove(pushDir);
+          return;
+        }
+      }
+      // Cannot walk onto a box if not adjacent
+      return;
+    }
 
     // BFS
     const queue: {r: number, c: number, path: ('up'|'down'|'left'|'right')[]}[] = [];

@@ -222,14 +222,14 @@
             <div class="flex items-center justify-center gap-2 py-0.5 z-20 shrink-0 flex-wrap">
               <!-- Mobile Touch Mode Switch Capsule (0ms response) -->
               <div class="flex sm:hidden items-center p-0.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] shadow-xs">
-                <button (click)="mobileActionMode.set('reveal')"
-                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                <button (click)="mobileActionMode.set('reveal'); haptic.vibrateLight()"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 active:scale-95 touch-manipulation select-none cursor-pointer"
                         [ngClass]="mobileActionMode() === 'reveal' ? 'bg-amber-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
                   <span>⛏️</span>
                   <span>{{ i18n.t('minesweeper.mode_reveal')() || '翻开' }}</span>
                 </button>
-                <button (click)="mobileActionMode.set('flag')"
-                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                <button (click)="mobileActionMode.set('flag'); haptic.vibrateLight()"
+                        class="px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 active:scale-95 touch-manipulation select-none cursor-pointer"
                         [ngClass]="mobileActionMode() === 'flag' ? 'bg-rose-500 text-white shadow-xs' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]'">
                   <span>🚩</span>
                   <span>{{ i18n.t('minesweeper.mode_flag')() || '插旗' }}</span>

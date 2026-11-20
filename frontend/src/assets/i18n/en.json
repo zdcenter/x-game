@@ -1679,6 +1679,7 @@
   "pwa.install": "Install",
   "pwa.install_action": "Install Now",
   "pwa.install_app": "Install Puzzle PK App",
+  "pwa.install_btn": "Full App",
   "pwa.install_desc": "Enjoy native fullscreen & offline instant play",
   "pwa.install_desktop": "Install to Desktop / Home Screen",
   "pwa.install_guide_title": "Add to Home Screen",

@@ -1,11 +1,22 @@
 
-    <div class="grid grid-cols-9 md:grid-cols-1 gap-1 md:gap-2 w-full max-w-[500px] md:max-w-none mx-auto">
+    <div class="grid grid-cols-9 md:grid-cols-1 gap-1 md:gap-2 w-full max-w-[500px] md:max-w-none mx-auto select-none touch-manipulation">
       @for (num of [1,2,3,4,5,6,7,8,9]; track num) {
+        @let count = digitCounts()[num] || 0;
+        @let isCompleted = count >= 9;
         <button 
-          (click)="store.inputNumber(num)"
-          class="aspect-square flex items-center justify-center text-xl md:text-3xl font-black bg-[var(--color-bg-card)] rounded-md md:rounded-xl border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] transition-all shadow md:shadow-md active:scale-95 text-[var(--color-text-main)]"
+          (click)="onNumberClick(num)"
+          [disabled]="isCompleted"
+          class="relative aspect-square flex flex-col items-center justify-center rounded-lg md:rounded-xl border transition-all shadow md:shadow-md active:scale-95 touch-manipulation cursor-pointer select-none"
+          [ngClass]="isCompleted 
+            ? 'bg-[var(--color-bg-card)]/40 border-[var(--color-border-card)]/40 text-[var(--color-text-muted)]/40 opacity-40 cursor-not-allowed' 
+            : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] active:bg-amber-500/20 text-[var(--color-text-main)]'"
         >
-          {{ num }}
+          <span class="text-xl md:text-3xl font-black leading-none">{{ num }}</span>
+          @if (isCompleted) {
+            <span class="absolute top-0.5 right-1 text-[8px] sm:text-[9px] text-emerald-500 font-bold">✓</span>
+          } @else if (count > 0) {
+            <span class="text-[8px] md:text-[10px] font-mono opacity-50 leading-none mt-0.5">{{ 9 - count }}</span>
+          }
         </button>
       }
     </div>
