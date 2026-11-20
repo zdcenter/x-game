@@ -420,7 +420,26 @@ export class BlogListComponent implements OnInit {
             name: appName,
             logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` }
           }
-        });
+        }, 'blog-list-jsonld');
+
+        this.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: lang === 'zh' ? '首页' : 'Home',
+              item: `${origin}/${lang}`
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: lang === 'zh' ? '博客' : 'Blog',
+              item: `${origin}/${lang}/blog`
+            }
+          ]
+        }, 'blog-breadcrumb-jsonld');
       });
     });
   }
@@ -476,10 +495,9 @@ export class BlogListComponent implements OnInit {
     return BLOG_ICON_MAP[postId] || '📄';
   }
 
-  private setJsonLd(data: Record<string, unknown>): void {
+  private setJsonLd(data: Record<string, unknown>, elemId = 'blog-list-jsonld'): void {
     const head = this.doc.head;
     if (!head) return;
-    const elemId = 'blog-list-jsonld';
     let script = head.querySelector(`#${elemId}`) as HTMLScriptElement | null;
     if (!script) {
       script = this.doc.createElement('script');

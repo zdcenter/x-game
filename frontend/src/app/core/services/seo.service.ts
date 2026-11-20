@@ -29,16 +29,19 @@ export class SeoService {
   private gameRegistry = inject(GameRegistryService);
 
   private currentSeoData = signal<SeoData | null>(null);
+  private currentUrl = signal<string>('');
 
   constructor() {
     // Reactively update SEO tags when language or route SEO data changes
     effect(() => {
       const seoData = this.currentSeoData();
+      const currentNavUrl = this.currentUrl();
+      const activeUrl = currentNavUrl || this.router.url;
 
       // Legal pages: provide dedicated title/desc/keywords for privacy, terms, about, contact
       // to eliminate duplicate meta content signals across legal routes.
       let effectiveSeo = seoData;
-      const legalMatch = this.router.url.match(/\/legal\/([a-zA-Z_-]+)/);
+      const legalMatch = activeUrl.match(/\/legal\/([a-zA-Z_-]+)/);
       if (legalMatch) {
         const legalSub = legalMatch[1];
         effectiveSeo = {
@@ -89,7 +92,7 @@ export class SeoService {
       // Strip the lang prefix that Transloco routing adds
       const langPattern = SUPPORTED_LANGS.map(l => l.code).join('|');
       const regex = new RegExp(`^\\/(${langPattern})`);
-      const rawRoute = this.router.url.split('?')[0].replace(regex, '') || '/';
+      const rawRoute = activeUrl.split('?')[0].replace(regex, '') || '/';
       // Normalize /lobby or / to empty string for canonical URLs (/en, /zh)
       const cleanRoute = (rawRoute === '/' || rawRoute === '/lobby') ? '' : rawRoute;
       const canonicalUrl = `${origin}/${lang}${cleanRoute}`;
@@ -306,7 +309,10 @@ export class SeoService {
           }
         }
       }
-      if (breadcrumbItems.length >= 2) {
+      if (seg[0] === 'blog') {
+        // Blog pages manage their own dedicated Article & BreadcrumbList schemas
+        this.removeJsonLd('seo-jsonld-breadcrumb');
+      } else if (breadcrumbItems.length >= 2) {
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
@@ -339,10 +345,11 @@ export class SeoService {
       this.currentSeoData.set(data['seo'] ? { ...data['seo'] } : null);
     });
 
-    // GA4 Page View Tracking
+    // Track active route URL reactively on every navigation end
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
+      this.currentUrl.set(event.urlAfterRedirects || event.url);
       if (isBrowser() && typeof (window as any).gtag !== 'undefined') {
         (window as any).gtag('config', 'G-S0JB094KY4', {
           'page_path': event.urlAfterRedirects

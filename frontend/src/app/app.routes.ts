@@ -80,7 +80,8 @@ const langChildren: Routes = [
       },
       {
         path: 'blog/:id',
-        loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent)
+        loadComponent: () => import('./features/blog/blog-post/blog-post.component').then(m => m.BlogPostComponent),
+        data: { seo: { isBlogPost: true } }
       },
       {
         path: 'pages/:id',

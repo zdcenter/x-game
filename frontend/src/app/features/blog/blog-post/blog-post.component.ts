@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
 import { BlogService, BlogPostMeta, BlogLanguageMeta } from '../../../core/services/blog.service';
-import { I18nService, LANG_LOCALES } from '../../../core/i18n/i18n.service';
+import { I18nService, LANG_LOCALES, SUPPORTED_LANGS } from '../../../core/i18n/i18n.service';
 import { optimizeMetaTitle, optimizeMetaDescription } from '../../../core/utils/seo.util';
 import { marked } from 'marked';
 
@@ -517,7 +517,14 @@ export class BlogPostComponent implements OnInit {
 
         const origin = (typeof window !== 'undefined' && window.location?.origin) || PROD_ORIGIN;
         const coverImg = raw.cover_image ? raw.cover_image : `${origin}/og-cover.png`;
+        const postUrl = `${origin}/${lang}/blog/${raw.id}`;
         this.metaService.updateTag({ property: 'og:image', content: coverImg });
+        this.metaService.updateTag({ property: 'og:url', content: postUrl });
+
+        // Update Canonical and Alternate hreflang tags
+        this.updateCanonicalAndHreflang(raw.id, lang, origin);
+
+        // BlogPosting Schema
         this.setJsonLd({
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
@@ -527,12 +534,38 @@ export class BlogPostComponent implements OnInit {
           publisher: { '@type': 'Organization', name: appName, logo: { '@type': 'ImageObject', url: `${origin}/assets/icons/icon-192x192.png` } },
           datePublished: raw.date,
           dateModified: raw.date,
-          url: `${origin}/${lang}/blog/${raw.id}`,
-          mainEntityOfPage: { '@type': 'WebPage', '@id': `${origin}/${lang}/blog/${raw.id}` },
+          url: postUrl,
+          mainEntityOfPage: { '@type': 'WebPage', '@id': postUrl },
           keywords: meta.keywords,
           image: raw.cover_image || `${origin}/og-cover.png`,
           inLanguage: LANG_LOCALES[lang],
-        });
+        }, 'blog-post-jsonld');
+
+        // BreadcrumbList Schema (Home > Blog > Current Article)
+        this.setJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: lang === 'zh' ? '首页' : 'Home',
+              item: `${origin}/${lang}`
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: lang === 'zh' ? '博客' : 'Blog',
+              item: `${origin}/${lang}/blog`
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: meta.title || raw.id,
+              item: postUrl
+            }
+          ]
+        }, 'blog-breadcrumb-jsonld');
 
         let markdownStr = meta.content ?? '';
         // Strip the leading H1 markdown title since <header><h1> already renders the canonical article title
@@ -563,36 +596,23 @@ export class BlogPostComponent implements OnInit {
   }
 
   ngOnInit() {
-    // 1. Load blog post list first
+    this.route.paramMap.subscribe(params => {
+      const slug = params.get('id');
+      if (slug) {
+        this.currentId.set(slug);
+        this.loadPost(slug);
+      }
+    });
+
     this.blogService.getBlogPosts().subscribe({
       next: (posts) => {
         const list = posts || [];
         this.allPosts.set(list);
-
-        // 2. Listen to route param
-        this.route.paramMap.subscribe(params => {
-          const slug = params.get('id');
-          if (slug) {
-            this.currentId.set(slug);
-            this.loadPost(slug);
-          } else {
-            // If on /blog without :id, default to the first post or DEFAULT_POST_SLUG
-            const fallbackSlug = list[0]?.id || DEFAULT_POST_SLUG;
-            this.currentId.set(fallbackSlug);
-            this.loadPost(fallbackSlug);
-          }
-
-          if (typeof window !== 'undefined') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        });
-      },
-      error: () => {
-        this.route.paramMap.subscribe(params => {
-          const slug = params.get('id') || DEFAULT_POST_SLUG;
-          this.currentId.set(slug);
-          this.loadPost(slug);
-        });
+        if (!this.currentId()) {
+          const fallbackSlug = list[0]?.id || DEFAULT_POST_SLUG;
+          this.currentId.set(fallbackSlug);
+          this.loadPost(fallbackSlug);
+        }
       }
     });
   }
@@ -636,10 +656,43 @@ export class BlogPostComponent implements OnInit {
     return BLOG_ICON_MAP[postId] || '📄';
   }
 
-  private setJsonLd(data: Record<string, unknown>): void {
+  private updateCanonicalAndHreflang(slug: string, lang: string, origin: string): void {
+    const canonicalUrl = `${origin}/${lang}/blog/${slug}`;
+    let link = this.doc.querySelector("link[rel='canonical']") as HTMLLinkElement | null;
+    if (!link) {
+      link = this.doc.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      this.doc.head?.appendChild(link);
+    }
+    link.setAttribute('href', canonicalUrl);
+
+    // Alternate hreflangs for all supported languages
+    SUPPORTED_LANGS.forEach(sLang => {
+      const altUrl = `${origin}/${sLang.code}/blog/${slug}`;
+      const hreflangCode = sLang.code === 'zh' ? 'zh-Hans' : sLang.code;
+      let altLink = this.doc.querySelector(`link[rel='alternate'][hreflang='${hreflangCode}']`) as HTMLLinkElement | null;
+      if (!altLink) {
+        altLink = this.doc.createElement('link');
+        altLink.setAttribute('rel', 'alternate');
+        altLink.setAttribute('hreflang', hreflangCode);
+        this.doc.head?.appendChild(altLink);
+      }
+      altLink.setAttribute('href', altUrl);
+    });
+    // x-default
+    let defLink = this.doc.querySelector("link[rel='alternate'][hreflang='x-default']") as HTMLLinkElement | null;
+    if (!defLink) {
+      defLink = this.doc.createElement('link');
+      defLink.setAttribute('rel', 'alternate');
+      defLink.setAttribute('hreflang', 'x-default');
+      this.doc.head?.appendChild(defLink);
+    }
+    defLink.setAttribute('href', `${origin}/en/blog/${slug}`);
+  }
+
+  private setJsonLd(data: Record<string, unknown>, elemId = 'blog-post-jsonld'): void {
     const head = this.doc.head;
     if (!head) return;
-    const elemId = 'blog-post-jsonld';
     let script = head.querySelector(`#${elemId}`) as HTMLScriptElement | null;
     if (!script) {
       script = this.doc.createElement('script');

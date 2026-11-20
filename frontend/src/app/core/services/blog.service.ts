@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, TransferState, makeStateKey } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface BlogLanguageMeta {
@@ -137,15 +137,32 @@ function apiToMeta(p: BlogPostAPI): BlogPostMeta {
 
 @Injectable({ providedIn: 'root' })
 export class BlogService {
-  private http = inject(HttpClient);
+  protected http = inject(HttpClient);
+  protected transferState = inject(TransferState);
   private base = environment.apiUrl;
 
   getBlogPosts(): Observable<BlogPostMeta[]> {
+    const key = makeStateKey<BlogPostMeta[]>('blog_posts_all');
+    if (this.transferState.hasKey(key)) {
+      const cached = this.transferState.get(key, []);
+      this.transferState.remove(key);
+      if (cached && cached.length > 0) {
+        return of(cached);
+      }
+    }
     const t = new Date().getTime();
     return this.http.get<BlogPostMeta[]>(`/assets/blog/index.json?t=${t}`);
   }
 
   getBlogPost(slug: string): Observable<BlogPostMeta> {
+    const key = makeStateKey<BlogPostMeta>(`blog_post_${slug}`);
+    if (this.transferState.hasKey(key)) {
+      const cached = this.transferState.get(key, null as any);
+      this.transferState.remove(key);
+      if (cached) {
+        return of(cached);
+      }
+    }
     const t = new Date().getTime();
     return this.http.get<BlogPostMeta>(`/assets/blog/${slug}.json?t=${t}`);
   }
