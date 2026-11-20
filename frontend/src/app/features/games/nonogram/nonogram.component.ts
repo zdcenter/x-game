@@ -4,7 +4,7 @@ import { NonogramStore } from './store/nonogram.store';
 import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
-import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { getSavedDifficulty, setSavedDifficulty, isBrowser } from '../../../core/utils/browser.util';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameId } from '../../../core/models/game.model';
@@ -102,6 +102,181 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.store.playAgain();
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 新手 4 步互动速成教程 (Interactive Step-by-Step Tutorial)
+  // ═══════════════════════════════════════════════════════════════════
+  isTutorialActive = signal(false);
+  tutorialStep = signal(0);
+  hasCompletedTutorial = signal(false);
+  tutorialDismissed = signal(false);
+  readonly isTutorialFinished = computed(() => this.tutorialStep() >= 4);
+
+  readonly tutorialStepsData = [
+    {
+      step: 0,
+      titleKey: 'tutorial.interactive.step1_title',
+      defaultTitle: '步骤 1/4 · 满行全填法则 (Full Line)',
+      descKey: 'tutorial.interactive.step1_desc',
+      defaultDesc: '行列旁的数字代表「连续黑格数」。棋盘宽 5 格，而第 2 行与第 3 行提示都是「5」——当数字等于行宽时，该行所有 5 格必然全部涂黑！',
+      actionKey: 'tutorial.interactive.step1_action',
+      defaultAction: '请滑动或点击涂黑这两行全部 10 个格子 ⬛',
+      requiredMode: 'fill' as const,
+      requiredState: 1 as const,
+      targets: [
+        { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 1 },
+        { x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }
+      ],
+      highlightRows: [1, 2]
+    },
+    {
+      step: 1,
+      titleKey: 'tutorial.interactive.step2_title',
+      defaultTitle: '步骤 2/4 · 打叉排除技巧 (Cross ❌)',
+      descKey: 'tutorial.interactive.step2_desc',
+      defaultDesc: '看最左与最右列，提示都是「2」。我们刚才已涂黑中间两格，正好满足 2 个黑格！因此这两列其余空格绝不可能有黑格，必须用 ✕ 排除。',
+      actionKey: 'tutorial.interactive.step2_action',
+      defaultAction: '已自动切换为【打叉模式 ❌】，在两列的上下空格标上 ✕',
+      requiredMode: 'cross' as const,
+      requiredState: 2 as const,
+      targets: [
+        { x: 0, y: 0 }, { x: 0, y: 3 }, { x: 0, y: 4 },
+        { x: 4, y: 0 }, { x: 4, y: 3 }, { x: 4, y: 4 }
+      ],
+      highlightCols: [0, 4]
+    },
+    {
+      step: 2,
+      titleKey: 'tutorial.interactive.step3_title',
+      defaultTitle: '步骤 3/4 · 多数字与间隔法则 (1 1)',
+      descKey: 'tutorial.interactive.step3_desc',
+      defaultDesc: '最顶行提示是「1 1」，代表有两块独立黑格，且中间至少隔一个空格。因为第 0、2、4 列已打叉排除，这两个黑块必定在第 1 列与第 3 列！',
+      actionKey: 'tutorial.interactive.step3_action',
+      defaultAction: '已自动切换回【涂色 ⬛】，涂黑顶部的两个爱心拱形顶点',
+      requiredMode: 'fill' as const,
+      requiredState: 1 as const,
+      targets: [
+        { x: 1, y: 0 }, { x: 3, y: 0 }
+      ],
+      highlightRows: [0]
+    },
+    {
+      step: 3,
+      titleKey: 'tutorial.interactive.step4_title',
+      defaultTitle: '步骤 4/4 · 收官冲刺，见证奇迹！',
+      descKey: 'tutorial.interactive.step4_desc',
+      defaultDesc: '第 4 行提示是「3」，第 5 行提示是「1」（爱心底部尖角）。点击涂黑剩下的 4 个目标格，完成画作！',
+      actionKey: 'tutorial.interactive.step4_action',
+      defaultAction: '涂黑剩余的 4 个格子，见证像素爱心点亮！',
+      requiredMode: 'fill' as const,
+      requiredState: 1 as const,
+      targets: [
+        { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 2, y: 4 }
+      ],
+      highlightRows: [3, 4]
+    }
+  ];
+
+  readonly currentTutorialStepInfo = computed(() => {
+    if (!this.isTutorialActive()) return null;
+    const step = this.tutorialStep();
+    return this.tutorialStepsData[step] || null;
+  });
+
+  isTutorialTargetCell(x: number, y: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    const inTarget = info.targets.some(t => t.x === x && t.y === y);
+    if (!inTarget) return false;
+    return this.store.grid()[y]?.[x] !== info.requiredState;
+  }
+
+  isFirstTutorialTarget(x: number, y: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    const firstUnsatisfied = info.targets.find(t => this.store.grid()[t.y]?.[t.x] !== info.requiredState);
+    return firstUnsatisfied ? (firstUnsatisfied.x === x && firstUnsatisfied.y === y) : false;
+  }
+
+  isTutorialHeartCell(x: number, y: number): boolean {
+    return this.isTutorialActive() && this.isTutorialFinished() && this.store.grid()[y]?.[x] === 1;
+  }
+
+  isTutorialRowHighlighted(y: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    return this.currentTutorialStepInfo()?.highlightRows?.includes(y) ?? false;
+  }
+
+  isTutorialColHighlighted(x: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    return this.currentTutorialStepInfo()?.highlightCols?.includes(x) ?? false;
+  }
+
+  startTutorial() {
+    this.vibrateLight();
+    this.isTutorialActive.set(true);
+    this.tutorialStep.set(0);
+    this.store.startTutorialPuzzle();
+    this.store.setDrawMode('fill');
+  }
+
+  exitTutorial() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.store.startNewSingleGame(this.store.currentDifficulty() as string);
+  }
+
+  restartTutorial() {
+    this.startTutorial();
+  }
+
+  completeTutorialAndPlay() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    if (isBrowser()) {
+      localStorage.setItem('nonogram_tutorial_completed', 'true');
+    }
+    this.store.startNewSingleGame('easy');
+  }
+
+  dismissTutorialCapsule() {
+    this.tutorialDismissed.set(true);
+  }
+
+  checkTutorialStepProgress() {
+    if (!this.isTutorialActive()) return;
+    const stepInfo = this.currentTutorialStepInfo();
+    if (!stepInfo) return;
+
+    const grid = this.store.grid();
+    const allCompleted = stepInfo.targets.every(t => grid[t.y]?.[t.x] === stepInfo.requiredState);
+
+    if (allCompleted) {
+      const nextStep = this.tutorialStep() + 1;
+      this.tutorialStep.set(nextStep);
+
+      if (nextStep === 1) {
+        this.vibrateSnap();
+        this.store.setDrawMode('cross');
+      } else if (nextStep === 2) {
+        this.vibrateSnap();
+        this.store.setDrawMode('fill');
+      } else if (nextStep === 3) {
+        this.vibrateSnap();
+        this.store.setDrawMode('fill');
+      } else if (nextStep >= 4) {
+        this.vibrateCombo();
+        this.celebrateVictory();
+        if (isBrowser()) {
+          localStorage.setItem('nonogram_tutorial_completed', 'true');
+        }
+        this.hasCompletedTutorial.set(true);
+      }
+    }
+  }
+
   showInGameReplayModal = signal(false);
 
   openReplayModal() {
@@ -146,6 +321,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   override ngOnInit() {
     super.ngOnInit();
+    if (isBrowser()) {
+      const completed = localStorage.getItem('nonogram_tutorial_completed') === 'true';
+      this.hasCompletedTutorial.set(completed);
+    }
     const pending = this.roomLifecycle.consumePendingOrReconnect();
     if (pending) {
       this.pendingResumeSession.set(null);
@@ -498,6 +677,22 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const isRightClick = event.button === 2;
     const isTouch = event.pointerType === 'touch' || event.pointerType === 'pen' || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
+    // 🎓 Tutorial interception: strictly guide player to allowed target cells
+    if (this.isTutorialActive()) {
+      const stepInfo = this.currentTutorialStepInfo();
+      if (!stepInfo) return;
+      const isTarget = stepInfo.targets.some(t => t.x === coord.x && t.y === coord.y);
+      if (!isTarget) {
+        this.vibrateError();
+        return;
+      }
+      this.dragTargetState = stepInfo.requiredState;
+      this.vibrateLight();
+      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
+      this.checkTutorialStepProgress();
+      return;
+    }
+
     // ⚡ 0ms Instant Response: Paint start cell immediately without any latency!
     this.dragTargetState = this.store.determineNextState(coord.x, coord.y, isRightClick);
     this.vibrateLight();
@@ -566,6 +761,24 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const clampedCoord = { x: targetX, y: targetY };
     this.hoverRow.set(clampedCoord.y);
     this.hoverCol.set(clampedCoord.x);
+
+    // 🎓 Tutorial interception during pointer drag
+    if (this.isTutorialActive()) {
+      const stepInfo = this.currentTutorialStepInfo();
+      if (!stepInfo) return;
+      const lineCells = this.lastCoord
+        ? this.getLineCells(this.lastCoord.x, this.lastCoord.y, clampedCoord.x, clampedCoord.y)
+        : [clampedCoord];
+      const validCells = lineCells.filter(c =>
+        stepInfo.targets.some(t => t.x === c.x && t.y === c.y)
+      );
+      if (validCells.length > 0) {
+        this.store.setCellsBatch(validCells, stepInfo.requiredState as any, this.currentBatchId);
+        this.checkTutorialStepProgress();
+      }
+      this.lastCoord = clampedCoord;
+      return;
+    }
 
     if (this.lastCoord) {
       if (this.lastCoord.x === clampedCoord.x && this.lastCoord.y === clampedCoord.y) {
@@ -643,6 +856,22 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.hoverRow.set(coord.y);
     this.hoverCol.set(coord.x);
 
+    // 🎓 Tutorial interception on touch
+    if (this.isTutorialActive()) {
+      const stepInfo = this.currentTutorialStepInfo();
+      if (!stepInfo) return;
+      const isTarget = stepInfo.targets.some(t => t.x === coord.x && t.y === coord.y);
+      if (!isTarget) {
+        this.vibrateError();
+        return;
+      }
+      this.dragTargetState = stepInfo.requiredState;
+      this.vibrateLight();
+      this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
+      this.checkTutorialStepProgress();
+      return;
+    }
+
     // 0ms instant response on touch
     this.dragTargetState = this.store.determineNextState(coord.x, coord.y, false);
     this.store.setCellsBatch([coord], this.dragTargetState as any, this.currentBatchId);
@@ -693,6 +922,24 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     const clampedCoord = { x: targetX, y: targetY };
     this.hoverRow.set(clampedCoord.y);
     this.hoverCol.set(clampedCoord.x);
+
+    // 🎓 Tutorial interception during pointer drag
+    if (this.isTutorialActive()) {
+      const stepInfo = this.currentTutorialStepInfo();
+      if (!stepInfo) return;
+      const lineCells = this.lastCoord
+        ? this.getLineCells(this.lastCoord.x, this.lastCoord.y, clampedCoord.x, clampedCoord.y)
+        : [clampedCoord];
+      const validCells = lineCells.filter(c =>
+        stepInfo.targets.some(t => t.x === c.x && t.y === c.y)
+      );
+      if (validCells.length > 0) {
+        this.store.setCellsBatch(validCells, stepInfo.requiredState as any, this.currentBatchId);
+        this.checkTutorialStepProgress();
+      }
+      this.lastCoord = clampedCoord;
+      return;
+    }
 
     if (this.lastCoord) {
       if (this.lastCoord.x === clampedCoord.x && this.lastCoord.y === clampedCoord.y) return;

@@ -804,6 +804,40 @@ export class NonogramStore extends BaseGameStore {
     this.startTimer();
   }
 
+  startTutorialPuzzle() {
+    this.hintsUsed.set(0);
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentDifficulty.set(GameDifficulty.Easy);
+    this.roomId.set('');
+    this.history.set([]);
+    this.moveHistory.set([]);
+    this.resumeService.clearSession('nonogram');
+
+    const w = 5, h = 5;
+    const answerGrid = [
+      [0, 1, 0, 1, 0],
+      [1, 1, 1, 1, 1],
+      [1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 0],
+      [0, 0, 1, 0, 0]
+    ];
+    const { rowHints, colHints } = NonogramEngine.extractHints(answerGrid);
+    const grid: CellState[][] = Array(h).fill(0).map(() => Array(w).fill(0));
+
+    this.localState.set({
+      width: w,
+      height: h,
+      grid,
+      answerGrid,
+      rowHints,
+      colHints,
+      status: GameStatus.Playing,
+      startAt: Date.now()
+    });
+    this.timeSpent.set(0);
+    this.startTimer();
+  }
+
   getReplayData(): NonogramReplayData | null {
     const state = this.localState();
     if (!state) return null;

@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'nonogram'"
+  [autoManageOverlays]="!isTutorialActive()"
   [title]="t('lobby.nonogram')() || 'Nonogram'"
   [subtitle]="getSubtitle()"
   icon="🎨"
@@ -157,7 +158,69 @@
     <div class="min-w-fit flex flex-col items-center pt-0.5 sm:pt-1"
          [class.my-auto]="!isBoardOverflowing() && zoomLevel() <= 1.0">
 
-              <div class="nonogram-board prevent-select"
+      <!-- 🎓 First-time Tutorial Invitation Capsule (Non-intrusive) -->
+      @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && store.currentRoomMode() === GameMode.Single) {
+        <div class="w-full max-w-[480px] mb-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-indigo-500/15 border border-amber-500/35 flex items-center justify-between gap-2 shadow-sm animate-pulse-slow">
+          <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <span class="text-base sm:text-lg shrink-0">🎓</span>
+            <span class="text-xs sm:text-sm font-black text-amber-400 truncate">
+              {{ t('tutorial.interactive.prompt')() || '第一次玩数织？30秒互动教程带你轻松玩懂' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button (click)="startTutorial()" 
+                    class="px-2.5 sm:px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
+              {{ t('tutorial.interactive.start')() || '开始教学' }}
+            </button>
+            <button (click)="dismissTutorialCapsule()" 
+                    class="p-1 text-[var(--color-text-muted)] hover:text-white transition-colors cursor-pointer text-xs"
+                    title="关闭">
+              ✕
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 🎓 Active Tutorial Step Card (Spotlight Focus Guidance) -->
+      @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
+        <div class="w-full max-w-[480px] mb-2 p-3 sm:p-3.5 rounded-2xl bg-[var(--color-bg-card)] border-2 border-amber-500/50 shadow-[0_8px_25px_rgba(245,158,11,0.2)] flex flex-col gap-2 relative z-30 transition-all">
+          
+          <!-- Top Bar: Step & Progress dots & Skip button -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 font-mono font-black text-xs border border-amber-500/40">
+                {{ t(stepInfo.titleKey)() || stepInfo.defaultTitle }}
+              </span>
+              <!-- 4 Step Dots -->
+              <div class="flex items-center gap-1.5">
+                @for (s of [0, 1, 2, 3]; track s) {
+                  <span class="w-2 h-2 rounded-full transition-all"
+                        [ngClass]="tutorialStep() === s ? 'bg-amber-400 scale-125 shadow-[0_0_6px_rgba(251,191,36,0.8)]' : (tutorialStep() > s ? 'bg-emerald-400' : 'bg-slate-600')">
+                  </span>
+                }
+              </div>
+            </div>
+
+            <button (click)="exitTutorial()"
+                    class="text-[11px] font-bold text-[var(--color-text-muted)] hover:text-rose-400 transition-colors cursor-pointer px-1.5 py-0.5 rounded-md hover:bg-rose-500/10">
+              {{ t('tutorial.interactive.skip')() || '跳过教程' }} ›
+            </button>
+          </div>
+
+          <!-- Explanation Text -->
+          <p class="text-xs sm:text-[13px] text-[var(--color-text-secondary)] leading-relaxed font-medium">
+            {{ t(stepInfo.descKey)() || stepInfo.defaultDesc }}
+          </p>
+
+          <!-- Action Instruction Callout with animated badge -->
+          <div class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs font-bold text-amber-400">
+            <span class="text-sm shrink-0 animate-bounce">👉</span>
+            <span>{{ t(stepInfo.actionKey)() || stepInfo.defaultAction }}</span>
+          </div>
+        </div>
+      }
+
+      <div class="nonogram-board prevent-select"
                      (contextmenu)="onContextMenu($event)"
                      (mouseleave)="handleMouseLeave()"
                      [style.--cell-size.px]="cellSize()"
@@ -171,11 +234,13 @@
                 <div class="col-hints"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none"
+                       class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none transition-colors"
                        [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                        [class.no-border-r]="x === store.width() - 1"
                        [class.col-focused]="hoverCol() === x"
-                       [class.col-completed]="store.completedCols()[x]">
+                       [class.col-completed]="store.completedCols()[x]"
+                       [class.bg-amber-500/20]="isTutorialColHighlighted(x)"
+                       [class.text-amber-400]="isTutorialColHighlighted(x)">
                     <span *ngFor="let hint of col" 
                           class="font-mono font-black leading-none py-0.5"
                           [class.line-through]="store.completedCols()[x]"
@@ -186,11 +251,13 @@
                 <div class="row-hints"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none"
+                       class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none transition-colors"
                        [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
                        [class.no-border-b]="y === store.height() - 1"
                        [class.row-focused]="hoverRow() === y"
-                       [class.row-completed]="store.completedRows()[y]">
+                       [class.row-completed]="store.completedRows()[y]"
+                       [class.bg-amber-500/20]="isTutorialRowHighlighted(y)"
+                       [class.text-amber-400]="isTutorialRowHighlighted(y)">
                     <span *ngFor="let hint of row; let last = last" 
                           class="font-mono font-black leading-none" 
                           [class.mr-0.5]="store.width() >= 20 && !last" 
@@ -223,12 +290,27 @@
                          [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                          [class.no-border-r]="x === store.width() - 1"
                          [class.no-border-b]="y === store.height() - 1"
-                         [class.bg-[var(--color-text-main)]]="cell === 1"
+                         [class.bg-[var(--color-text-main)]]="cell === 1 && !isTutorialHeartCell(x, y)"
+                         [class.bg-gradient-to-br]="isTutorialHeartCell(x, y)"
+                         [class.from-rose-500]="isTutorialHeartCell(x, y)"
+                         [class.to-pink-500]="isTutorialHeartCell(x, y)"
+                         [class.shadow-[0_0_16px_rgba(244,63,94,0.9)]]="isTutorialHeartCell(x, y)"
+                         [class.animate-pulse]="isTutorialHeartCell(x, y)"
+                         [class.ring-2]="isTutorialTargetCell(x, y)"
+                         [class.ring-amber-400]="isTutorialTargetCell(x, y)"
+                         [class.z-20]="isTutorialTargetCell(x, y)"
+                         [class.shadow-[0_0_12px_rgba(251,191,36,0.9)]]="isTutorialTargetCell(x, y)"
                          [class.cell-crosshair-row]="!store.isSpectator() && hoverRow() === y && cell !== 1"
                          [class.cell-crosshair-col]="!store.isSpectator() && hoverCol() === x && cell !== 1"
                          [class.cell-crosshair-center]="!store.isSpectator() && hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
+                      <!-- 👆 Guided Finger Pointer for first tutorial target -->
+                      <div *ngIf="isFirstTutorialTarget(x, y)" 
+                           class="absolute inset-0 flex items-center justify-center pointer-events-none z-30 animate-bounce text-sm sm:text-base drop-shadow-md">
+                        👆
+                      </div>
+
                       <!-- Crossed 2 -->
                       <div *ngIf="cell === 2" class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center" [style.font-size.px]="cellSize() * 0.72">✕</div>
                     </div>
@@ -332,6 +414,16 @@
                     <span class="text-base sm:text-lg mb-0.5 drop-shadow-md">🎬</span>
                     <span class="text-[10px] md:text-xs font-bold">复盘</span>
                   </button>
+
+                  <button 
+                    (click)="startTutorial()"
+                    class="flex-1 flex flex-col items-center justify-start p-1.5 sm:p-2 md:p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 transition-all active:scale-95 shadow-xs cursor-pointer"
+                    [class.ring-2]="isTutorialActive()"
+                    [class.ring-amber-400]="isTutorialActive()"
+                    [title]="t('tutorial.interactive.btn_tutorial')() || '新手教程'">
+                    <span class="text-base sm:text-lg mb-0.5 drop-shadow-md">🎓</span>
+                    <span class="text-[10px] md:text-xs font-bold">{{ t('tutorial.interactive.btn_tutorial')() || '教程' }}</span>
+                  </button>
                 </div>
               }
 
@@ -352,6 +444,34 @@
             </div>
           </div>
       </div>
+  <!-- 🎓 Tutorial Completion Celebration Modal -->
+  @if (isTutorialActive() && isTutorialFinished()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-md animate-fade-in">
+      <div class="w-full max-w-sm rounded-3xl bg-[var(--color-bg-card)] border-2 border-amber-500/50 p-5 sm:p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.5)] flex flex-col items-center gap-3 relative overflow-hidden animate-scale-up">
+        
+        <div class="text-5xl animate-bounce">❤️</div>
+
+        <h3 class="text-lg sm:text-xl font-black text-amber-400">
+          {{ t('tutorial.interactive.win_title')() || '🎉 恭喜！你已完全掌握数织解谜秘诀！' }}
+        </h3>
+
+        <p class="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+          {{ t('tutorial.interactive.win_desc')() || '你用清晰的逻辑推导，亲手拼出了一颗像素爱心 ❤️！从全满行、打叉排除到数字间隔，你已学会了数织大师的核心法则。' }}
+        </p>
+
+        <div class="w-full flex flex-col gap-2 mt-2">
+          <button (click)="completeTutorialAndPlay()"
+                  class="w-full py-3 rounded-2xl font-black text-sm bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-lg shadow-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer">
+            {{ t('tutorial.interactive.btn_play')() || '🌟 开始正式挑战 (简单 5x5)' }}
+          </button>
+          <button (click)="restartTutorial()"
+                  class="w-full py-2.5 rounded-xl font-bold text-xs bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-white border border-[var(--color-border-card)] hover:border-amber-500/40 transition-all cursor-pointer active:scale-95">
+            {{ t('tutorial.interactive.btn_retry')() || '🔄 再复习一遍' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </app-game-layout>
 
 @if (showInGameReplayModal()) {
