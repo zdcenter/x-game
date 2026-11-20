@@ -193,27 +193,48 @@
         </div>
       }
 
-      <!-- 🎓 Minimal Top Step Bar (No bulky duplicate text! Just Step Pills & Skip) -->
+      <!-- 🎓 Plan A: Refined Top Guidance Board (Integrated, Light-Mode Crisp & Dark-Mode Glowing) -->
       @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
-        <div class="w-full max-w-sm mb-2 px-3 py-1.5 rounded-2xl bg-[var(--color-bg-card)] border border-blue-500/30 shadow-xs flex items-center justify-between gap-2 text-xs select-none">
-          <div class="flex items-center gap-2">
-            <span class="font-black text-blue-600 dark:text-blue-400 text-xs">
-              {{ t(stepInfo.titleKey)() || stepInfo.defaultTitle }}
-            </span>
-            <!-- 4 Step Dots -->
-            <div class="flex items-center gap-1">
-              @for (s of [0, 1, 2, 3]; track s) {
-                <span class="w-2 h-2 rounded-full transition-all"
-                      [ngClass]="tutorialStep() === s ? 'bg-blue-600 dark:bg-blue-400 scale-125 shadow-xs' : (tutorialStep() > s ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700')">
-                </span>
-              }
+        <div class="w-full max-w-[500px] mb-2 p-3 sm:p-3.5 rounded-2xl bg-[var(--color-bg-card)] border-2 border-blue-500/30 dark:border-blue-400/30 shadow-[0_8px_24px_rgba(37,99,235,0.08)] flex flex-col gap-2 relative z-30 transition-all select-none">
+          
+          <!-- Top Row: Step Title & Dots & Skip -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-xs sm:text-sm shadow-xs tracking-wide">
+                {{ t(stepInfo.titleKey)() || stepInfo.defaultTitle }}
+              </span>
+              <!-- 4 Step Dots -->
+              <div class="flex items-center gap-1.5">
+                @for (s of [0, 1, 2, 3]; track s) {
+                  <span class="w-2.5 h-2.5 rounded-full transition-all"
+                        [ngClass]="tutorialStep() === s ? 'bg-blue-600 dark:bg-blue-400 scale-125 shadow-[0_0_8px_rgba(37,99,235,0.6)]' : (tutorialStep() > s ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700')">
+                  </span>
+                }
+              </div>
             </div>
+
+            <button (click)="exitTutorial()"
+                    class="text-xs font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors cursor-pointer px-2 py-0.5 rounded-lg hover:bg-rose-500/10">
+              {{ t('tutorial.interactive.skip')() || '跳过教程' }} ›
+            </button>
           </div>
 
-          <button (click)="exitTutorial()"
-                  class="text-[11px] font-bold text-[var(--color-text-muted)] hover:text-rose-500 transition-colors cursor-pointer px-1.5 py-0.5 rounded-md hover:bg-rose-500/10">
-            {{ t('tutorial.interactive.skip')() || '跳过' }} ›
-          </button>
+          <!-- Formula Pill & Badge (Visual Rule) -->
+          <div class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 flex items-center justify-between gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
+            <span class="font-mono text-xs sm:text-sm tracking-wide font-black truncate">{{ stepInfo.formula }}</span>
+            <span class="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:text-blue-300 text-[11px] font-extrabold uppercase tracking-wider shrink-0 whitespace-nowrap">{{ stepInfo.formulaBadge }}</span>
+          </div>
+
+          <!-- The "Why" / Detailed Deduction Reason (Comfortable, high-contrast, beautiful typography) -->
+          <p class="text-xs sm:text-[13px] text-[var(--color-text-main)] font-medium leading-relaxed">
+            {{ currentTutorialBubbleReason() }}
+          </p>
+
+          <!-- The "Action" Instruction -->
+          <div class="px-2.5 py-1.5 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/30 text-blue-800 dark:text-blue-200 text-xs font-bold flex items-center gap-1.5">
+            <span class="animate-bounce shrink-0">👉</span>
+            <span class="leading-snug">{{ currentTutorialBubbleAction() }}</span>
+          </div>
         </div>
       }
 
@@ -323,7 +344,7 @@
                          [class.cell-crosshair-center]="!store.isSpectator() && hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
-                      <!-- 👆 Guided Action Tooltip Bubble & Pointer for first tutorial target -->
+                      <!-- 👆 Plan A: Guided Action Micro-Pill & Pointer for first tutorial target (Light & Dark matching, NEVER obscures) -->
                       <ng-container *ngIf="isFirstTutorialTarget(x, y)">
                         <!-- Hand pointer: ALWAYS mathematically centered on this cell! -->
                         <div class="absolute left-1/2 -translate-x-1/2 pointer-events-none z-50 select-none drop-shadow-md text-base sm:text-lg animate-bounce"
@@ -331,59 +352,12 @@
                           {{ y === 0 ? '👆' : '👇' }}
                         </div>
 
-                        <!-- Unified Speech Bubble Card: Anchored to cell, caret pointing at hand! -->
-                        <div class="absolute pointer-events-none z-50 drop-shadow-2xl animate-fade-in flex flex-col"
-                             [ngClass]="{
-                               'top-full mt-7': y === 0,
-                               'bottom-full mb-7': y > 0,
-                               'right-0 items-end': x >= store.width() - 2,
-                               'left-0 items-start': x <= 1,
-                               'left-1/2 -translate-x-1/2 items-center': x > 1 && x < store.width() - 2
-                             }">
-                          
-                          <!-- Caret Arrow (when card is below cell: y === 0) -->
-                          <div *ngIf="y === 0" 
-                               class="w-0 h-0 border-x-[6px] border-x-transparent border-b-[7px] border-b-slate-900 dark:border-b-slate-950 mb-0 shrink-0"
-                               [ngClass]="{
-                                 'mr-5': x >= store.width() - 2,
-                                 'ml-5': x <= 1,
-                                 'mx-auto': x > 1 && x < store.width() - 2
-                               }">
-                          </div>
-
-                          <!-- The Unified Card Body -->
-                          <div class="w-[250px] sm:w-[280px] p-2.5 sm:p-3 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-[0_12px_32px_rgba(0,0,0,0.6)] border border-blue-400/80 backdrop-blur-md flex flex-col gap-1.5 select-none text-left">
-                            @if (currentTutorialStepInfo(); as sInfo) {
-                              <!-- Header Badge with Rule Formula -->
-                              <div class="flex items-center justify-between gap-1 pb-1 border-b border-white/15">
-                                <span class="px-2 py-0.5 rounded-lg bg-blue-500/25 text-blue-300 text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
-                                  {{ sInfo.formulaBadge }}
-                                </span>
-                                <span class="font-mono text-[11px] text-cyan-300 font-bold">
-                                  {{ sInfo.formula }}
-                                </span>
-                              </div>
-                            }
-
-                            <!-- Line 1: Why / Clue Reason (Full, friendly text) -->
-                            <p class="text-[11px] sm:text-xs text-slate-200 font-medium leading-relaxed whitespace-normal">
-                              {{ currentTutorialBubbleReason() }}
-                            </p>
-
-                            <!-- Line 2: How / Direct Action Instruction -->
-                            <div class="px-2 py-1 rounded-xl bg-blue-500/20 border border-blue-400/30 text-white text-[11px] sm:text-xs font-bold flex items-center gap-1.5 whitespace-normal">
-                              <span>{{ currentTutorialBubbleAction() }}</span>
-                            </div>
-                          </div>
-
-                          <!-- Downward Caret Arrow (when card is above cell: y > 0) -->
-                          <div *ngIf="y > 0" 
-                               class="w-0 h-0 border-x-[6px] border-x-transparent border-t-[7px] border-t-slate-900 dark:border-t-slate-950 mt-0 shrink-0"
-                               [ngClass]="{
-                                 'mr-5': x >= store.width() - 2,
-                                 'ml-5': x <= 1,
-                                 'mx-auto': x > 1 && x < store.width() - 2
-                               }">
+                        <!-- Refined Action Micro-Pill (Clean white in light mode, deep slate in dark mode) -->
+                        <div class="absolute left-1/2 -translate-x-1/2 pointer-events-none z-50 whitespace-nowrap animate-fade-in"
+                             [ngClass]="y === 0 ? 'top-full mt-6' : 'bottom-full mb-6'">
+                          <div class="px-2.5 py-0.5 sm:py-1 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-blue-500/50 text-blue-700 dark:text-blue-300 text-[10px] sm:text-[11px] font-black shadow-[0_4px_12px_rgba(37,99,235,0.2)] flex items-center gap-1 backdrop-blur-xs">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping"></span>
+                            <span>{{ currentTutorialMicroAction() }}</span>
                           </div>
                         </div>
                       </ng-container>

@@ -223,6 +223,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     return this.t((info as any).bubbleActionKey)() || (info as any).defaultBubbleAction || '';
   });
 
+  readonly currentTutorialMicroAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.t((info as any).bubbleKey)() || (info as any).defaultBubble || '';
+  });
+
   isTutorialTargetCell(x: number, y: number): boolean {
     if (!this.isTutorialActive()) return false;
     const info = this.currentTutorialStepInfo();
