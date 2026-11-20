@@ -70,7 +70,9 @@ export class I18nService {
   ) as Signal<Lang>;
 
   t(key: string, params?: Record<string, unknown>): Signal<string> {
+    if (!key) return computed(() => '');
     return computed(() => {
+      if (!key) return '';
       const lang = this.currentLang(); // reactive dependency
       let res = this.transloco.translate(key, params ?? {}, lang);
 

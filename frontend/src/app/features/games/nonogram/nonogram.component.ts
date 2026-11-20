@@ -129,6 +129,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultBubbleReason: '👈 看左边数字「5」：满行5格全黑',
       bubbleActionKey: 'tutorial.interactive.step1_action_short',
       defaultBubbleAction: '👇 滑动或点击涂黑整行 ⬛',
+      microActionKey: 'tutorial.interactive.step1_bubble',
+      defaultMicroAction: '滑动涂黑 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -151,6 +153,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultBubbleReason: '👆 提示「2」已满足，其余必为空格',
       bubbleActionKey: 'tutorial.interactive.step2_action_short',
       defaultBubbleAction: '👉 点击空格标记 ✕ 排除',
+      microActionKey: 'tutorial.interactive.step2_bubble',
+      defaultMicroAction: '标 ✕ 排除',
       requiredMode: 'cross' as const,
       requiredState: 2 as const,
       targets: [
@@ -173,6 +177,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultBubbleReason: '👆 顶部提示「1 1」：被✕隔开必在两端',
       bubbleActionKey: 'tutorial.interactive.step3_action_short',
       defaultBubbleAction: '👇 涂黑两个拱形顶点 ⬛',
+      microActionKey: 'tutorial.interactive.step3_bubble',
+      defaultMicroAction: '涂黑拱顶 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -194,6 +200,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultBubbleReason: '👈 看第4行「3」与第5行「1」',
       bubbleActionKey: 'tutorial.interactive.step4_action_short',
       defaultBubbleAction: '👇 涂黑最后4格，点亮爱心！',
+      microActionKey: 'tutorial.interactive.step4_bubble',
+      defaultMicroAction: '点亮爱心 ❤️',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -227,7 +235,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (!this.isTutorialActive()) return '';
     const info = this.currentTutorialStepInfo();
     if (!info) return '';
-    return this.t((info as any).bubbleKey)() || (info as any).defaultBubble || '';
+    const microKey = (info as any).microActionKey || (info as any).bubbleKey;
+    const defaultMicro = (info as any).defaultMicroAction || (info as any).defaultBubble || '';
+    if (!microKey) return defaultMicro;
+    return this.t(microKey)() || defaultMicro;
   });
 
   isTutorialTargetCell(x: number, y: number): boolean {
