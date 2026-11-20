@@ -219,6 +219,12 @@
             </button>
           </div>
 
+          <!-- Visual Formula Pill (Compact Diagram of the Rule) -->
+          <div class="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/25 flex items-center justify-between gap-2 text-xs font-bold text-blue-700 dark:text-blue-300 shadow-2xs">
+            <span class="font-mono text-xs sm:text-sm tracking-wide font-black">{{ stepInfo.formula }}</span>
+            <span class="px-2 py-0.5 rounded-lg bg-blue-500/15 text-[11px] font-extrabold uppercase tracking-wider shrink-0">{{ stepInfo.formulaBadge }}</span>
+          </div>
+
           <!-- Explanation Text (Larger, High Contrast & Comfortable line-height) -->
           <p class="text-[13px] sm:text-base text-[var(--color-text-main)] font-medium leading-relaxed">
             {{ t(stepInfo.descKey)() || stepInfo.defaultDesc }}
@@ -246,32 +252,44 @@
                 <div class="col-hints"
                      [style.grid-template-columns]="'repeat(' + store.width() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let col of store.colHints(); let x = index" 
-                       class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none transition-colors"
+                       class="col-hint-item flex flex-col justify-end items-center pb-0.5 sm:pb-1 text-[var(--color-text-main)] font-black select-none transition-all relative"
                        [class.thick-r]="(x + 1) % 5 === 0 && x !== store.width() - 1"
                        [class.no-border-r]="x === store.width() - 1"
                        [class.col-focused]="hoverCol() === x"
                        [class.col-completed]="store.completedCols()[x]"
-                       [class.bg-blue-500/15]="isTutorialColHighlighted(x)"
-                       [class.text-blue-600]="isTutorialColHighlighted(x)"
-                       [class.dark:text-blue-400]="isTutorialColHighlighted(x)">
+                       [class.bg-blue-600]="isTutorialColHighlighted(x)"
+                       [class.text-white]="isTutorialColHighlighted(x)"
+                       [class.dark:text-white]="isTutorialColHighlighted(x)"
+                       [class.shadow-[0_0_14px_rgba(37,99,235,0.85)]]="isTutorialColHighlighted(x)"
+                       [class.ring-2]="isTutorialColHighlighted(x)"
+                       [class.ring-blue-400]="isTutorialColHighlighted(x)"
+                       [class.animate-pulse]="isTutorialColHighlighted(x)"
+                       [class.z-20]="isTutorialColHighlighted(x)">
                     <span *ngFor="let hint of col" 
                           class="font-mono font-black leading-none py-0.5"
                           [class.line-through]="store.completedCols()[x]"
                           [class.opacity-35]="store.completedCols()[x]">{{ hint }}</span>
+                    <!-- Clue Indicator Arrow for highlighted col -->
+                    <span *ngIf="isTutorialColHighlighted(x)" class="text-[9px] font-black text-cyan-300 animate-bounce leading-none mt-0.5">▼</span>
                   </div>
                 </div>
 
                 <div class="row-hints"
                      [style.grid-template-rows]="'repeat(' + store.height() + ', ' + cellSize() + 'px)'">
                   <div *ngFor="let row of store.rowHints(); let y = index" 
-                       class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none transition-colors"
+                       class="row-hint-item flex justify-end items-center pr-1.5 sm:pr-2 text-[var(--color-text-main)] font-black select-none transition-all relative"
                        [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
                        [class.no-border-b]="y === store.height() - 1"
                        [class.row-focused]="hoverRow() === y"
                        [class.row-completed]="store.completedRows()[y]"
-                       [class.bg-blue-500/15]="isTutorialRowHighlighted(y)"
-                       [class.text-blue-600]="isTutorialRowHighlighted(y)"
-                       [class.dark:text-blue-400]="isTutorialRowHighlighted(y)">
+                       [class.bg-blue-600]="isTutorialRowHighlighted(y)"
+                       [class.text-white]="isTutorialRowHighlighted(y)"
+                       [class.dark:text-white]="isTutorialRowHighlighted(y)"
+                       [class.shadow-[0_0_14px_rgba(37,99,235,0.85)]]="isTutorialRowHighlighted(y)"
+                       [class.ring-2]="isTutorialRowHighlighted(y)"
+                       [class.ring-blue-400]="isTutorialRowHighlighted(y)"
+                       [class.animate-pulse]="isTutorialRowHighlighted(y)"
+                       [class.z-20]="isTutorialRowHighlighted(y)">
                     <span *ngFor="let hint of row; let last = last" 
                           class="font-mono font-black leading-none" 
                           [class.mr-0.5]="store.width() >= 20 && !last" 
@@ -279,6 +297,8 @@
                           [class.sm:mr-1.5]="store.width() < 15 && !last"
                           [class.line-through]="store.completedRows()[y]"
                           [class.opacity-35]="store.completedRows()[y]">{{ hint }}</span>
+                    <!-- Clue Indicator Arrow for highlighted row -->
+                    <span *ngIf="isTutorialRowHighlighted(y)" class="text-[9px] font-black text-cyan-300 animate-bounce leading-none ml-1">▶</span>
                   </div>
                 </div>
 
@@ -334,13 +354,19 @@
                                'right-0': x === store.width() - 1,
                                'left-1/2 -translate-x-1/2': x > 0 && x < store.width() - 1
                              }">
-                          <!-- Bubble pill -->
-                          <div class="px-2.5 py-1 rounded-xl bg-blue-600 dark:bg-blue-500 text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center gap-1.5 border border-white/25">
-                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
-                            <span>{{ currentTutorialBubbleText() }}</span>
+                          <!-- 2-layer Bubble Card: Reason + Action -->
+                          <div class="px-3 py-1.5 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex flex-col gap-0.5 border border-blue-400/80 backdrop-blur-md">
+                            <!-- Line 1: Why / Clue Reason -->
+                            <div class="text-[11px] sm:text-xs font-black text-cyan-300 dark:text-cyan-200 tracking-tight flex items-center gap-1">
+                              <span>{{ currentTutorialBubbleReason() }}</span>
+                            </div>
+                            <!-- Line 2: How / Direct Action -->
+                            <div class="text-[11px] sm:text-xs font-bold text-white tracking-tight flex items-center gap-1 border-t border-white/15 pt-0.5">
+                              <span>{{ currentTutorialBubbleAction() }}</span>
+                            </div>
                           </div>
                           <!-- Downward Caret -->
-                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-t-[6px] border-t-blue-600 dark:border-t-blue-500"></div>
+                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-t-[6px] border-t-slate-900 dark:border-t-slate-950"></div>
                           <!-- Direct Pointer Hand pointing into the cell -->
                           <div class="text-base sm:text-lg select-none drop-shadow-md -mt-0.5">👇</div>
                         </div>
@@ -356,11 +382,17 @@
                           <!-- Direct Pointer Hand pointing up into the cell -->
                           <div class="text-base sm:text-lg select-none drop-shadow-md -mb-0.5">👆</div>
                           <!-- Upward Caret -->
-                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-b-[6px] border-b-blue-600 dark:border-b-blue-500"></div>
-                          <!-- Bubble pill -->
-                          <div class="px-2.5 py-1 rounded-xl bg-blue-600 dark:bg-blue-500 text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center gap-1.5 border border-white/25">
-                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
-                            <span>{{ currentTutorialBubbleText() }}</span>
+                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-b-[6px] border-b-slate-900 dark:border-b-slate-950"></div>
+                          <!-- 2-layer Bubble Card: Reason + Action -->
+                          <div class="px-3 py-1.5 rounded-2xl bg-slate-900/95 dark:bg-slate-950/95 text-white shadow-[0_8px_24px_rgba(0,0,0,0.5)] flex flex-col gap-0.5 border border-blue-400/80 backdrop-blur-md">
+                            <!-- Line 1: Why / Clue Reason -->
+                            <div class="text-[11px] sm:text-xs font-black text-cyan-300 dark:text-cyan-200 tracking-tight flex items-center gap-1">
+                              <span>{{ currentTutorialBubbleReason() }}</span>
+                            </div>
+                            <!-- Line 2: How / Direct Action -->
+                            <div class="text-[11px] sm:text-xs font-bold text-white tracking-tight flex items-center gap-1 border-t border-white/15 pt-0.5">
+                              <span>{{ currentTutorialBubbleAction() }}</span>
+                            </div>
                           </div>
                         </div>
                       </ng-container>

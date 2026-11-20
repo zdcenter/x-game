@@ -119,12 +119,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       step: 0,
       titleKey: 'tutorial.interactive.step1_title',
       defaultTitle: '步骤 1/4 · 满行全填法则 (Full Line)',
+      formula: '[ 提示 5 ] ➜ [ ⬛ ⬛ ⬛ ⬛ ⬛ ]',
+      formulaBadge: '满行全填法则',
       descKey: 'tutorial.interactive.step1_desc',
-      defaultDesc: '行列旁的数字代表「连续黑格数」。棋盘宽 5 格，而第 2 行与第 3 行提示都是「5」——当数字等于行宽时，该行所有 5 格必然全部涂黑！',
+      defaultDesc: '行列旁的数字代表「连续黑格数」。棋盘宽 5 格，而第 2 行与第 3 行提示都是「5」——当数字等于行宽时，整行所有 5 格必然全部涂黑！',
       actionKey: 'tutorial.interactive.step1_action',
       defaultAction: '请滑动或点击涂黑这两行全部 10 个格子 ⬛',
-      bubbleKey: 'tutorial.interactive.step1_bubble',
-      defaultBubble: '滑动涂黑这两行 ⬛',
+      bubbleReasonKey: 'tutorial.interactive.step1_reason',
+      defaultBubbleReason: '👈 看左边数字「5」：满行5格全黑',
+      bubbleActionKey: 'tutorial.interactive.step1_action_short',
+      defaultBubbleAction: '👇 滑动或点击涂黑整行 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -137,12 +141,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       step: 1,
       titleKey: 'tutorial.interactive.step2_title',
       defaultTitle: '步骤 2/4 · 打叉排除技巧 (Cross ❌)',
+      formula: '[ 提示 2 ] ➜ [ ⬛ ⬛ ✕ ✕ ✕ ]',
+      formulaBadge: '打叉排除法则',
       descKey: 'tutorial.interactive.step2_desc',
       defaultDesc: '看最左与最右列，提示都是「2」。我们刚才已涂黑中间两格，正好满足 2 个黑格！因此这两列其余空格绝不可能有黑格，必须用 ✕ 排除。',
       actionKey: 'tutorial.interactive.step2_action',
       defaultAction: '已自动切换为【打叉模式 ❌】，在两列的上下空格标上 ✕',
-      bubbleKey: 'tutorial.interactive.step2_bubble',
-      defaultBubble: '点击标 ✕ 排除',
+      bubbleReasonKey: 'tutorial.interactive.step2_reason',
+      defaultBubbleReason: '👆 提示「2」已满足，其余必为空格',
+      bubbleActionKey: 'tutorial.interactive.step2_action_short',
+      defaultBubbleAction: '👉 点击空格标记 ✕ 排除',
       requiredMode: 'cross' as const,
       requiredState: 2 as const,
       targets: [
@@ -155,12 +163,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       step: 2,
       titleKey: 'tutorial.interactive.step3_title',
       defaultTitle: '步骤 3/4 · 多数字与间隔法则 (1 1)',
+      formula: '[ 提示 1 1 ] ➜ [ ✕ ⬛ ✕ ⬛ ✕ ]',
+      formulaBadge: '多数字间隔法则',
       descKey: 'tutorial.interactive.step3_desc',
       defaultDesc: '最顶行提示是「1 1」，代表有两块独立黑格，且中间至少隔一个空格。因为第 0、2、4 列已打叉排除，这两个黑块必定在第 1 列与第 3 列！',
       actionKey: 'tutorial.interactive.step3_action',
       defaultAction: '已自动切换回【涂色 ⬛】，涂黑顶部的两个爱心拱形顶点',
-      bubbleKey: 'tutorial.interactive.step3_bubble',
-      defaultBubble: '涂黑爱心顶部 ⬛',
+      bubbleReasonKey: 'tutorial.interactive.step3_reason',
+      defaultBubbleReason: '👆 顶部提示「1 1」：被✕隔开必在两端',
+      bubbleActionKey: 'tutorial.interactive.step3_action_short',
+      defaultBubbleAction: '👇 涂黑两个拱形顶点 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -172,12 +184,16 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       step: 3,
       titleKey: 'tutorial.interactive.step4_title',
       defaultTitle: '步骤 4/4 · 收官冲刺，见证奇迹！',
+      formula: '[ 提示 3 / 1 ] ➜ [ ❤️ 像素爱心完成 ]',
+      formulaBadge: '收官冲刺点亮',
       descKey: 'tutorial.interactive.step4_desc',
       defaultDesc: '第 4 行提示是「3」，第 5 行提示是「1」（爱心底部尖角）。点击涂黑剩下的 4 个目标格，完成画作！',
       actionKey: 'tutorial.interactive.step4_action',
       defaultAction: '涂黑剩余的 4 个格子，见证像素爱心点亮！',
-      bubbleKey: 'tutorial.interactive.step4_bubble',
-      defaultBubble: '涂黑最后4格 ⬛',
+      bubbleReasonKey: 'tutorial.interactive.step4_reason',
+      defaultBubbleReason: '👈 看第4行「3」与第5行「1」',
+      bubbleActionKey: 'tutorial.interactive.step4_action_short',
+      defaultBubbleAction: '👇 涂黑最后4格，点亮爱心！',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -193,11 +209,18 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     return this.tutorialStepsData[step] || null;
   });
 
-  readonly currentTutorialBubbleText = computed(() => {
+  readonly currentTutorialBubbleReason = computed(() => {
     if (!this.isTutorialActive()) return '';
     const info = this.currentTutorialStepInfo();
     if (!info) return '';
-    return this.t(info.bubbleKey)() || info.defaultBubble || '';
+    return this.t((info as any).bubbleReasonKey)() || (info as any).defaultBubbleReason || '';
+  });
+
+  readonly currentTutorialBubbleAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.t((info as any).bubbleActionKey)() || (info as any).defaultBubbleAction || '';
   });
 
   isTutorialTargetCell(x: number, y: number): boolean {
