@@ -74,6 +74,16 @@ const langChildren: Routes = [
         pathMatch: 'full'
       },
       {
+        path: 'games',
+        redirectTo: '',
+        pathMatch: 'full'
+      },
+      {
+        path: 'legal',
+        redirectTo: 'legal/about',
+        pathMatch: 'full'
+      },
+      {
         path: 'blog',
         loadComponent: () => import('./features/blog/blog-list/blog-list.component').then(m => m.BlogListComponent),
         data: { seo: { titleKey: 'seo.blog.title', descKey: 'seo.blog.desc', keywordsKey: 'seo.blog.keywords' } }

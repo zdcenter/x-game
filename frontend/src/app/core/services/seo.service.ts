@@ -293,18 +293,25 @@ export class SeoService {
       if (seg.length >= 1) {
         const section = seg[0];
         const sectionNames: Record<string, string> = {
-          games: lang === 'zh' ? '游戏' : 'Games',
-          docs: lang === 'zh' ? '攻略' : 'Guides',
+          games: lang === 'zh' ? '益智游戏' : 'Games',
+          docs: lang === 'zh' ? '玩法教程' : 'Guides',
           blog: lang === 'zh' ? '博客' : 'Blog',
-          legal: lang === 'zh' ? '法律与联系' : 'Legal',
+          legal: lang === 'zh' ? '关于与条款' : 'Legal & About',
+        };
+        const sectionPaths: Record<string, string> = {
+          games: `/${lang}/games`,
+          docs: `/${lang}/docs`,
+          blog: `/${lang}/blog`,
+          legal: `/${lang}/legal/about`,
         };
         const sectionName = sectionNames[section];
-        if (sectionName) {
-          breadcrumbItems.push({ name: sectionName, path: `/${lang}/${section}` });
+        const sectionPath = sectionPaths[section];
+        if (sectionName && sectionPath) {
+          breadcrumbItems.push({ name: sectionName, path: sectionPath });
         }
-        if (seg.length >= 2 && (section === 'games' || section === 'docs' || section === 'blog')) {
+        if (seg.length >= 2 && (section === 'games' || section === 'docs' || section === 'blog' || section === 'legal')) {
           const pageName = (pageTitle || '').split(' - ')[0].split(' | ')[0];
-          if (pageName) {
+          if (pageName && pageName !== sectionName) {
             breadcrumbItems.push({ name: pageName, path: `/${lang}${cleanRoute}` });
           }
         }

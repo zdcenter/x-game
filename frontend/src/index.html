@@ -25,8 +25,9 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link id="app-manifest" rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#f8fafc">
-  <!-- Google AdSense Publisher Account Verification Tag (Instant Ownership Check) -->
+  <!-- Google AdSense Publisher Account Verification Tag & Official Async Loader -->
   <meta name="google-adsense-account" content="ca-pub-8428944074138941">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8428944074138941" crossorigin="anonymous"></script>
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
   <!-- DNS prefetch & Preconnect for third-party resources -->
   <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
@@ -64,13 +65,6 @@
         ga.async = true;
         ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-S0JB094KY4';
         document.head.appendChild(ga);
-
-        // 2. Google AdSense
-        var ads = document.createElement('script');
-        ads.async = true;
-        ads.crossOrigin = 'anonymous';
-        ads.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8428944074138941';
-        document.head.appendChild(ads);
       }
 
       // Load on first real user interaction
