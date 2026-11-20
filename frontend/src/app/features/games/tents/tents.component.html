@@ -1,6 +1,7 @@
 <app-game-layout
   [store]="store"
   [gameId]="'tents'"
+  [autoManageOverlays]="!isTutorialActive()"
   [title]="i18n.t('lobby.tents')() || '帐篷与树'"
   [immersive]="isHandheld()"
   icon="⛺"

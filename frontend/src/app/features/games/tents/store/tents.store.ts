@@ -107,6 +107,9 @@ export class TentsStore extends BaseGameStore {
 
   readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
     this.tick();
+    if (this.isTutorialMode()) {
+      return GameStatus.Playing;
+    }
     return this.localEngine()?.status ?? GameStatus.Waiting;
   });
 

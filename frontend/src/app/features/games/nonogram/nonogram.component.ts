@@ -302,6 +302,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   onClearOrRestartClick() {
     this.vibrateLight();
     if (this.isTutorialActive()) {
+      if (this.isTutorialFinished()) return;
       this.restartTutorial();
       return;
     }
@@ -1187,6 +1188,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   override handleRematch() {
     if (this.isTutorialActive()) {
+      if (this.isTutorialFinished()) return;
       this.restartTutorial();
       return;
     }
@@ -1195,6 +1197,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
 
   override handleRestart() {
     if (this.isTutorialActive()) {
+      if (this.isTutorialFinished()) return;
       this.restartTutorial();
       return;
     }

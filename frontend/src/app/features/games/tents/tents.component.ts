@@ -230,6 +230,10 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
       if (nextStep >= 4) {
         this.vibrateSuccess();
         this.celebrateVictory();
+        this.hasCompletedTutorial.set(true);
+        if (isBrowser()) {
+          localStorage.setItem('tents_tutorial_completed', 'true');
+        }
       } else {
         this.vibrateMedium();
       }
@@ -347,6 +351,7 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
   onPlayAgain(): void {
     if (this.isTutorialActive()) {
+      if (this.isTutorialFinished()) return;
       this.restartTutorial();
       return;
     }
@@ -359,6 +364,7 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
 
   override handleRestart(): void {
     if (this.isTutorialActive()) {
+      if (this.isTutorialFinished()) return;
       this.restartTutorial();
       return;
     }
