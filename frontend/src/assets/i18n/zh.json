@@ -2242,7 +2242,7 @@
   "tutorial.mine.reveal_desc": "左键点击（或轻触）揭开格子。第一下永远安全——会打开一片空白区域。",
   "tutorial.interactive.btn_play": "🌟 开始正式挑战 (简单 5x5)",
   "tutorial.interactive.btn_retry": "🔄 再复习一遍",
-  "tutorial.interactive.btn_tutorial": "🎓 互动教程",
+  "tutorial.interactive.btn_tutorial": "教程",
   "tutorial.interactive.completed_badge": "已掌握秘诀",
   "tutorial.interactive.prompt": "第一次玩数织？30秒互动教程带你轻松玩懂",
   "tutorial.interactive.skip": "跳过教程",

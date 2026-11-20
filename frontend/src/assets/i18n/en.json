@@ -2242,7 +2242,7 @@
   "tutorial.mine.reveal_desc": "Left-click (or tap) a cell to reveal it. The first click is always safe — a blank area will open up.",
   "tutorial.interactive.btn_play": "🌟 Start Playing (Easy 5x5)",
   "tutorial.interactive.btn_retry": "🔄 Practice Again",
-  "tutorial.interactive.btn_tutorial": "🎓 Tutorial",
+  "tutorial.interactive.btn_tutorial": "Guide",
   "tutorial.interactive.completed_badge": "Mastered",
   "tutorial.interactive.prompt": "New to Nonogram? Learn in 30 seconds with an interactive puzzle!",
   "tutorial.interactive.skip": "Skip Tutorial",
