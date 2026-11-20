@@ -30,14 +30,14 @@ export interface GamesPage {
   hasMore: boolean;
 }
 
-const GAMES_DOCS_KEY = makeStateKey<GameDoc[]>('games-docs-index');
+export const GAMES_DOCS_KEY = makeStateKey<GameDoc[]>('games-docs-index');
 
 @Injectable({
   providedIn: 'root'
 })
 export class GameService {
-  private http = inject(HttpClient);
-  private transferState = inject(TransferState);
+  protected http = inject(HttpClient);
+  protected transferState = inject(TransferState);
   private readonly baseUrl = environment.apiUrl;
 
   getGames(page = 1, limit = 8): Observable<GamesPage> {

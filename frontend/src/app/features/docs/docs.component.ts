@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, effect, ElementRef, ViewChild, DOC
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml, Title, Meta } from '@angular/platform-browser';
-import { I18nService } from '../../core/i18n/i18n.service';
+import { I18nService, SUPPORTED_LANGS } from '../../core/i18n/i18n.service';
 import { GameService, GameDoc, getLocalizedField } from '../../core/services/game.service';
 import { marked } from 'marked';
 import { getOrigin } from '../../core/utils/browser.util';
@@ -399,19 +399,16 @@ export class DocsComponent {
     });
 
     this.route.data.subscribe(data => {
-      const id = data['gameId'];
-      if (id) {
-        this.currentGameId.set(id);
-      }
+      const id = data['gameId'] || '';
+      this.currentGameId.set(id);
+      this.loadGameDoc(id);
     });
 
     // Auto-fetch rules chunk for current game
     effect(() => {
       const id = this.currentGameId();
       if (id) {
-        this.gameService.getGameDoc(id).subscribe(doc => {
-          this.currentRulesDoc.set(doc);
-        });
+        this.loadGameDoc(id);
       } else {
         this.currentRulesDoc.set(null);
       }
@@ -468,8 +465,6 @@ export class DocsComponent {
           : `Learn how to play ${gameTitle}. Read the comprehensive rules, advanced strategies, and step-by-step visual tutorials.`);
         const origin = getOrigin() || PROD_ORIGIN;
         const canonicalUrl = `${origin}/${lang}/docs/${game.id}`;
-        const altLang = lang === 'en' ? 'zh' : 'en';
-        const altUrl = `${origin}/${altLang}/docs/${game.id}`;
 
         const finalTitle = optimizeMetaTitle(pageTitle, appName);
         const finalDesc = optimizeMetaDescription(desc, lang);
@@ -481,9 +476,41 @@ export class DocsComponent {
         this.metaService.updateTag({ property: 'og:url', content: canonicalUrl });
 
         this.setLinkTag('canonical', canonicalUrl);
-        this.setLinkTag('alternate', canonicalUrl, lang);
-        this.setLinkTag('alternate', altUrl, altLang);
+        SUPPORTED_LANGS.forEach(sLang => {
+          const altUrl = `${origin}/${sLang.code}/docs/${game.id}`;
+          const hreflangCode = sLang.code === 'zh' ? 'zh-Hans' : sLang.code;
+          this.setLinkTag('alternate', altUrl, hreflangCode);
+        });
         this.setLinkTag('alternate', `${origin}/en/docs/${game.id}`, 'x-default');
+      } else {
+        const origin = getOrigin() || PROD_ORIGIN;
+        const canonicalUrl = `${origin}/${lang}/docs`;
+        this.setLinkTag('canonical', canonicalUrl);
+        SUPPORTED_LANGS.forEach(sLang => {
+          const altUrl = `${origin}/${sLang.code}/docs`;
+          const hreflangCode = sLang.code === 'zh' ? 'zh-Hans' : sLang.code;
+          this.setLinkTag('alternate', altUrl, hreflangCode);
+        });
+        this.setLinkTag('alternate', `${origin}/en/docs`, 'x-default');
+      }
+    });
+  }
+
+  private loadGameDoc(id: string): void {
+    if (!id) {
+      this.currentRulesDoc.set(null);
+      return;
+    }
+    if (this.currentRulesDoc()?.id === id) return;
+    this.gameService.getGameDoc(id).subscribe(doc => {
+      this.currentRulesDoc.set(doc);
+      if (doc) {
+        const lang = this.i18n.currentLang();
+        const rawRules = doc.rules || '';
+        const md = getLocalizedField(rawRules, lang);
+        if (md) {
+          this.renderMarkdown(md);
+        }
       }
     });
   }
