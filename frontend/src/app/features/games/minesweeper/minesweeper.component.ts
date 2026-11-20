@@ -23,6 +23,11 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
+import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
+import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
+import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
+import { MINESWEEPER_TUTORIAL_STEPS, MinesweeperTutorialStep } from './store/minesweeper-tutorial';
+import { CellState } from './store/minesweeper.store';
 
 @Component({
   selector: 'app-minesweeper',
@@ -38,7 +43,10 @@ import { TimelapseModalComponent } from '../../../shared/components/timelapse-mo
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
     GameStatusHudComponent,
-    TimelapseModalComponent
+    TimelapseModalComponent,
+    InteractiveTutorialBoardComponent,
+    InteractiveTutorialPointerComponent,
+    InteractiveTutorialSuccessComponent
   ],
   providers: [MinesweeperStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +56,54 @@ import { TimelapseModalComponent } from '../../../shared/components/timelapse-mo
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(MinesweeperStore);
   showInGameReplayModal = signal(false);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 新手 4 步互动速成教程 (Interactive Step-by-Step Tutorial)
+  // ═══════════════════════════════════════════════════════════════════
+  isTutorialActive = signal(false);
+  tutorialStep = signal(0);
+  hasCompletedTutorial = signal(false);
+  tutorialDismissed = signal(false);
+  readonly isTutorialFinished = computed(() => this.tutorialStep() >= MINESWEEPER_TUTORIAL_STEPS.length);
+
+  readonly currentTutorialStepInfo = computed<MinesweeperTutorialStep | null>(() => {
+    if (!this.isTutorialActive()) return null;
+    const step = this.tutorialStep();
+    return MINESWEEPER_TUTORIAL_STEPS[step] || null;
+  });
+
+  readonly currentTutorialBubbleReason = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.descKey)() || info.defaultDesc || '';
+  });
+
+  readonly currentTutorialBubbleAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.actionKey)() || info.defaultAction || '';
+  });
+
+  readonly currentTutorialMicroAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const step = this.tutorialStep();
+    if (step === 3) {
+      const board = this.store.board();
+      const cell00 = board[0]?.[0];
+      if (cell00 && cell00.state !== CellState.Flagged) {
+        return this.i18n.t('tutorial.minesweeper.step2_micro')() || '右键/长按插旗 🚩';
+      }
+      return this.i18n.t('tutorial.minesweeper.step3_micro')() || '安全格，点击揭开 🔍';
+    }
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    const microKey = info.microActionKey;
+    const defaultMicro = info.defaultMicroAction || '';
+    if (!microKey) return defaultMicro;
+    return this.i18n.t(microKey)() || defaultMicro;
+  });
 
   openReplayModal() {
     this.haptic.vibrateLight();
@@ -436,6 +492,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS
+    if (isBrowser()) {
+      const completed = localStorage.getItem('minesweeper_tutorial_completed') === 'true';
+      this.hasCompletedTutorial.set(completed);
+    }
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
       if (joinInfo.password) this.wsService.setPendingPassword(joinInfo.password);
@@ -487,7 +547,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   private checkAutoSaveMinesweeper() {
-    if (this.currentRoomMode() !== GameMode.Single) return;
+    if (this.currentRoomMode() !== GameMode.Single || this.isTutorialActive()) return;
     if (this.store.status() === GameStatus.Finished) {
       this.clearResumeSession('minesweeper');
       return;
@@ -565,12 +625,186 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
 
 
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 Tutorial Helper & Interaction Methods
+  // ═══════════════════════════════════════════════════════════════════
+
+  isFirstTutorialTarget(x: number, y: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const step = this.tutorialStep();
+    if (step === 0) {
+      return x === 0 && y === 3;
+    }
+    if (step === 1) {
+      return x === 2 && y === 1;
+    }
+    if (step === 2) {
+      return x === 3 && y === 1;
+    }
+    if (step === 3) {
+      const board = this.store.board();
+      const cell00 = board[0]?.[0];
+      if (cell00 && cell00.state !== CellState.Flagged) {
+        return x === 0 && y === 0;
+      }
+      for (const cx of [1, 2, 3]) {
+        const c = board[0]?.[cx];
+        if (c && c.state !== CellState.Revealed) {
+          return x === cx && y === 0;
+        }
+      }
+    }
+    return false;
+  }
+
+  isTutorialTargetCell(x: number, y: number): boolean {
+    return this.isFirstTutorialTarget(x, y);
+  }
+
+  isTutorialClueCell(x: number, y: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info || !info.highlightClueCell) return false;
+    return info.highlightClueCell.x === x && info.highlightClueCell.y === y;
+  }
+
+  private checkTutorialCompletion() {
+    const board = this.store.board();
+    if (!board || board.length === 0) return;
+    let revealedSafe = 0;
+    for (const row of board) {
+      for (const cell of row) {
+        if (cell.state === CellState.Revealed) {
+          revealedSafe++;
+        }
+      }
+    }
+    if (revealedSafe >= 14) {
+      this.tutorialStep.set(4);
+      this.vibrateSuccess();
+      this.celebrateVictory();
+      this.hasCompletedTutorial.set(true);
+      if (isBrowser()) {
+        localStorage.setItem('minesweeper_tutorial_completed', 'true');
+      }
+    }
+  }
+
+  startTutorial() {
+    this.vibrateLight();
+    this.isTutorialActive.set(true);
+    this.tutorialStep.set(0);
+    this.currentRoomMode.set(GameMode.Single);
+    this.store.startTutorialGame();
+    this.cellSize.set(52); // Large comfortable cells for 4x4 tutorial
+    this.mobileActionMode.set('reveal');
+  }
+
+  restartTutorial() {
+    this.vibrateLight();
+    this.tutorialStep.set(0);
+    this.store.startTutorialGame();
+    this.cellSize.set(52);
+    this.mobileActionMode.set('reveal');
+  }
+
+  exitTutorial() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.changeSingleDifficulty(getSavedDifficulty('minesweeper', 'easy'));
+  }
+
+  completeTutorialAndPlay() {
+    this.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    if (isBrowser()) {
+      localStorage.setItem('minesweeper_tutorial_completed', 'true');
+    }
+    this.changeSingleDifficulty('easy');
+  }
+
+  dismissTutorialCapsule() {
+    this.tutorialDismissed.set(true);
+  }
+
   handleCellReveal(cell: any) {
+    if (this.isTutorialActive()) {
+      const step = this.tutorialStep();
+      if (step === 0) {
+        // Step 1/4: Reveal (0, 3)
+        if (cell.x === 0 && cell.y === 3) {
+          this.vibrateLight();
+          this.store.revealCell(cell.x, cell.y);
+          this.tutorialStep.set(1);
+          this.mobileActionMode.set('flag');
+        } else {
+          this.vibrateError();
+        }
+      } else if (step === 1) {
+        // Step 2/4 is a Flagging step!
+        this.vibrateError();
+      } else if (step === 2) {
+        // Step 3/4: Reveal (3, 1)
+        if (cell.x === 3 && cell.y === 1) {
+          this.vibrateLight();
+          this.store.revealCell(cell.x, cell.y);
+          this.tutorialStep.set(3);
+          this.mobileActionMode.set('reveal');
+        } else {
+          this.vibrateError();
+        }
+      } else if (step === 3) {
+        // Step 4/4: Reveal safe cells (1, 0), (2, 0), (3, 0)
+        if (cell.x === 0 && cell.y === 0) {
+          // Explode protection! (0,0) is a mine, don't allow reveal!
+          this.vibrateError();
+          return;
+        }
+        if ((cell.x === 1 || cell.x === 2 || cell.x === 3) && cell.y === 0) {
+          this.vibrateLight();
+          this.store.revealCell(cell.x, cell.y);
+          this.checkTutorialCompletion();
+        } else {
+          this.vibrateError();
+        }
+      }
+      return;
+    }
+
     if (!cell.flagged && !cell.revealed) this.vibrateLight();
     this.store.revealCell(cell.x, cell.y);
     this.checkAutoSaveMinesweeper();
   }
+
   handleCellFlag(cell: any) {
+    if (this.isTutorialActive()) {
+      const step = this.tutorialStep();
+      if (step === 1) {
+        // Step 2/4: Flag (2, 1)
+        if (cell.x === 2 && cell.y === 1) {
+          this.vibrateMedium();
+          this.store.toggleFlag(cell.x, cell.y);
+          this.tutorialStep.set(2);
+          this.mobileActionMode.set('reveal');
+        } else {
+          this.vibrateError();
+        }
+      } else if (step === 3) {
+        // Step 4/4: Flag (0, 0)
+        if (cell.x === 0 && cell.y === 0) {
+          this.vibrateMedium();
+          this.store.toggleFlag(cell.x, cell.y);
+          this.checkTutorialCompletion();
+        } else {
+          this.vibrateError();
+        }
+      } else {
+        this.vibrateError();
+      }
+      return;
+    }
+
     if (!cell.revealed) this.vibrateMedium();
     this.store.toggleFlag(cell.x, cell.y);
     this.checkAutoSaveMinesweeper();
@@ -668,6 +902,9 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   }
 
   getBoardDimensions(): { cols: number; rows: number } {
+    if (this.isTutorialActive() || this.currentDifficulty() === 'tutorial') {
+      return { cols: 4, rows: 4 };
+    }
     const board = this.store.board();
     if (board && board.length > 0 && board[0]?.length > 0) {
       return { cols: board[0].length, rows: board.length };

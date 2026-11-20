@@ -54,6 +54,7 @@ export class MinesweeperStore extends BaseGameStore {
   private optimisticFlags = signal<Record<string, CellState>>({});
   
   bestTime = signal<number>(0);
+  isTutorialMode = signal<boolean>(false);
 
   // Override derived state
   override readonly singlePlayerList = computed(() => []);
@@ -122,6 +123,9 @@ export class MinesweeperStore extends BaseGameStore {
   });
   override readonly singlePlayerStatus = computed<GameStatusType>(() => {
     this.tick();
+    if (this.isTutorialMode()) {
+      return GameStatus.Playing;
+    }
     return this.localEngine()?.status || 'waiting';
   });
   
@@ -237,6 +241,7 @@ export class MinesweeperStore extends BaseGameStore {
   }
 
   startLocalGame(width: number, height: number, mines: number, difficulty: string = GameDifficulty.Medium) {
+    this.isTutorialMode.set(false);
     this.optimisticFlags.set({});
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set(difficulty);
@@ -293,6 +298,7 @@ export class MinesweeperStore extends BaseGameStore {
   }
 
   startTutorialGame() {
+    this.isTutorialMode.set(true);
     this.optimisticFlags.set({});
     this.currentRoomMode.set(GameMode.Single);
     this.currentDifficulty.set('tutorial');
@@ -381,6 +387,7 @@ export class MinesweeperStore extends BaseGameStore {
   }
 
   override leaveRoom() {
+    this.isTutorialMode.set(false);
     this.optimisticFlags.set({});
     super.leaveRoom();
   }

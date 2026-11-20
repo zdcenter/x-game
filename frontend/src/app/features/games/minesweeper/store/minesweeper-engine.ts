@@ -90,8 +90,8 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
   }
 
   initTutorialBoard() {
-    this.width = 5;
-    this.height = 5;
+    this.width = 4;
+    this.height = 4;
     this.mines = 2;
     this.status = GameStatus.Playing;
     this.revealedCnt = 0;
@@ -111,9 +111,9 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       }))
     );
 
-    // Hardcode mines at (1,1) and (3,2)
-    (this.cells[1][1] as any).isMine = true;
-    (this.cells[2][3] as any).isMine = true;
+    // Hardcode mines at (0,0) and (2,1) [y=0, x=0] and [y=1, x=2]
+    (this.cells[0][0] as any).isMine = true;
+    (this.cells[1][2] as any).isMine = true;
 
     this.calculateNeighbors();
   }
