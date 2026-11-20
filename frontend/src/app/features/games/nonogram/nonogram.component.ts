@@ -123,6 +123,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultDesc: '行列旁的数字代表「连续黑格数」。棋盘宽 5 格，而第 2 行与第 3 行提示都是「5」——当数字等于行宽时，该行所有 5 格必然全部涂黑！',
       actionKey: 'tutorial.interactive.step1_action',
       defaultAction: '请滑动或点击涂黑这两行全部 10 个格子 ⬛',
+      bubbleKey: 'tutorial.interactive.step1_bubble',
+      defaultBubble: '滑动涂黑这两行 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -139,6 +141,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultDesc: '看最左与最右列，提示都是「2」。我们刚才已涂黑中间两格，正好满足 2 个黑格！因此这两列其余空格绝不可能有黑格，必须用 ✕ 排除。',
       actionKey: 'tutorial.interactive.step2_action',
       defaultAction: '已自动切换为【打叉模式 ❌】，在两列的上下空格标上 ✕',
+      bubbleKey: 'tutorial.interactive.step2_bubble',
+      defaultBubble: '点击标 ✕ 排除',
       requiredMode: 'cross' as const,
       requiredState: 2 as const,
       targets: [
@@ -155,6 +159,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultDesc: '最顶行提示是「1 1」，代表有两块独立黑格，且中间至少隔一个空格。因为第 0、2、4 列已打叉排除，这两个黑块必定在第 1 列与第 3 列！',
       actionKey: 'tutorial.interactive.step3_action',
       defaultAction: '已自动切换回【涂色 ⬛】，涂黑顶部的两个爱心拱形顶点',
+      bubbleKey: 'tutorial.interactive.step3_bubble',
+      defaultBubble: '涂黑爱心顶部 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -170,6 +176,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       defaultDesc: '第 4 行提示是「3」，第 5 行提示是「1」（爱心底部尖角）。点击涂黑剩下的 4 个目标格，完成画作！',
       actionKey: 'tutorial.interactive.step4_action',
       defaultAction: '涂黑剩余的 4 个格子，见证像素爱心点亮！',
+      bubbleKey: 'tutorial.interactive.step4_bubble',
+      defaultBubble: '涂黑最后4格 ⬛',
       requiredMode: 'fill' as const,
       requiredState: 1 as const,
       targets: [
@@ -183,6 +191,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     if (!this.isTutorialActive()) return null;
     const step = this.tutorialStep();
     return this.tutorialStepsData[step] || null;
+  });
+
+  readonly currentTutorialBubbleText = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.t(info.bubbleKey)() || info.defaultBubble || '';
   });
 
   isTutorialTargetCell(x: number, y: number): boolean {

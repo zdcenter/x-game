@@ -297,7 +297,10 @@
                      (touchcancel)="handleTouchFallbackEnd()">
                   <ng-container *ngFor="let row of store.grid(); let y = index">
                     <div *ngFor="let cell of row; let x = index" 
-                         class="cell cursor-pointer flex items-center justify-center relative overflow-hidden"
+                         class="cell cursor-pointer flex items-center justify-center relative"
+                         [class.overflow-hidden]="!isFirstTutorialTarget(x, y)"
+                         [class.!overflow-visible]="isFirstTutorialTarget(x, y)"
+                         [class.z-40]="isFirstTutorialTarget(x, y)"
                          [attr.data-x]="x"
                          [attr.data-y]="y"
                          [class.thick-b]="(y + 1) % 5 === 0 && y !== store.height() - 1"
@@ -313,7 +316,7 @@
                          [class.ring-2]="isTutorialTargetCell(x, y)"
                          [class.ring-blue-500]="isTutorialTargetCell(x, y)"
                          [class.dark:ring-blue-400]="isTutorialTargetCell(x, y)"
-                         [class.z-20]="isTutorialTargetCell(x, y)"
+                         [class.z-20]="isTutorialTargetCell(x, y) && !isFirstTutorialTarget(x, y)"
                          [class.shadow-[0_0_12px_rgba(59,130,246,0.6)]]="isTutorialTargetCell(x, y)"
                          [class.bg-blue-500/10]="isTutorialTargetCell(x, y)"
                          [class.cell-crosshair-row]="!store.isSpectator() && hoverRow() === y && cell !== 1"
@@ -321,11 +324,46 @@
                          [class.cell-crosshair-center]="!store.isSpectator() && hoverRow() === y && hoverCol() === x && cell !== 1"
                          (contextmenu)="onContextMenu($event)">
                       
-                      <!-- 👆 Guided Finger Pointer for first tutorial target -->
-                      <div *ngIf="isFirstTutorialTarget(x, y)" 
-                           class="absolute inset-0 flex items-center justify-center pointer-events-none z-30 animate-bounce text-sm sm:text-base drop-shadow-md">
-                        👆
-                      </div>
+                      <!-- 👆 Guided Action Tooltip Bubble & Pointer for first tutorial target -->
+                      <ng-container *ngIf="isFirstTutorialTarget(x, y)">
+                        <!-- Case A: Target on y > 0 (Bubble floats ABOVE cell with downward caret & 👇 pointing into cell) -->
+                        <div *ngIf="y > 0"
+                             class="absolute bottom-full mb-1 flex flex-col items-center pointer-events-none z-50 whitespace-nowrap animate-bounce drop-shadow-xl"
+                             [ngClass]="{
+                               'left-0': x === 0,
+                               'right-0': x === store.width() - 1,
+                               'left-1/2 -translate-x-1/2': x > 0 && x < store.width() - 1
+                             }">
+                          <!-- Bubble pill -->
+                          <div class="px-2.5 py-1 rounded-xl bg-blue-600 dark:bg-blue-500 text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center gap-1.5 border border-white/25">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
+                            <span>{{ currentTutorialBubbleText() }}</span>
+                          </div>
+                          <!-- Downward Caret -->
+                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-t-[6px] border-t-blue-600 dark:border-t-blue-500"></div>
+                          <!-- Direct Pointer Hand pointing into the cell -->
+                          <div class="text-base sm:text-lg select-none drop-shadow-md -mt-0.5">👇</div>
+                        </div>
+
+                        <!-- Case B: Target on y === 0 (Top row: Bubble floats BELOW cell with upward caret & 👆 pointing into cell) -->
+                        <div *ngIf="y === 0"
+                             class="absolute top-full mt-1 flex flex-col items-center pointer-events-none z-50 whitespace-nowrap animate-bounce drop-shadow-xl"
+                             [ngClass]="{
+                               'left-0': x === 0,
+                               'right-0': x === store.width() - 1,
+                               'left-1/2 -translate-x-1/2': x > 0 && x < store.width() - 1
+                             }">
+                          <!-- Direct Pointer Hand pointing up into the cell -->
+                          <div class="text-base sm:text-lg select-none drop-shadow-md -mb-0.5">👆</div>
+                          <!-- Upward Caret -->
+                          <div class="w-0 h-0 border-x-[5px] border-x-transparent border-b-[6px] border-b-blue-600 dark:border-b-blue-500"></div>
+                          <!-- Bubble pill -->
+                          <div class="px-2.5 py-1 rounded-xl bg-blue-600 dark:bg-blue-500 text-white text-[11px] sm:text-xs font-bold tracking-tight shadow-[0_4px_14px_rgba(37,99,235,0.4)] flex items-center gap-1.5 border border-white/25">
+                            <span class="w-1.5 h-1.5 rounded-full bg-cyan-300 animate-ping"></span>
+                            <span>{{ currentTutorialBubbleText() }}</span>
+                          </div>
+                        </div>
+                      </ng-container>
 
                       <!-- Crossed 2 -->
                       <div *ngIf="cell === 2" class="text-rose-500 dark:text-rose-400 font-bold pointer-events-none select-none flex items-center justify-center" [style.font-size.px]="cellSize() * 0.72">✕</div>
