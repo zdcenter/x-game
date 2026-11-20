@@ -68,9 +68,9 @@ import { JuiceService } from '../../../core/services/juice.service';
     <div class="fixed top-2.5 right-2.5 z-50 animate-fade-in pointer-events-auto">
       <button (click)="zenService.toggle()"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-bg-card)]/85 hover:bg-[var(--color-bg-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] shadow-lg backdrop-blur-md text-xs font-semibold cursor-pointer transition-all active:scale-95 group"
-              [title]="i18n.t('game.exit_zen_mode')() || '退出沉浸模式'">
+              [title]="i18n.t('game.exit_zen_mode')() || '退出专注模式'">
         <span class="text-sm">🧘</span>
-        <span class="text-[11px] opacity-80 group-hover:opacity-100">{{ i18n.t('game.zen_mode_exit')() || '退出沉浸' }}</span>
+        <span class="text-[11px] opacity-80 group-hover:opacity-100">{{ i18n.t('game.zen_mode_exit')() || '退出专注' }}</span>
       </button>
     </div>
   }
@@ -177,13 +177,13 @@ import { JuiceService } from '../../../core/services/juice.service';
                 </button>
               }
 
-              <!-- Theater / Zen Mode Toggle (Quick-access in header) -->
+              <!-- Zen / Focus Mode Toggle (Quick-access in header) -->
               <button (click)="zenService.toggle()"
                       type="button"
                       class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-sub)]/80 hover:border-amber-400 text-[var(--color-text-secondary)] hover:text-amber-500 transition-all text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95 group shrink-0 cursor-pointer"
-                      [title]="zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注最大化 (剧场模式)')">
+                      [title]="zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出专注') : (i18n.t('game.zen_mode')() || '专注全屏模式')">
                 <span class="group-hover:scale-110 transition-transform">⛶</span>
-                <span class="hidden md:inline">{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '恢复') : (i18n.t('game.zen_mode_short')() || '最大化') }}</span>
+                <span class="hidden md:inline">{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '恢复') : (i18n.t('game.zen_mode_btn')() || '专注模式') }}</span>
               </button>
             </div>
           </ng-container>
@@ -544,13 +544,6 @@ import { JuiceService } from '../../../core/services/juice.service';
                 </button>
               </div>
             </div>
-
-            <!-- Focus / Zen Mode Shortcut -->
-            <button (click)="zenService.toggle()"
-                    class="w-full mt-2 py-2.5 px-4 rounded-xl bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] font-bold text-xs xl:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer">
-              <span class="text-base">🧘</span>
-              <span>{{ zenService.isZenMode() ? (i18n.t('game.zen_mode_exit')() || '退出沉浸') : (i18n.t('game.zen_mode')() || '专注全屏模式') }}</span>
-            </button>
           </div>
 
           <!-- Card 2: 💡 官方进阶指南与深度解析 (SEO internal link + content reinforcement) -->
