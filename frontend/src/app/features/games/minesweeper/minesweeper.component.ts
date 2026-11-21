@@ -23,6 +23,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
+import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
 import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
 import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
@@ -36,7 +37,7 @@ import { CellState } from './store/minesweeper.store';
     CommonModule,
     FormsModule,
     CellComponent,
-    GameToolbarComponent,
+    HintButtonComponent,
     GameFrozenOverlayComponent,
     GameLayoutComponent,
     GamePkHudComponent,
