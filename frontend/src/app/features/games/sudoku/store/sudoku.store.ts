@@ -13,6 +13,12 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { SudokuCell } from './sudoku-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
+import {
+  SUDOKU_TUTORIAL_STEPS,
+  SUDOKU_TUTORIAL_PUZZLE,
+  SUDOKU_TUTORIAL_SOLUTION,
+  SudokuTutorialStep
+} from './sudoku-tutorial';
 export type { SudokuCell };
 
 @Injectable()
@@ -47,6 +53,44 @@ export class SudokuStore extends BaseGameStore {
   override isFinished = signal<boolean>(false);
   bestTime = signal<number>(0);
 
+  // ═══════════════════════════════════════════════════════════════════
+  // 🎓 新手 4 步互动速成教程 (Interactive Step-by-Step Tutorial)
+  // ═══════════════════════════════════════════════════════════════════
+  isTutorialActive = signal<boolean>(false);
+  tutorialStep = signal<number>(0);
+  tutorialDismissed = signal<boolean>(false);
+  hasCompletedTutorial = signal<boolean>(typeof window !== 'undefined' && localStorage.getItem('sudoku_tutorial_completed') === 'true');
+  readonly isTutorialFinished = computed(() => this.tutorialStep() >= SUDOKU_TUTORIAL_STEPS.length);
+
+  readonly currentTutorialStepInfo = computed<SudokuTutorialStep | null>(() => {
+    if (!this.isTutorialActive()) return null;
+    return SUDOKU_TUTORIAL_STEPS[this.tutorialStep()] || null;
+  });
+
+  readonly currentTutorialBubbleReason = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.descKey)() || info.defaultDesc || '';
+  });
+
+  readonly currentTutorialBubbleAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.actionKey)() || info.defaultAction || '';
+  });
+
+  readonly currentTutorialMicroAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    const microKey = info.microActionKey;
+    const defaultMicro = info.defaultMicroAction || '';
+    if (!microKey) return defaultMicro;
+    return this.i18n.t(microKey)() || defaultMicro;
+  });
+
   filledCells = computed(() => {
     let count = 0;
     const b = this.board();
@@ -74,6 +118,7 @@ export class SudokuStore extends BaseGameStore {
   override readonly hostId = computed(() => this.rawState()?.host || '');
 
   override readonly singlePlayerStatus = computed(() => {
+    if (this.isTutorialActive()) return 'playing';
     if (this.currentRoomMode() === GameMode.Single) return this.isFinished() ? GameStatus.Finished : 'playing';
     return (this.rawState()?.status as string) || 'waiting';
   });
@@ -392,6 +437,74 @@ export class SudokuStore extends BaseGameStore {
     this.board.set(newBoard);
   }
 
+  // --- TUTORIAL ACTIONS ---
+  startTutorial() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(true);
+    this.tutorialStep.set(0);
+    this.view.set('play');
+    this.currentRoomMode.set(GameMode.Single);
+    this.currentPuzzleId.set('sudoku-tutorial');
+    this.initBoard(SUDOKU_TUTORIAL_PUZZLE, SUDOKU_TUTORIAL_SOLUTION);
+    this.selectCell(0, 2);
+  }
+
+  restartTutorial() {
+    this.haptic.vibrateLight();
+    this.tutorialStep.set(0);
+    this.initBoard(SUDOKU_TUTORIAL_PUZZLE, SUDOKU_TUTORIAL_SOLUTION);
+    this.selectCell(0, 2);
+  }
+
+  exitTutorial() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.view.set('lobby');
+  }
+
+  dismissTutorialPrompt() {
+    this.tutorialDismissed.set(true);
+  }
+
+  completeTutorialAndPlay() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sudoku_tutorial_completed', 'true');
+    }
+    this.view.set('lobby');
+  }
+
+  isTutorialTarget(r: number, c: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    return info.targetR === r && info.targetC === c;
+  }
+
+  isTutorialClue(r: number, c: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    if (info.highlightClues && info.highlightClues.some(clue => clue.r === r && clue.c === c)) return true;
+    return false;
+  }
+
+  isTutorialRay(r: number, c: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    if (info.highlightRow !== undefined && info.highlightRow === r) return true;
+    if (info.highlightCol !== undefined && info.highlightCol === c) return true;
+    if (info.highlightBox !== undefined) {
+      const br = info.highlightBox.r;
+      const bc = info.highlightBox.c;
+      if (r >= br && r < br + 3 && c >= bc && c < bc + 3) return true;
+    }
+    return false;
+  }
+
   // Interaction
   selectCell(r: number, c: number) {
     this.selectedCell.set({ r, c });
@@ -409,6 +522,46 @@ export class SudokuStore extends BaseGameStore {
     const b = this.board();
     const cell = b[sel.r][sel.c];
     if (cell.fixed) return;
+
+    if (this.isTutorialActive()) {
+      const step = this.tutorialStep();
+      const info = this.currentTutorialStepInfo();
+      if (!info) return;
+
+      if (sel.r !== info.targetR || sel.c !== info.targetC) {
+        this.selectCell(info.targetR, info.targetC);
+      }
+
+      if (num === info.targetVal) {
+        this.haptic.vibrateMedium();
+        this.audio.playSudoku('input');
+        cell.val = num;
+        cell.notes.clear();
+        this.autoEraseNotes(info.targetR, info.targetC, num);
+        this.board.set([...b]);
+        this.checkErrors();
+
+        const nextStep = step + 1;
+        this.tutorialStep.set(nextStep);
+        if (nextStep < SUDOKU_TUTORIAL_STEPS.length) {
+          const nextInfo = SUDOKU_TUTORIAL_STEPS[nextStep];
+          this.selectCell(nextInfo.targetR, nextInfo.targetC);
+        } else {
+          this.isFinished.set(true);
+          this.hasCompletedTutorial.set(true);
+          this.audio.playSudoku('success');
+          this.haptic.vibrateSuccess();
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('sudoku_tutorial_completed', 'true');
+          }
+        }
+      } else {
+        this.haptic.vibrateError();
+        const hintMsg = (info.microActionKey ? this.i18n.t(info.microActionKey)() : null) || info.defaultMicroAction || '请根据提示填入正确数字';
+        this.toast.show(hintMsg, 'info');
+      }
+      return;
+    }
 
     this.audio.playSudoku('input');
     if (this.pencilMode()) {
@@ -656,7 +809,9 @@ export class SudokuStore extends BaseGameStore {
     if (valid && this.currentRoomMode() === GameMode.Single) {
       this.isFinished.set(true);
       this.stopTimer();
-      this.finishPuzzle();
+      if (!this.isTutorialActive()) {
+        this.finishPuzzle();
+      }
     }
 
     if (valid) {

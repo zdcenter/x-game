@@ -60,5 +60,24 @@
         </svg>
         <span class="text-xs md:text-sm font-semibold">{{ i18n.t('game.notes')() }}</span>
       </button>
+
+      <!-- 🎓 教程 (对齐全站卡片规范) -->
+      @if (store.currentRoomMode() === GameMode.Single) {
+        <button 
+          (click)="onTutorialClick()"
+          class="flex-1 flex flex-col items-center justify-center p-1.5 md:p-3 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-bold transition-all active:scale-95 touch-manipulation select-none cursor-pointer relative group"
+          [class.ring-2]="store.isTutorialActive()"
+          [class.ring-blue-500]="store.isTutorialActive()"
+          [title]="i18n.t('tutorial.interactive.btn_tutorial')() || '新手教程'">
+          @if (!store.hasCompletedTutorial() && !store.isTutorialActive()) {
+            <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+            </span>
+          }
+          <span class="text-base md:text-xl mb-0.5 md:mb-1 drop-shadow-md group-hover:scale-110 transition-transform">🎓</span>
+          <span class="text-xs md:text-sm font-semibold">{{ store.isTutorialActive() ? (i18n.t('tutorial.interactive.btn_restart')() || '重置') : (i18n.t('tutorial.interactive.btn_tutorial')() || '教程') }}</span>
+        </button>
+      }
     </div>
   

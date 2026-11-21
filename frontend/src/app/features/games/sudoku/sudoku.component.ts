@@ -27,6 +27,8 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
+import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
+import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
 
 @Component({
   selector: 'app-sudoku',
@@ -42,7 +44,9 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
     GameLayoutComponent,
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
-    GameStatusHudComponent
+    GameStatusHudComponent,
+    InteractiveTutorialBoardComponent,
+    InteractiveTutorialSuccessComponent
   ],
   providers: [SudokuStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,6 +59,36 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
   pwaService = inject(PwaService);
   feedbackService = inject(FeedbackService);
   private elementRef = inject(ElementRef);
+
+  // Tutorial delegates
+  readonly isTutorialActive = this.store.isTutorialActive;
+  readonly tutorialStep = this.store.tutorialStep;
+  readonly isTutorialFinished = this.store.isTutorialFinished;
+  readonly currentTutorialStepInfo = this.store.currentTutorialStepInfo;
+  readonly currentTutorialBubbleReason = this.store.currentTutorialBubbleReason;
+  readonly currentTutorialBubbleAction = this.store.currentTutorialBubbleAction;
+  readonly hasCompletedTutorial = this.store.hasCompletedTutorial;
+  readonly tutorialDismissed = this.store.tutorialDismissed;
+
+  startTutorial() {
+    this.store.startTutorial();
+  }
+
+  restartTutorial() {
+    this.store.restartTutorial();
+  }
+
+  exitTutorial() {
+    this.store.exitTutorial();
+  }
+
+  dismissTutorialPrompt() {
+    this.store.dismissTutorialPrompt();
+  }
+
+  completeTutorialAndPlay() {
+    this.store.completeTutorialAndPlay();
+  }
 
   getDifficultyLabel(diff: string): string {
     const item = this.sudokuDifficulties.find(d => d.id === diff);

@@ -13,6 +13,12 @@ export class SudokuNumpadComponent {
   store = inject(SudokuStore);
   haptic = inject(HapticService);
 
+  isTutorialTargetNum(num: number): boolean {
+    if (!this.store.isTutorialActive()) return false;
+    const info = this.store.currentTutorialStepInfo();
+    return info !== null && info.targetVal === num;
+  }
+
   digitCounts = computed(() => {
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     const b = this.store.board();

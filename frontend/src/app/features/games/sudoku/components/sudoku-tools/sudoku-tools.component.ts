@@ -39,4 +39,13 @@ export class SudokuToolsComponent {
     this.haptic.vibrateLight();
     this.store.togglePencilMode();
   }
+
+  onTutorialClick() {
+    this.haptic.vibrateLight();
+    if (this.store.isTutorialActive()) {
+      this.store.restartTutorial();
+    } else {
+      this.store.startTutorial();
+    }
+  }
 }

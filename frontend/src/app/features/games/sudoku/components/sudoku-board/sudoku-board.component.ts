@@ -1,11 +1,12 @@
 import { Component, inject, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SudokuStore, SudokuCell } from '../../store/sudoku.store';
+import { InteractiveTutorialPointerComponent } from '../../../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
 
 @Component({
   selector: 'app-sudoku-board',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, InteractiveTutorialPointerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     'class': 'w-full flex justify-center'
@@ -14,6 +15,18 @@ import { SudokuStore, SudokuCell } from '../../store/sudoku.store';
   templateUrl: './sudoku-board.component.html'})
 export class SudokuBoardComponent {
   store = inject(SudokuStore);
+
+  isTutorialTarget(r: number, c: number): boolean {
+    return this.store.isTutorialTarget(r, c);
+  }
+
+  isTutorialClue(r: number, c: number): boolean {
+    return this.store.isTutorialClue(r, c);
+  }
+
+  isTutorialRay(r: number, c: number): boolean {
+    return this.store.isTutorialRay(r, c);
+  }
 
   isSelected(cell: SudokuCell): boolean {
     const sel = this.store.selectedCell();
@@ -46,6 +59,17 @@ export class SudokuBoardComponent {
   getCellBg(cell: SudokuCell): string {
     if (this.isSelected(cell)) {
       return 'var(--color-accent-from)';
+    }
+    if (this.store.isTutorialActive()) {
+      if (this.isTutorialTarget(cell.r, cell.c)) {
+        return 'rgba(245, 158, 11, 0.2)';
+      }
+      if (this.isTutorialClue(cell.r, cell.c)) {
+        return 'rgba(14, 165, 233, 0.25)';
+      }
+      if (this.isTutorialRay(cell.r, cell.c)) {
+        return 'rgba(59, 130, 246, 0.08)';
+      }
     }
     if (this.isSameValue(cell)) {
       return 'var(--color-accent-to)';

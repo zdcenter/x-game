@@ -7,6 +7,10 @@
           (click)="onNumberClick(num)"
           [disabled]="isCompleted"
           class="relative aspect-square flex flex-col items-center justify-center rounded-lg md:rounded-xl border transition-all shadow md:shadow-md active:scale-95 touch-manipulation cursor-pointer select-none"
+          [class.ring-2]="isTutorialTargetNum(num)"
+          [class.ring-amber-500]="isTutorialTargetNum(num)"
+          [class.shadow-[0_0_12px_rgba(245,158,11,0.5)]]="isTutorialTargetNum(num)"
+          [class.animate-pulse]="isTutorialTargetNum(num)"
           [ngClass]="isCompleted 
             ? 'bg-[var(--color-bg-card)]/40 border-[var(--color-border-card)]/40 text-[var(--color-text-muted)]/40 opacity-40 cursor-not-allowed' 
             : 'bg-[var(--color-bg-card)] border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] hover:text-[var(--color-accent-from)] active:bg-amber-500/20 text-[var(--color-text-main)]'"
