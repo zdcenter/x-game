@@ -22,7 +22,6 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
-import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
 import { HintButtonComponent } from '../../../shared/components/hint-button/hint-button.component';
 import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
 import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
@@ -44,7 +43,6 @@ import { CellState } from './store/minesweeper.store';
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
     GameStatusHudComponent,
-    TimelapseModalComponent,
     InteractiveTutorialBoardComponent,
     InteractiveTutorialPointerComponent,
     InteractiveTutorialSuccessComponent
@@ -56,7 +54,6 @@ import { CellState } from './store/minesweeper.store';
 })
 export class MinesweeperComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(MinesweeperStore);
-  showInGameReplayModal = signal(false);
 
   // ═══════════════════════════════════════════════════════════════════
   // 🎓 新手 4 步互动速成教程 (Interactive Step-by-Step Tutorial)
@@ -106,14 +103,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     return this.i18n.t(microKey)() || defaultMicro;
   });
 
-  openReplayModal() {
-    this.haptic.vibrateLight();
-    this.showInGameReplayModal.set(true);
-  }
-
-  closeReplayModal() {
-    this.showInGameReplayModal.set(false);
-  }
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
   pwaService = inject(PwaService);

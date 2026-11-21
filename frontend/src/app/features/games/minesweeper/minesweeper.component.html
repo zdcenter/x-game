@@ -440,18 +440,6 @@
                 </button>
               }
 
-              <!-- 🎬 复盘 -->
-              @if (!isTutorialActive()) {
-                <button type="button"
-                        (click)="openReplayModal()"
-                        class="w-[58px] sm:w-[68px] h-[50px] sm:h-[54px] rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 font-bold transition-all active:scale-95 shadow-xs flex flex-col items-center justify-center shrink-0 cursor-pointer group"
-                        title="回放复盘 (极速排雷时光倒流 & 视频/GIF导出)">
-                  <span class="text-base sm:text-lg leading-none mb-0.5 group-hover:scale-110 transition-transform">🎬</span>
-                  <span class="w-full text-center tracking-tighter whitespace-nowrap text-[9px] sm:text-xs leading-none">
-                    复盘
-                  </span>
-                </button>
-              }
             </div>
           </div>
 
@@ -513,12 +501,3 @@
     </div>
   }
 </app-game-layout>
-
-@if (showInGameReplayModal()) {
-  <app-timelapse-modal
-    [gameTitle]="i18n.t('lobby.minesweeper')() || '扫雷'"
-    [gameId]="'minesweeper'"
-    [statSummary]="'雷数: ' + store.totalMines() + '颗'"
-    [replayData]="store.getReplayData()"
-    (close)="closeReplayModal()" />
-}

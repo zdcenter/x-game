@@ -21,7 +21,6 @@ import { FeedbackService } from '../../../core/services/feedback.service';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
-import { TimelapseModalComponent } from '../../../shared/components/timelapse-modal/timelapse-modal.component';
 import {
   InteractiveTutorialBoardComponent,
   InteractiveTutorialPointerComponent,
@@ -40,7 +39,6 @@ import {
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
     GameStatusHudComponent,
-    TimelapseModalComponent,
     InteractiveTutorialBoardComponent,
     InteractiveTutorialPointerComponent,
     InteractiveTutorialSuccessComponent
@@ -353,17 +351,6 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
         this.hasCompletedTutorial.set(true);
       }
     }
-  }
-
-  showInGameReplayModal = signal(false);
-
-  openReplayModal() {
-    this.haptic.vibrateLight();
-    this.showInGameReplayModal.set(true);
-  }
-
-  closeReplayModal() {
-    this.showInGameReplayModal.set(false);
   }
 
   constructor() {
