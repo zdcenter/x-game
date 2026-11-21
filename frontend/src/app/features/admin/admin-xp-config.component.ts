@@ -26,6 +26,7 @@ const DEFAULT_COIN_SETTINGS: ConfigItem[] = [
   { key: 'coins.pk_defeat',   value: '0',  label: '真人 PK 失败', description: '真人实时对战/排位失败奖励基础脑力币 (通常为 0)', unit: '🪙', category: 'reward' },
   { key: 'coins.cost_hint',   value: '20', label: '免广告提示单价', description: '单机解题免看广告秒出提示消耗', unit: '🪙', category: 'cost' },
   { key: 'coins.cost_revive', value: '50', label: '免广告复活单价', description: '单机失误免看广告当局复活消耗', unit: '🪙', category: 'cost' },
+  { key: 'coins.cost_swap',   value: '20', label: '六角消除换牌单价', description: '单机对局中置换整组手牌消耗的脑力币', unit: '🪙', category: 'cost' },
   { key: 'coins.cost_freeze',    value: '100', label: '连胜冷冻卡单价', description: '商城购买防断签/连胜冷冻保护卡消耗', unit: '🪙', category: 'cost' },
   { key: 'coins.daily_cap',      value: '80',  label: '单机每日代币上限', description: '单人单机每日获取总币数上限 (防脚本刷币)', unit: '🪙', category: 'rule' },
   { key: 'coins.register_bonus', value: '0',   label: '新注册赠送脑力币', description: '新用户注册时赠送代币 (设为 0 即不送，通过游戏闯关赚取)', unit: '🪙', category: 'rule' },

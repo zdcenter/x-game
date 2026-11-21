@@ -7,6 +7,7 @@ import { HexaStore } from './store/hexa.store';
 import { RoomLifecycleHandle, setupRoomLifecycle } from '../../../core/services/room-lifecycle';
 import { HexaBoardComponent } from './components/hexa-board/hexa-board.component';
 import { HexPiece, HexCoord } from './store/hexa-engine';
+import { CoinService } from '../../../core/services/coin.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -31,6 +32,10 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 export class HexaComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(HexaStore);
   private windowSize = inject(WindowSizeService);
+  coinService = inject(CoinService);
+
+  readonly costSwap = computed(() => this.settingsService.coinEconomy().costSwap);
+  isSwapping = signal(false);
 
   readonly boardDimPx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
@@ -332,7 +337,37 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
   // --- Drag and Drop Logic --- //
 
-  onDragStart(event: MouseEvent | TouchEvent, piece: HexPiece, index: number, pieceElement: HTMLElement) {
+  onSwapHand(event: MouseEvent) {
+    if (this.store.gameOver() || this.isSwapping()) return;
+    if (this.currentRoomMode() !== GameMode.Single) return;
+
+    if (!this.authStore.isAuthenticated()) {
+      this.toast.show(this.i18n.t('game.login_required_coins')() || '请先登录以使用换牌锦囊', 'info');
+      return;
+    }
+
+    const cost = this.costSwap();
+    if (this.coinService.coins() < cost) {
+      this.toast.show(this.i18n.t('game.insufficient_coins')() || '脑力币不足，可通过闯关挑战获取！', 'error');
+      return;
+    }
+
+    this.isSwapping.set(true);
+    this.haptic.vibrateMedium();
+    this.coinService.consumeCoins('swap', event).subscribe({
+      next: () => {
+        this.audio.playMath24('flip');
+        this.store.swapPieces();
+        setTimeout(() => this.isSwapping.set(false), 350);
+      },
+      error: () => {
+        this.isSwapping.set(false);
+      }
+    });
+  }
+
+  onDragStart(event: MouseEvent | TouchEvent, piece: HexPiece | null, index: number, pieceElement: HTMLElement) {
+    if (!piece) return;
     this.audioService.initAudio(); // fire-and-forget: warm up AudioContext without blocking drag
 
     if (this.store.gameOver() || (this.currentRoomMode() !== GameMode.Single && this.store.status() !== GameStatus.Playing)) return;
@@ -477,7 +512,10 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
   }
 
   // Draw helpers for the piece palette
-  getPieceSvgViewBoxData(piece: HexPiece) {
+  getPieceSvgViewBoxData(piece: HexPiece | null) {
+    if (!piece || !piece.shape) {
+      return { vbX: 0, vbY: 0, vbW: 50, vbH: 50 };
+    }
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     const size = 10;
     for (const p of piece.shape) {
@@ -502,7 +540,7 @@ export class HexaComponent extends BaseGameComponent implements OnInit, OnDestro
 
 
 
-  getPieceSvgViewBox(piece: HexPiece): string {
+  getPieceSvgViewBox(piece: HexPiece | null): string {
     const d = this.getPieceSvgViewBoxData(piece);
     return `${d.vbX} ${d.vbY} ${d.vbW} ${d.vbH}`;
   }

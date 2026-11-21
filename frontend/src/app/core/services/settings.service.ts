@@ -56,6 +56,7 @@ export class SettingsService {
       costHint: parseInt(s['coins.cost_hint'] || '20', 10),
       costRevive: parseInt(s['coins.cost_revive'] || '50', 10),
       costFreeze: parseInt(s['coins.cost_freeze'] || '100', 10),
+      costSwap: parseInt(s['coins.cost_swap'] || '20', 10),
       dailyCap: parseInt(s['coins.daily_cap'] || '80', 10),
       registerBonus: parseInt(s['coins.register_bonus'] || '0', 10),
     };

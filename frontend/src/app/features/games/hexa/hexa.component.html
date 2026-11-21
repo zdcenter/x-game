@@ -264,34 +264,63 @@
                 </div>
               </div>
 
-              <!-- Available Pieces Palette (紧随棋盘下方一小段距离) -->
+              <!-- Available Pieces Palette + Swap Pouch Action -->
               @if (!store.isSpectator()) {
-                <div class="w-full max-w-[500px] mx-auto flex justify-between items-center gap-2 lg:gap-4 h-20 lg:h-24 px-2 lg:px-4 shrink-0 rounded-xl bg-[var(--color-bg-sub)]/60 border border-[var(--color-border-card)]/60 shadow-xs">
-                  @for (piece of store.availablePieces(); track $index; let i = $index) {
-                    <div class="flex-1 relative flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-                         #pieceEl
-                         (mousedown)="piece && onDragStart($event, piece, i, pieceEl)"
-                         (touchstart)="piece && onDragStart($event, piece, i, pieceEl)">
-                      @if (piece) {
-                        <svg [attr.viewBox]="getPieceSvgViewBox(piece)" class="w-[80%] h-[80%] lg:w-3/4 lg:h-3/4 pointer-events-none"
-                             [class.opacity-0]="isDragging && draggedPieceIndex === i">
-                          <g filter="url(#shadow3d)">
-                            <polygon *ngFor="let p of piece.shape"
-                              [attr.points]="getPieceHexPoints(p.q, p.r)"
-                              [attr.fill]="resolveColor(piece.color)"
-                              stroke="rgba(255,255,255,0.4)"
-                              stroke-width="0.8"
-                              stroke-linejoin="round">
-                            </polygon>
-                            <!-- 晶体反光高光切面 -->
-                            <polygon *ngFor="let p of piece.shape"
-                              [attr.points]="getPieceFacetPoints(p.q, p.r)"
-                              fill="rgba(255,255,255,0.22)">
-                            </polygon>
-                          </g>
-                        </svg>
-                      }
-                    </div>
+                <div class="w-full max-w-[520px] mx-auto flex items-center gap-2 sm:gap-3 shrink-0">
+                  <!-- The 3 Hand Slots -->
+                  <div class="flex-1 flex justify-between items-center gap-2 lg:gap-4 h-20 lg:h-24 px-2 lg:px-4 rounded-2xl bg-[var(--color-bg-sub)]/70 border border-[var(--color-border-card)]/80 shadow-xs backdrop-blur-xs">
+                    @for (piece of store.availablePieces(); track $index; let i = $index) {
+                      <div class="flex-1 h-full relative flex items-center justify-center cursor-pointer transition-transform"
+                           [class.hover:scale-105]="!!piece"
+                           #pieceEl
+                           (mousedown)="onDragStart($event, piece, i, pieceEl)"
+                           (touchstart)="onDragStart($event, piece, i, pieceEl)">
+                        @if (piece) {
+                          <svg [attr.viewBox]="getPieceSvgViewBox(piece)" class="w-[85%] h-[85%] lg:w-3/4 lg:h-3/4 pointer-events-none"
+                               [class.opacity-0]="isDragging && draggedPieceIndex === i">
+                            <g filter="url(#shadow3d)">
+                              <polygon *ngFor="let p of piece.shape"
+                                [attr.points]="getPieceHexPoints(p.q, p.r)"
+                                [attr.fill]="resolveColor(piece.color)"
+                                stroke="rgba(255,255,255,0.4)"
+                                stroke-width="0.8"
+                                stroke-linejoin="round">
+                              </polygon>
+                              <!-- 晶体反光高光切面 -->
+                              <polygon *ngFor="let p of piece.shape"
+                                [attr.points]="getPieceFacetPoints(p.q, p.r)"
+                                fill="rgba(255,255,255,0.22)">
+                              </polygon>
+                            </g>
+                          </svg>
+                        } @else {
+                          <!-- Empty Slot Placeholder (Dashed Circle) -->
+                          <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full border border-dashed border-[var(--color-text-muted)]/25 flex items-center justify-center">
+                            <span class="w-2 h-2 rounded-full bg-[var(--color-text-muted)]/15"></span>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- 换牌锦囊 (Swap Hand Pieces) - 单机对局可用 -->
+                  @if (currentRoomMode() === GameMode.Single) {
+                    <button
+                      type="button"
+                      (click)="onSwapHand($event)"
+                      [disabled]="store.gameOver() || isSwapping()"
+                      class="h-20 lg:h-24 px-2.5 sm:px-3.5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-amber-500/15 to-amber-600/20 hover:from-amber-500/20 hover:to-amber-600/30 active:scale-95 border border-amber-500/30 flex flex-col items-center justify-center gap-0.5 sm:gap-1 shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed group shrink-0"
+                      [title]="i18n.t('hexa.swap_tooltip')() || '置换手牌 (换一组)'"
+                    >
+                      <span class="text-base sm:text-lg transition-transform duration-500"
+                            [class.rotate-180]="isSwapping()"
+                            [class.group-hover:rotate-180]="!isSwapping()">🔄</span>
+                      <span class="text-[10px] sm:text-xs font-black text-amber-500 whitespace-nowrap">{{ i18n.t('hexa.swap_btn')() || '换一组' }}</span>
+                      <span class="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-[9px] sm:text-[10px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap flex items-center gap-0.5">
+                        <span>🪙</span>
+                        <span>{{ costSwap() }}</span>
+                      </span>
+                    </button>
                   }
                 </div>
               } @else {

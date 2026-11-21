@@ -23,19 +23,21 @@ export interface HexPiece {
 export enum HexaActionType {
   PlacePiece = 'place_piece',
   Reset = 'reset',
-  LoadState = 'load_state'
+  LoadState = 'load_state',
+  SwapPieces = 'swap_pieces',
 }
 
 export type HexaAction = 
   | { type: HexaActionType.PlacePiece; piece: HexPiece; origin: HexCoord; pieceIndex: number }
   | { type: HexaActionType.Reset; seed?: number }
-  | { type: HexaActionType.LoadState; cells: any; score: number; combo: number; pieces: HexPiece[]; piecesPlaced: number; gameOver: boolean };
+  | { type: HexaActionType.LoadState; cells: any; score: number; combo: number; pieces: (HexPiece | null)[]; piecesPlaced: number; gameOver: boolean }
+  | { type: HexaActionType.SwapPieces };
 
 export interface HexaState {
   cells: HexCell[];
   score: number;
   combo: number;
-  availablePieces: HexPiece[];
+  availablePieces: (HexPiece | null)[];
   piecesPlaced: number;
   gameOver: boolean;
   status: GameStatusType;
@@ -46,7 +48,7 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
   cells: Map<string, HexCell> = new Map();
   score = 0;
   combo = 0;
-  availablePieces: HexPiece[] = [];
+  availablePieces: (HexPiece | null)[] = [null, null, null];
   piecesPlaced = 0;
   gameOver = false;
   status: GameStatusType = GameStatus.Waiting;
@@ -109,6 +111,8 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
   handleAction(action: HexaAction): void {
     if (action.type === HexaActionType.PlacePiece) {
       this.executePlacePiece(action.piece, action.origin, action.pieceIndex);
+    } else if (action.type === HexaActionType.SwapPieces) {
+      this.swapPieces();
     } else if (action.type === HexaActionType.Reset) {
       this.initGame({ seed: action.seed });
     } else if (action.type === HexaActionType.LoadState) {
@@ -120,14 +124,24 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
           this.cells.set(HexaEngine.coordToString({ q: cell.q, r: cell.r, s: cell.s }), cell);
         }
       }
-      this.availablePieces = action.pieces;
+      const loadedPieces = action.pieces || [];
+      if (loadedPieces.length === 0 || loadedPieces.every((p: any) => p === null)) {
+        this.availablePieces = generatePieces(3, this.prng);
+      } else {
+        this.availablePieces = loadedPieces;
+      }
       this.piecesPlaced = action.piecesPlaced;
       this.gameOver = action.gameOver;
-      this.status = action.gameOver ? GameStatus.Finished : 'playing';
+      this.status = action.gameOver ? GameStatus.Finished : GameStatus.Playing;
+      if (!this.gameOver && this.checkGameOver()) {
+        this.gameOver = true;
+        this.status = GameStatus.Finished;
+      }
     }
   }
 
   canPlacePiece(piece: HexPiece, origin: HexCoord): boolean {
+    if (!piece || !piece.shape) return false;
     for (const offset of piece.shape) {
       const targetQ = origin.q + offset.q;
       const targetR = origin.r + offset.r;
@@ -143,9 +157,19 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     return true;
   }
 
+  swapPieces(): boolean {
+    if (this.gameOver || this.status !== GameStatus.Playing) return false;
+    this.availablePieces = generatePieces(3, this.prng);
+    if (this.checkGameOver(this.availablePieces)) {
+      this.gameOver = true;
+      this.status = GameStatus.Finished;
+    }
+    return true;
+  }
+
   private executePlacePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number): { linesCleared: number; isAllClear?: boolean } | null {
     if (this.gameOver || this.status !== GameStatus.Playing) return null;
-    if (!this.canPlacePiece(piece, origin)) return null;
+    if (!piece || !this.canPlacePiece(piece, origin)) return null;
 
     // Place the piece
     for (const offset of piece.shape) {
@@ -167,14 +191,19 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     // Check for cleared lines
     const cleared = this.checkAndClearLines();
 
-    // Replace the used piece with a new one
+    // 3-Piece Triad Lifecycle: Set placed piece slot to null.
+    // When all 3 slots are empty, deal a fresh triad of 3 pieces!
     const newPieces = [...this.availablePieces];
-    newPieces[pieceIndex] = generatePieces(1, this.prng)[0];
-    this.availablePieces = newPieces;
+    newPieces[pieceIndex] = null;
+    if (newPieces.every(p => p === null)) {
+      this.availablePieces = generatePieces(3, this.prng);
+    } else {
+      this.availablePieces = newPieces;
+    }
 
-    // Check Game Over
-    const currentPieces = this.availablePieces.filter(p => p !== null && p !== undefined);
-    if (this.checkGameOver(currentPieces)) {
+    // Check Game Over on remaining pieces in hand
+    const activePieces = this.availablePieces.filter((p): p is HexPiece => p !== null);
+    if (activePieces.length > 0 && this.checkGameOver(activePieces)) {
       this.gameOver = true;
       this.status = GameStatus.Finished;
     }
@@ -245,10 +274,11 @@ export class HexaEngine implements ILocalEngine<HexaState, HexaAction> {
     return res;
   }
 
-  private checkGameOver(availablePieces: HexPiece[] = this.availablePieces): boolean {
-    if (!availablePieces || availablePieces.length === 0) return false;
+  private checkGameOver(availablePieces: (HexPiece | null)[] = this.availablePieces): boolean {
+    const activePieces = (availablePieces || []).filter((p): p is HexPiece => p !== null && p !== undefined);
+    if (!activePieces || activePieces.length === 0) return false;
 
-    for (const piece of availablePieces) {
+    for (const piece of activePieces) {
       for (const cell of this.cells.values()) {
         if (this.canPlacePiece(piece, { q: cell.q, r: cell.r, s: cell.s })) {
           return false;

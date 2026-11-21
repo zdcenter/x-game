@@ -37,6 +37,7 @@ func GetPublicSettings(c fiber.Ctx) error {
 	result[service.KeyCoinsCostHint] = strconv.Itoa(cfg.CostHint)
 	result[service.KeyCoinsCostRevive] = strconv.Itoa(cfg.CostRevive)
 	result[service.KeyCoinsCostFreeze] = strconv.Itoa(cfg.CostFreeze)
+	result[service.KeyCoinsCostSwap] = strconv.Itoa(cfg.CostSwap)
 	result[service.KeyCoinsDailyCap] = strconv.Itoa(cfg.DailyCap)
 
 	for _, s := range settings {

@@ -21,7 +21,7 @@ export class HexaStore extends BaseGameStore {
   localCells = signal<HexCell[]>(Array.from(this.engine.cells.values()));
   localScore = signal<number>(0);
   combo = signal<number>(0);
-  availablePieces = signal<HexPiece[]>([]);
+  availablePieces = signal<(HexPiece | null)[]>([]);
   gameOver = signal<boolean>(false);
   bestScore = signal<number>(0);
   comboTrigger = signal<number>(0);
@@ -231,6 +231,23 @@ export class HexaStore extends BaseGameStore {
     return this.engine.canPlacePiece(piece, origin);
   }
 
+  swapPieces() {
+    if (this.gameOver() || this.status() !== GameStatus.Playing) return;
+    this.engine.handleAction({ type: HexaActionType.SwapPieces });
+    this.updateSignals();
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.saveSinglePlayerProgress();
+    } else {
+      this.ws.send({
+        action: C2SAction.Move,
+        score: this.localScore(),
+        piecesPlaced: this.engine.piecesPlaced,
+        finished: this.gameOver(),
+        cells: this.engine.getState().cells
+      });
+    }
+  }
+
   placePiece(piece: HexPiece, origin: HexCoord, pieceIndex: number) {
     if (this.gameOver() || this.status() !== GameStatus.Playing) return;
 
@@ -383,7 +400,7 @@ export class HexaStore extends BaseGameStore {
   }
 
   protected override restoreSinglePlayerSaveData(data: any): boolean {
-    if (!data.availablePieces || data.availablePieces.length === 0 || !data.availablePieces[0]) {
+    if (!data.availablePieces || !Array.isArray(data.availablePieces) || data.availablePieces.length === 0) {
       return false;
     }
     this.engine.handleAction({

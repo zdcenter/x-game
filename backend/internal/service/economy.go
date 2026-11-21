@@ -21,6 +21,7 @@ const (
 	DefaultCostHint        = 20
 	DefaultCostRevive      = 50
 	DefaultCostFreeze      = 100
+	DefaultCostSwap        = 20
 	DefaultDailyCap        = 80
 	DefaultRegisterBonus   = 0
 )
@@ -38,6 +39,7 @@ const (
 	KeyCoinsCostHint      = "coins.cost_hint"
 	KeyCoinsCostRevive    = "coins.cost_revive"
 	KeyCoinsCostFreeze    = "coins.cost_freeze"
+	KeyCoinsCostSwap      = "coins.cost_swap"
 	KeyCoinsDailyCap      = "coins.daily_cap"
 	KeyCoinsRegisterBonus = "coins.register_bonus"
 )
@@ -55,6 +57,7 @@ var AllEconomyKeys = []string{
 	KeyCoinsCostHint,
 	KeyCoinsCostRevive,
 	KeyCoinsCostFreeze,
+	KeyCoinsCostSwap,
 	KeyCoinsDailyCap,
 	KeyCoinsRegisterBonus,
 }
@@ -71,6 +74,7 @@ type EconomyConfig struct {
 	CostHint        int `json:"cost_hint"`
 	CostRevive      int `json:"cost_revive"`
 	CostFreeze      int `json:"cost_freeze"`
+	CostSwap        int `json:"cost_swap"`
 	DailyCap        int `json:"daily_cap"`
 	RegisterBonus   int `json:"register_bonus"`
 }
@@ -89,6 +93,7 @@ func GetEconomyConfig() EconomyConfig {
 		CostHint:        DefaultCostHint,
 		CostRevive:      DefaultCostRevive,
 		CostFreeze:      DefaultCostFreeze,
+		CostSwap:        DefaultCostSwap,
 		DailyCap:        DefaultDailyCap,
 		RegisterBonus:   DefaultRegisterBonus,
 	}
@@ -126,6 +131,8 @@ func GetEconomyConfig() EconomyConfig {
 			cfg.CostRevive = val
 		case KeyCoinsCostFreeze:
 			cfg.CostFreeze = val
+		case KeyCoinsCostSwap:
+			cfg.CostSwap = val
 		case KeyCoinsDailyCap:
 			cfg.DailyCap = val
 		case KeyCoinsRegisterBonus:
@@ -176,6 +183,8 @@ func GetActionCoinCost(action string) int {
 		return cfg.CostRevive
 	case "streak_freeze":
 		return cfg.CostFreeze
+	case "swap", "hexa_swap":
+		return cfg.CostSwap
 	default:
 		return 0
 	}
@@ -195,6 +204,7 @@ func SeedEconomySettings() {
 		KeyCoinsCostHint:      strconv.Itoa(DefaultCostHint),
 		KeyCoinsCostRevive:    strconv.Itoa(DefaultCostRevive),
 		KeyCoinsCostFreeze:    strconv.Itoa(DefaultCostFreeze),
+		KeyCoinsCostSwap:      strconv.Itoa(DefaultCostSwap),
 		KeyCoinsDailyCap:      strconv.Itoa(DefaultDailyCap),
 		KeyCoinsRegisterBonus: strconv.Itoa(DefaultRegisterBonus),
 	}

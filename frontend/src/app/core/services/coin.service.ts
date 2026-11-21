@@ -41,7 +41,7 @@ export class CoinService {
     return this.isAuthenticated() && this.coins() >= cost;
   }
 
-  consumeCoins(action: 'hint' | 'revive' | 'streak_freeze', originEvent?: MouseEvent): Observable<ConsumeCoinsResponse> {
+  consumeCoins(action: 'hint' | 'revive' | 'streak_freeze' | 'swap', originEvent?: MouseEvent): Observable<ConsumeCoinsResponse> {
     return this.http.post<ConsumeCoinsResponse>(`${this.apiUrl}/shop/consume`, { action }).pipe(
       tap({
         next: (res) => {
@@ -58,10 +58,12 @@ export class CoinService {
           const x = originEvent ? originEvent.clientX : window.innerWidth / 2;
           const y = originEvent ? originEvent.clientY - 30 : 120;
           const badgeText = action === 'hint'
-            ? '-20 🪙'
+            ? `-${res.consumed || 20} 🪙`
             : action === 'revive'
-            ? '-50 🪙'
-            : '-100 🪙';
+            ? `-${res.consumed || 50} 🪙`
+            : action === 'swap'
+            ? `-${res.consumed || 20} 🪙`
+            : `-${res.consumed || 100} 🪙`;
           this.floatingText.show(badgeText, x, y, { color: '#fbbf24', size: 'lg' });
         },
         error: (err) => {
