@@ -1,9 +1,13 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
 import { AudioService } from '../../../../core/services/audio.service';
+import { HapticService } from '../../../../core/services/haptic.service';
+import { I18nService } from '../../../../core/i18n/i18n.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';
+import { LIGHTSOUT_TUTORIAL_START_BOARD, LIGHTSOUT_TUTORIAL_STEPS, LightsoutTutorialStep } from './lightsout-tutorial';
 
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
@@ -12,11 +16,53 @@ export class LightsoutStore extends BaseGameStore {
   readonly gameId = GameId.LightsOut;
 
   private audio = inject(AudioService);
+  private haptic = inject(HapticService);
+  private i18n = inject(I18nService);
+  private toast = inject(ToastService);
   private resumeService = inject(ResumeGameService);
 
   private localEngine = signal<LocalLightsoutEngine | null>(null);
   private pkBoard = signal<{ board: boolean[][]; moves: number } | null>(null);
   private tick = signal(0);
+
+  // --- TUTORIAL SIGNALS ---
+  readonly isTutorialActive = signal(false);
+  readonly tutorialStep = signal(0);
+  readonly tutorialDismissed = signal(false);
+  readonly hasCompletedTutorial = signal(
+    typeof localStorage !== 'undefined' && localStorage.getItem('lightsout_tutorial_completed') === 'true'
+  );
+  private tutorialBoard = signal<boolean[][]>(LIGHTSOUT_TUTORIAL_START_BOARD.map(r => [...r]));
+
+  readonly currentTutorialStepInfo = computed<LightsoutTutorialStep | null>(() => {
+    if (!this.isTutorialActive()) return null;
+    const s = this.tutorialStep();
+    return LIGHTSOUT_TUTORIAL_STEPS[s] || null;
+  });
+
+  readonly currentTutorialBubbleReason = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.descKey)() || info.defaultDesc;
+  });
+
+  readonly currentTutorialBubbleAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    return this.i18n.t(info.actionKey)() || info.defaultAction;
+  });
+
+  readonly currentTutorialMicroAction = computed(() => {
+    if (!this.isTutorialActive()) return '';
+    const info = this.currentTutorialStepInfo();
+    if (!info) return '';
+    const microKey = info.microActionKey;
+    const defaultMicro = info.defaultMicroAction || '';
+    if (!microKey) return defaultMicro;
+    return this.i18n.t(microKey)() || defaultMicro;
+  });
 
   constructor() {
     super();
@@ -48,6 +94,9 @@ export class LightsoutStore extends BaseGameStore {
 
   readonly board = computed<boolean[][]>(() => {
     this.tick();
+    if (this.isTutorialActive()) {
+      return this.tutorialBoard().map(row => [...row]);
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       const b = this.localEngine()?.board || [];
       return b.map(row => [...row]);
@@ -78,6 +127,9 @@ export class LightsoutStore extends BaseGameStore {
 
   readonly moves = computed<number>(() => {
     this.tick();
+    if (this.isTutorialActive()) {
+      return this.tutorialStep();
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       return this.localEngine()?.moves || 0;
     }
@@ -128,7 +180,7 @@ export class LightsoutStore extends BaseGameStore {
     this.tick();
     const lit = this.litLights();
     const total = this.totalLights();
-    return this.targetMode() === 'on' ? Math.max(0, total - lit) : lit;
+    return this.targetMode() === 'on' || this.isTutorialActive() ? Math.max(0, total - lit) : lit;
   });
 
   readonly remainingLights = computed<number>(() => this.remainingGoalLights());
@@ -142,6 +194,7 @@ export class LightsoutStore extends BaseGameStore {
   });
 
   readonly canUndo = computed<boolean>(() => {
+    if (this.isTutorialActive()) return false;
     if (this.currentRoomMode() !== GameMode.Single) return false;
     this.tick();
     return (this.localEngine()?.moveHistory?.length || 0) > 0;
@@ -152,6 +205,9 @@ export class LightsoutStore extends BaseGameStore {
   readonly lastToggled = signal<{ row: number; col: number; ts: number } | null>(null);
 
   readonly size = computed<number>(() => {
+    if (this.isTutorialActive()) {
+      return 3;
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
       return this.localEngine()?.size || 5;
@@ -160,11 +216,17 @@ export class LightsoutStore extends BaseGameStore {
   });
 
   override readonly singlePlayerStatus = computed<GameStatusType | string>(() => {
+    if (this.isTutorialActive()) {
+      return this.tutorialStep() >= LIGHTSOUT_TUTORIAL_STEPS.length ? GameStatus.Finished : GameStatus.Playing;
+    }
     this.tick();
     return this.localEngine()?.status || 'waiting';
   });
 
   override readonly isFinished = computed<boolean>(() => {
+    if (this.isTutorialActive()) {
+      return this.tutorialStep() >= LIGHTSOUT_TUTORIAL_STEPS.length;
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       this.tick();
       return this.localEngine()?.finished || false;
@@ -223,6 +285,10 @@ export class LightsoutStore extends BaseGameStore {
   }
 
   override startGame() {
+    if (this.isTutorialActive()) {
+      this.restartTutorial();
+      return;
+    }
     if (this.currentRoomMode() === GameMode.Single) {
       const diff = this.currentDifficulty() as string;
       const engine = new LocalLightsoutEngine();
@@ -245,6 +311,7 @@ export class LightsoutStore extends BaseGameStore {
   }
 
   toggleTargetMode() {
+    if (this.isTutorialActive()) return;
     if (this.currentRoomMode() !== GameMode.Single) return;
     const next = this.targetMode() === 'on' ? 'off' : 'on';
     this.targetMode.set(next);
@@ -272,6 +339,43 @@ export class LightsoutStore extends BaseGameStore {
 
 
   toggle(row: number, col: number) {
+    if (this.isTutorialActive()) {
+      const info = this.currentTutorialStepInfo();
+      if (!info) return;
+
+      if (row === info.targetR && col === info.targetC) {
+        const b = this.tutorialBoard().map(r => [...r]);
+        const s = 3;
+        b[row][col] = !b[row][col];
+        if (row > 0) b[row - 1][col] = !b[row - 1][col];
+        if (row < s - 1) b[row + 1][col] = !b[row + 1][col];
+        if (col > 0) b[row][col - 1] = !b[row][col - 1];
+        if (col < s - 1) b[row][col + 1] = !b[row][col + 1];
+
+        this.tutorialBoard.set(b);
+        this.audio.playPuzzle('toggle');
+        this.haptic.vibrateLight();
+        this.lastToggled.set({ row, col, ts: Date.now() });
+
+        const nextStep = this.tutorialStep() + 1;
+        this.tutorialStep.set(nextStep);
+        if (nextStep >= LIGHTSOUT_TUTORIAL_STEPS.length) {
+          this.hasCompletedTutorial.set(true);
+          this.audio.playPuzzle('success');
+          this.haptic.vibrateSuccess();
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('lightsout_tutorial_completed', 'true');
+          }
+        }
+        this.tick.set(this.tick() + 1);
+      } else {
+        this.haptic.vibrateError();
+        const hintMsg = (info.microActionKey ? this.i18n.t(info.microActionKey)() : null) || info.defaultMicroAction || '请根据提示点击目标格子';
+        this.toast.show(hintMsg, 'info');
+      }
+      return;
+    }
+
     if (this.status() !== GameStatus.Playing || this.isFinished()) return;
 
     this.lastToggled.set({ row, col, ts: Date.now() });
@@ -383,5 +487,48 @@ export class LightsoutStore extends BaseGameStore {
     this.localEngine.set(engine);
     this.currentDifficulty.set(engine.difficulty);
     this.tick.set(this.tick() + 1);
+  }
+
+  // --- TUTORIAL ACTIONS ---
+  startTutorial() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(true);
+    this.tutorialStep.set(0);
+    this.tutorialBoard.set(LIGHTSOUT_TUTORIAL_START_BOARD.map(r => [...r]));
+    this.tick.set(this.tick() + 1);
+  }
+
+  restartTutorial() {
+    this.haptic.vibrateLight();
+    this.tutorialStep.set(0);
+    this.tutorialBoard.set(LIGHTSOUT_TUTORIAL_START_BOARD.map(r => [...r]));
+    this.tick.set(this.tick() + 1);
+  }
+
+  exitTutorial() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.startGame();
+  }
+
+  dismissTutorialPrompt() {
+    this.tutorialDismissed.set(true);
+  }
+
+  completeTutorialAndPlay() {
+    this.haptic.vibrateLight();
+    this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lightsout_tutorial_completed', 'true');
+    }
+    this.startGame();
+  }
+
+  isTutorialTarget(r: number, c: number): boolean {
+    if (!this.isTutorialActive()) return false;
+    const info = this.currentTutorialStepInfo();
+    if (!info) return false;
+    return info.targetR === r && info.targetC === c;
   }
 }

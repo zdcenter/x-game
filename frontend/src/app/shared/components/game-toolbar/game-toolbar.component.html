@@ -54,6 +54,26 @@
       </div>
     }
 
+    <!-- Tutorial -->
+    @if (showTutorial) {
+      <button class="flex-1 min-w-[50px] max-w-[100px] min-h-[46px] sm:min-h-[50px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 active:scale-95 text-[10px] sm:text-xs touch-manipulation select-none cursor-pointer relative group"
+              [class.ring-2]="isTutorialActive"
+              [class.ring-amber-500]="isTutorialActive"
+              (click)="tutorialClick.emit()"
+              [title]="i18n.t('tutorial.interactive.btn_tutorial')() || '教程'">
+        @if (!hasCompletedTutorial && !isTutorialActive) {
+          <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+          </span>
+        }
+        <span class="text-base sm:text-lg leading-none mb-0.5 group-hover:scale-110 transition-transform">🎓</span>
+        <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">
+          {{ i18n.t('tutorial.interactive.btn_tutorial')() || '教程' }}
+        </span>
+      </button>
+    }
+
     <!-- Next Level -->
     @if (showNext) {
       <button class="flex-1 min-w-[50px] max-w-[100px] min-h-[46px] sm:min-h-[50px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)] touch-manipulation select-none cursor-pointer"
@@ -115,6 +135,23 @@
     
     @if (showHint) {
       <app-hint-button [layout]="hintLayout" (hintApplied)="hintApplied.emit()"></app-hint-button>
+    }
+
+    @if (showTutorial) {
+      <button (click)="tutorialClick.emit()"
+              class="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-bold rounded-xl transition-all shadow-md active:scale-95 flex gap-2 items-center relative"
+              [class.ring-2]="isTutorialActive"
+              [class.ring-amber-500]="isTutorialActive"
+              title="{{ i18n.t('tutorial.interactive.btn_tutorial')() || '教程' }}">
+        @if (!hasCompletedTutorial && !isTutorialActive) {
+          <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+          </span>
+        }
+        <span class="text-lg">🎓</span>
+        {{ i18n.t('tutorial.interactive.btn_tutorial')() || '教程' }}
+      </button>
     }
 
     @if (showNext) {

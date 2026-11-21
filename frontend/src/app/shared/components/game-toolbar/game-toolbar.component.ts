@@ -26,6 +26,9 @@ export class GameToolbarComponent {
   @Input() showHint: boolean = true;
   @Input() showBack: boolean = false;
   @Input() showShare: boolean = false;
+  @Input() showTutorial: boolean = false;
+  @Input() isTutorialActive: boolean = false;
+  @Input() hasCompletedTutorial: boolean = false;
   
   @Input() gameId?: string;
   
@@ -42,6 +45,7 @@ export class GameToolbarComponent {
   @Output() undo = new EventEmitter<void>();
   @Output() hintApplied = new EventEmitter<void>();
   @Output() back = new EventEmitter<void>();
+  @Output() tutorialClick = new EventEmitter<void>();
 
   ngOnInit() {
     if (!this.gameId) {

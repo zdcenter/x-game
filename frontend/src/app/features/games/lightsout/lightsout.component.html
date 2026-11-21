@@ -1,6 +1,7 @@
 <app-game-layout
   [gameId]="'lightsout'"
   [store]="store"
+  [autoManageOverlays]="!isTutorialActive()"
   [immersive]="isHandheld()"
   [title]="i18n.t('lobby.lightsout')() || 'Lights Out'"
   [subtitle]="getSubtitle()"
@@ -156,6 +157,49 @@
         </div>
       }
 
+      <!-- Tutorial Prompt Banner (First Time Players) -->
+      @if (!hasCompletedTutorial() && !isTutorialActive() && store.currentRoomMode() === GameMode.Single && !tutorialDismissed()) {
+        <div class="w-full max-w-sm sm:max-w-md mx-auto mb-2 px-2 shrink-0">
+          <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-yellow-500/15 border border-amber-500/30 shadow-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-xl shrink-0 animate-bounce">🎓</span>
+              <div class="min-w-0">
+                <div class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-300 truncate">
+                  {{ i18n.t('tutorial.lightsout.prompt')() || '第一次玩点灯游戏？30秒互动教学带你秒懂解题技巧' }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+              <button (click)="startTutorial()" 
+                      class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500 text-white hover:bg-amber-600 active:scale-95 transition-all shadow-xs cursor-pointer">
+                {{ i18n.t('tutorial.interactive.btn_start')() || '立即体验' }}
+              </button>
+              <button (click)="dismissTutorialPrompt()" 
+                      class="p-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors cursor-pointer"
+                      title="{{ i18n.t('common.close')() || '关闭' }}">
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Interactive Tutorial Board (Instructions & Formula) -->
+      @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
+        <div class="w-full max-w-sm sm:max-w-md mx-auto mb-2 px-2 shrink-0">
+          <app-interactive-tutorial-board
+            [stepInfo]="stepInfo"
+            [currentStep]="tutorialStep()"
+            [totalSteps]="4"
+            [title]="i18n.t(stepInfo.titleKey)() || stepInfo.defaultTitle"
+            [reasonText]="currentTutorialBubbleReason()"
+            [actionText]="currentTutorialBubbleAction()"
+            [skipText]="i18n.t('tutorial.interactive.skip')() || '跳过教程'"
+            (skip)="exitTutorial()">
+          </app-interactive-tutorial-board>
+        </div>
+      }
+
       <!-- Main Board Stage -->
       <div class="relative flex-none flex items-center justify-center min-h-0 w-full py-2 sm:py-4 shrink-0 overflow-visible">
         
@@ -174,7 +218,9 @@
         </div>
 
         <!-- Clean Comfortable Board Card (Glare-Free, Eye-Friendly) -->
-        <div class="relative flex flex-col items-center justify-center bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl border border-[var(--color-border-card)] shadow-md p-2.5 sm:p-4 mx-auto overflow-hidden select-none z-10"
+        <div class="relative flex flex-col items-center justify-center bg-[var(--color-bg-card)] rounded-2xl sm:rounded-3xl border border-[var(--color-border-card)] shadow-md p-2.5 sm:p-4 mx-auto select-none z-10"
+             [class.overflow-visible]="isTutorialActive()"
+             [class.overflow-hidden]="!isTutorialActive()"
              [style.width]="boardSizePx()" [style.height]="boardSizePx()">
           
           <!-- Cross Shockwave Laser Beams -->
@@ -203,7 +249,7 @@
                   class="group relative w-full h-full rounded-xl sm:rounded-2xl transition-all duration-150 select-none cursor-pointer flex items-center justify-center p-1 sm:p-2 focus:outline-none"
                   [class.active:scale-95]="store.status() === GameStatus.Playing"
                   (click)="onCellClick(rIndex, cIndex)"
-                  [disabled]="store.status() !== GameStatus.Playing || store.isFinished()"
+                  [disabled]="!isTutorialActive() && (store.status() !== GameStatus.Playing || store.isFinished())"
                 >
                   @if (cell) {
                     <!-- === ON STATE: Warm Soothing Golden Amber Tile (No Glare, Comfortable) === -->
@@ -237,6 +283,16 @@
                   @if (hintCell()?.r === rIndex && hintCell()?.c === cIndex) {
                     <div class="absolute inset-0 rounded-xl sm:rounded-2xl ring-4 ring-amber-400 lo-halo-pulse shadow-md shadow-amber-400/40 z-20 pointer-events-none"></div>
                   }
+
+                  <!-- Tutorial Target Halo Pulse & Pointer -->
+                  @if (isTutorialActive() && isTutorialTarget(rIndex, cIndex)) {
+                    <div class="absolute inset-0 rounded-xl sm:rounded-2xl ring-4 ring-amber-400 lo-halo-pulse shadow-lg shadow-amber-400/50 z-30 pointer-events-none"></div>
+                    <app-interactive-tutorial-pointer
+                      [text]="currentTutorialMicroAction()"
+                      [direction]="rIndex === 0 ? 'up' : 'down'"
+                      [align]="cIndex === 0 ? 'left' : (cIndex === store.size() - 1 ? 'right' : 'center')">
+                    </app-interactive-tutorial-pointer>
+                  }
                 </button>
               }
             }
@@ -252,16 +308,30 @@
             [showPrev]="false"
             [showNext]="false"
             [showUndo]="true"
-            [disableUndo]="!store.canUndo()"
+            [disableUndo]="!store.canUndo() || isTutorialActive()"
             [showRestart]="true"
-            [showHint]="true"
+            [showHint]="!isTutorialActive()"
+            [showTutorial]="true"
+            [isTutorialActive]="isTutorialActive()"
+            [hasCompletedTutorial]="hasCompletedTutorial()"
+            (tutorialClick)="onTutorialClick()"
             hintLayout="sudoku"
             (undo)="undo()"
-            (restart)="store.startGame()"
+            (restart)="isTutorialActive() ? restartTutorial() : store.startGame()"
             (hintApplied)="applyHint()"
             class="w-full max-w-sm sm:max-w-md"
           ></app-game-toolbar>
         </div>
       }
     </div>
+
+  @if (isTutorialActive() && store.isFinished()) {
+    <app-interactive-tutorial-success
+      [title]="i18n.t('tutorial.lightsout.win_title')() || '🎉 恭喜！你已完全掌握点灯游戏的核心技巧！'"
+      [desc]="i18n.t('tutorial.lightsout.win_desc')() || '从十字翻转、边界效应到追光逐行推进，你已掌握点灯游戏的必胜心法。快去挑战更大棋盘与更高难度吧！'"
+      [playBtnText]="i18n.t('tutorial.lightsout.btn_play')() || '🌟 开始正式挑战 (简单 4x4)'"
+      (play)="completeTutorialAndPlay()"
+      (retry)="restartTutorial()">
+    </app-interactive-tutorial-success>
+  }
 </app-game-layout>

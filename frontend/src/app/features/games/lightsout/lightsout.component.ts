@@ -14,6 +14,9 @@ import { GameScoreCapsuleComponent } from '../../../shared/components/game-score
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
+import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
+import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
+import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
 
 @Component({
   selector: 'app-lightsout',
@@ -25,7 +28,10 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
     GameScoreCapsuleComponent,
     GameToolbarComponent,
     GameHandheldHeaderComponent,
-    GameStatusHudComponent
+    GameStatusHudComponent,
+    InteractiveTutorialBoardComponent,
+    InteractiveTutorialPointerComponent,
+    InteractiveTutorialSuccessComponent
   ],
   providers: [LightsoutStore],
   templateUrl: './lightsout.component.html',
@@ -67,6 +73,48 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   override store = inject(LightsoutStore);
 
   @ViewChild(GameLobbyPanelComponent) lobbyPanel?: GameLobbyPanelComponent;
+
+  // Tutorial delegates
+  readonly isTutorialActive = this.store.isTutorialActive;
+  readonly tutorialStep = this.store.tutorialStep;
+  readonly hasCompletedTutorial = this.store.hasCompletedTutorial;
+  readonly tutorialDismissed = this.store.tutorialDismissed;
+  readonly currentTutorialStepInfo = this.store.currentTutorialStepInfo;
+  readonly currentTutorialBubbleReason = this.store.currentTutorialBubbleReason;
+  readonly currentTutorialBubbleAction = this.store.currentTutorialBubbleAction;
+  readonly currentTutorialMicroAction = this.store.currentTutorialMicroAction;
+
+  startTutorial() {
+    this.store.startTutorial();
+  }
+
+  restartTutorial() {
+    this.store.restartTutorial();
+  }
+
+  exitTutorial() {
+    this.store.exitTutorial();
+  }
+
+  dismissTutorialPrompt() {
+    this.store.dismissTutorialPrompt();
+  }
+
+  completeTutorialAndPlay() {
+    this.store.completeTutorialAndPlay();
+  }
+
+  isTutorialTarget(r: number, c: number): boolean {
+    return this.store.isTutorialTarget(r, c);
+  }
+
+  onTutorialClick() {
+    if (this.isTutorialActive()) {
+      this.restartTutorial();
+    } else {
+      this.startTutorial();
+    }
+  }
 
   hintCell = signal<{r: number, c: number} | null>(null);
   keyboardCursor = signal<{ row: number; col: number }>({ row: 2, col: 2 });
@@ -171,6 +219,9 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   getSubtitle(): string {
+    if (this.isTutorialActive()) {
+      return '🎓 ' + (this.i18n.t('tutorial.interactive.btn_tutorial')() || '新手教程') + ' (3x3)';
+    }
     const base = this.getModeName() + ' - ' + this.getDifficultyName();
     if (this.store.currentRoomMode() === GameMode.Single) {
       const modeBadge = this.store.targetMode() === 'on'
@@ -352,6 +403,11 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
   }
 
   onCellClick(r: number, c: number) {
+    if (this.isTutorialActive()) {
+      this.keyboardCursor.set({ row: r, col: c });
+      this.store.toggle(r, c);
+      return;
+    }
     if (this.store.status() !== GameStatus.Playing || this.store.isSpectator()) {
       this.haptic.vibrateError();
       return;
