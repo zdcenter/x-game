@@ -22,9 +22,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
       <!-- 2. 中间自定义插槽 (如重开笑脸、主题切换、消行计数、连击等) -->
       <ng-content></ng-content>
 
-      <!-- 3. 个人最佳 (MY BEST / 个人最高 👑) -->
-      <div class="flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] min-w-[50px] xs:min-w-[58px] sm:min-w-[74px] shadow-2xs shrink-0"
-           [title]="(t('game.my_best')() || '个人最佳') + ': ' + (displayPersonalBest | number:'1.0-0')">
+      <!-- 3. 个人最佳 (MY BEST / 个人最高 👑 - 手机端点击可快速查看全网纪录) -->
+      <div class="flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] min-w-[46px] sm:min-w-[74px] shadow-2xs shrink-0 cursor-pointer active:scale-95 transition-all"
+           (click)="toggleHolderPopover($event)"
+           [title]="holderTooltip">
         <span class="text-[8px] sm:text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider leading-none flex items-center gap-0.5">
           <span class="text-[9px] sm:text-[11px]">👑</span>
           <span class="truncate">{{ myBestLabel || t('game.my_best')() || '个人' }}</span>
@@ -34,9 +35,9 @@ import { I18nService } from '../../../core/i18n/i18n.service';
         </span>
       </div>
 
-      <!-- 4. 全网最高纪录 (WORLD RECORD / 全网纪录 🏆) -->
+      <!-- 4. 全网最高纪录 (WORLD RECORD / 全网纪录 🏆) - 在平板/桌面展示，超窄手机折叠至个人最佳悬浮中以节约黄金空间 -->
       @if (showWorldRecord) {
-        <div class="relative group cursor-pointer shrink-0 wr-popover-container"
+        <div class="relative group cursor-pointer shrink-0 wr-popover-container hidden sm:block"
              (click)="toggleHolderPopover($event)"
              [title]="holderTooltip">
           <div class="flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg sm:rounded-xl bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-orange-500/15 hover:from-orange-500/25 hover:to-amber-500/20 border border-orange-500/35 min-w-[50px] xs:min-w-[58px] sm:min-w-[74px] shadow-2xs transition-all active:scale-95">

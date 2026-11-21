@@ -84,7 +84,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   // Responsive Board Size Calculation (standardized via boardSizePx utility)
   readonly boardSizePx = boardSizePx(
     this.windowSize,
-    { mobile: 185, tablet: 230, pc: 310 },
+    { mobile: 140, tablet: 180, pc: 310 },
     960,
     280,
     { mobile: 8, tablet: 24, pc: 48 },

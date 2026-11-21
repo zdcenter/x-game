@@ -38,43 +38,21 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()"
     >
-      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+      <div class="flex items-center justify-center gap-2 sm:gap-3 flex-1 min-w-0">
         @if (!pkRoomId()) {
           <!-- 连龙数 Streak -->
-          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-500 text-xs font-bold">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-500 text-xs sm:text-sm font-bold shadow-2xs">
             <span>🔥</span>
             <span class="font-black font-mono">{{ streak() }}</span>
+            <span class="text-[10px] opacity-75">连</span>
           </div>
 
           <!-- 龙身长度 Length -->
-          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-bold">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs sm:text-sm font-bold shadow-2xs">
             <span>🐉</span>
             <span class="font-black font-mono">{{ solitaireChain().length }}</span>
             <span class="text-[10px] opacity-75">节</span>
           </div>
-
-          <!-- 锦囊提示 -->
-          <button
-            type="button"
-            (click)="useHint()"
-            [disabled]="hintsRemaining() <= 0"
-            class="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-bold active:scale-95 transition-all cursor-pointer disabled:opacity-40"
-            [title]="'仙术锦囊 (剩余 ' + hintsRemaining() + ' 次)'"
-          >
-            <span>💡</span>
-            <span class="font-mono">{{ hintsRemaining() }}</span>
-          </button>
-
-          <!-- 乾坤重置 -->
-          <button
-            type="button"
-            (click)="useShuffle()"
-            [disabled]="shufflesRemaining() <= 0"
-            class="w-7 h-7 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-xs hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-40"
-            [title]="'乾坤重置 (剩余 ' + shufflesRemaining() + ' 次)'"
-          >
-            🔄
-          </button>
         } @else {
           <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">
             <span>🐉 神龙争夺 ({{ pkStore.myWins() }}:{{ pkStore.opponentWins() }})</span>

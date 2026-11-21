@@ -44,10 +44,7 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()"
     >
-      <div class="flex items-center justify-center gap-1.5 sm:gap-2">
-        <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] tracking-wide">
-          {{ i18n.t('game.gomoku')() || '五子棋' }}
-        </span>
+      <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
         @if (isSingleMode()) {
           <app-difficulty-selector
             [availableDifficulties]="difficulties"
@@ -60,15 +57,31 @@
             PK 对战
           </span>
         }
+
+        <!-- Live Turn & Move Capsule (移动端直观合并，彻底杜绝双层顶栏) -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-xs select-none">
+          <div class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center shrink-0 shadow-2xs"
+               [ngClass]="currentTurnColor === 1 ? 'stone-black' : 'stone-white'">
+          </div>
+          <span class="text-xs sm:text-sm font-black whitespace-nowrap"
+                [class.text-amber-500]="currentTurnColor === myColor"
+                [class.text-[var(--color-text-secondary)]]="currentTurnColor !== myColor">
+            {{ currentTurnColor === myColor ? (i18n.t('gomoku.turn.yours')() || '该你落子') : (isSingleMode() ? (i18n.t('gomoku.thinking')() || '思考中...') : (i18n.t('gomoku.turn.opponent')() || '对方回合')) }}
+          </span>
+          <span class="text-[10px] font-mono text-[var(--color-text-muted)] border-l border-[var(--color-border-card)] pl-1.5">
+            {{ moveCountText() }}
+          </span>
+        </div>
       </div>
     </app-game-handheld-header>
   }
           <!-- Main Game Area with Centered Responsive Layout -->
           <div class="flex-1 w-full mx-auto px-1 sm:px-4 flex flex-col items-center py-1 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden select-none">
             <div class="w-full flex flex-col items-center my-auto">
-              <!-- Battle Status HUD Bar (Matches board width, fixed height, zero jitter) -->
-              <div class="w-full flex items-center justify-between gap-1 sm:gap-2 px-2 sm:px-3 h-10 sm:h-12 mb-1.5 sm:mb-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-xs shrink-0"
-                   [style.max-width]="boardSizePx()">
+              <!-- Battle Status HUD Bar (PC 桌面端展示，手持端已无缝融入顶栏中) -->
+              @if (!isHandheld()) {
+                <div class="w-full flex items-center justify-between gap-1 sm:gap-2 px-2 sm:px-3 h-10 sm:h-12 mb-1.5 sm:mb-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-xs shrink-0"
+                     [style.max-width]="boardSizePx()">
               
                 <!-- Player 1: Black Stone -->
                 <div class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-xl border transition-colors duration-150 min-w-0"
@@ -114,6 +127,7 @@
                   </div>
                 </div>
               </div>
+            }
 
             <!-- Authentic Luxury Wood Board Area with Dynamic Viewport Size -->
             <div class="relative shrink-0 shadow-[0_24px_60px_rgba(0,0,0,0.5),0_6px_16px_rgba(0,0,0,0.25)] rounded-xl sm:rounded-3xl p-1.5 sm:p-4 md:p-6 transition-all duration-300 border-2 sm:border-4 border-[#8B5A2B]/40"

@@ -120,47 +120,37 @@
               <span>{{ i18n.t('tutorial.interactive.mode_badge')() || '新手速成教学' }}</span>
             </div>
           } @else {
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 md:gap-4 flex-1 min-w-0">
-              <!-- 🎯 难度规格抽屉选择器 (移动端紧凑微胶囊 + 底部自适应抽屉) -->
+            <div class="flex items-center justify-center gap-1 sm:gap-2.5 flex-1 min-w-0">
+              <!-- 🎯 难度规格抽屉选择器 (移动端紧凑微胶囊) -->
               <app-difficulty-selector
                 [availableDifficulties]="minesweeperDifficulties()"
                 [currentDifficulty]="currentDifficulty()"
                 (difficultyChange)="changeSingleDifficulty($event)">
               </app-difficulty-selector>
 
-              <!-- 经典三要素 HUD: 💣 + 😃 + ⏱️ -->
-              <div class="flex items-center gap-1.5 sm:gap-2.5">
-                <!-- 💣 剩余雷数 -->
-                <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                     [title]="i18n.t('game.pk.mines')() || '剩余雷数'">
-                  <span class="text-xs sm:text-sm opacity-80 select-none">💣</span>
-                  <span class="font-digital text-rose-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                    {{ store.remainingMines() | number:'3.0-0' }}
-                  </span>
-                </div>
+              <!-- 💣 剩余雷数 -->
+              <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
+                   [title]="i18n.t('game.pk.mines')() || '剩余雷数'">
+                <span class="text-xs opacity-80 select-none">💣</span>
+                <span class="font-digital text-rose-500 font-bold text-xs sm:text-base tracking-wider leading-none">
+                  {{ store.remainingMines() | number:'3.0-0' }}
+                </span>
+              </div>
 
-                <!-- 😃 经典笑脸重开 -->
-                <button (click)="changeSingleDifficulty(currentDifficulty())"
-                        class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
-                        [title]="i18n.t('minesweeper.restart')() || '重新开始'">
-                  {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
-                </button>
+              <!-- 😃 经典笑脸重开 -->
+              <button (click)="changeSingleDifficulty(currentDifficulty())"
+                      class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-base select-none cursor-pointer shrink-0"
+                      [title]="i18n.t('minesweeper.restart')() || '重新开始'">
+                {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
+              </button>
 
-                <!-- ⏱️ 计时器 -->
-                <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                     [title]="i18n.t('game.time')() || '耗时'">
-                  <span class="font-digital text-cyan-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                    {{ Math.min(999, elapsedSeconds()) | number:'3.0-0' }}
-                  </span>
-                  <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
-                </div>
-
-                <!-- 🏆/💡 冲榜资格徽章 -->
-                <app-game-status-hud
-                  [hintsUsed]="store.hintsUsed()"
-                  [showTimer]="false"
-                  [compact]="true">
-                </app-game-status-hud>
+              <!-- ⏱️ 计时器 -->
+              <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
+                   [title]="i18n.t('game.time')() || '耗时'">
+                <span class="font-digital text-cyan-500 font-bold text-xs sm:text-base tracking-wider leading-none">
+                  {{ Math.min(999, elapsedSeconds()) | number:'3.0-0' }}
+                </span>
+                <span class="text-[10px] sm:text-xs opacity-80 select-none">⏱️</span>
               </div>
             </div>
           }

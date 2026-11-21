@@ -42,13 +42,11 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()"
     >
-      <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+      <div class="flex items-center justify-center gap-2 sm:gap-3 w-full">
         <!-- 步数 -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ i18n.t('game.moves')() || '步数' }}
-          </span>
-          <span class="text-xs sm:text-base font-black text-cyan-500 font-mono leading-tight">
+        <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
+          <span class="text-xs">👟</span>
+          <span class="text-xs sm:text-sm font-black text-cyan-500 font-mono leading-none">
             {{ myMoves() }}
           </span>
         </div>
@@ -57,7 +55,7 @@
         <button
           type="button"
           (click)="playAgain()"
-          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
+          class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
           [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
         >
           {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}

@@ -43,49 +43,39 @@
       (rules)="showRules.set(true)"
       (pk)="navigateToPkArena()">
 
-      <!-- Center: [🎯 难度 ▾] + 🔄 步数 + 😃 重启 + ⏱️ 耗时 (中间舒展区) -->
+      <!-- Center: [🎯 难度 ▾] + 🔄 步数 + 😃 重启 + ⏱️ 耗时 (紧凑单行自适应) -->
       @if (currentRoomMode() === GameMode.Single) {
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 md:gap-4 flex-1 min-w-0">
-          <!-- 🎯 难度规格抽屉选择器 (移动端紧凑微胶囊 + 底部自适应抽屉) -->
+        <div class="flex items-center justify-center gap-1 sm:gap-2.5 flex-1 min-w-0">
+          <!-- 🎯 难度规格微胶囊选择器 -->
           <app-difficulty-selector
             [availableDifficulties]="difficulties"
             [currentDifficulty]="store.currentDifficulty()"
             (difficultyChange)="changeSingleDifficulty($event)">
           </app-difficulty-selector>
 
-          <!-- 经典三要素 HUD: 🔄 步数 + 😃 重启 + ⏱️ 耗时 -->
-          <div class="flex items-center gap-1.5 sm:gap-2.5">
-            <!-- 🔄 步数 -->
-            <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                 [title]="t('sliding.moves')() || '步数'">
-              <span class="text-xs sm:text-sm opacity-80 select-none">🔄</span>
-              <span class="font-digital text-rose-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
-              </span>
-            </div>
+          <!-- 🔄 步数 -->
+          <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
+               [title]="t('sliding.moves')() || '步数'">
+            <span class="text-xs sm:text-sm opacity-80 select-none">🔄</span>
+            <span class="font-digital text-rose-500 font-bold text-xs sm:text-base tracking-wider leading-none">
+              {{ store.myBoard()?.moves || 0 | number:'3.0-0' }}
+            </span>
+          </div>
 
-            <!-- 😃 经典笑脸重启 -->
-            <button (click)="store.startGame()"
-                    class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
-                    [title]="t('game.restart')() || '重新开始'">
-              {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-            </button>
+          <!-- 😃 经典笑脸重启 -->
+          <button (click)="store.startGame()"
+                  class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-base select-none cursor-pointer shrink-0"
+                  [title]="t('game.restart')() || '重新开始'">
+            {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+          </button>
 
-            <!-- ⏱️ 耗时 -->
-            <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-2 sm:px-3 py-0.5 sm:py-1 h-7 sm:h-9 justify-center shadow-2xs"
-                 [title]="t('game.time')() || '耗时'">
-              <span class="font-digital text-cyan-500 font-bold text-sm sm:text-lg tracking-wider leading-none">
-                {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
-              </span>
-              <span class="text-xs sm:text-sm opacity-80 select-none">⏱️</span>
-            </div>
-
-            <!-- 🏆/💡 冲榜资格徽章 -->
-            <app-game-status-hud
-              [hintsUsed]="store.hintsUsed()"
-              [showTimer]="false"
-              [compact]="true">
-            </app-game-status-hud>
+          <!-- ⏱️ 耗时 -->
+          <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
+               [title]="t('game.time')() || '耗时'">
+            <span class="font-digital text-cyan-500 font-bold text-xs sm:text-base tracking-wider leading-none">
+              {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
+            </span>
+            <span class="text-[10px] sm:text-xs opacity-80 select-none">⏱️</span>
           </div>
         </div>
       } @else {

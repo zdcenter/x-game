@@ -63,14 +63,14 @@ describe('LocalMinesweeperEngine', () => {
 
   it('handles tutorial board and win condition correctly', () => {
     engine.initTutorialBoard();
-    expect(engine.width).toBe(5);
-    expect(engine.height).toBe(5);
+    expect(engine.width).toBe(4);
+    expect(engine.height).toBe(4);
     expect(engine.mines).toBe(2);
 
-    // Total safe cells = 25 - 2 = 23
+    // Total safe cells = 16 - 2 = 14
     // Reveal all non-mine cells
-    for (let y = 0; y < 5; y++) {
-      for (let x = 0; x < 5; x++) {
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
         if (!(engine.cells[y][x] as any).isMine) {
           engine.handleAction({ type: MinesweeperActionType.Reveal, x, y });
         }
@@ -78,26 +78,25 @@ describe('LocalMinesweeperEngine', () => {
     }
 
     expect(engine.status).toBe(GameStatus.Finished);
-    expect(engine.revealedCnt).toBe(23);
+    expect(engine.revealedCnt).toBe(14);
   });
 
   it('performs Chording correctly when surrounding flags match cell neighbors', () => {
-    // Use tutorial board: mines at (1,1) and (3,2)
+    // Tutorial board: mines at (0,0) and (3,1)
     engine.initTutorialBoard();
-    // Reveal (0,0), neighbors = 1 (since mine is at 1,1)
-    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 0, y: 0 });
-    expect(engine.cells[0][0].state).toBe(CellState.Revealed);
-    expect(engine.cells[0][0].neighbors).toBe(1);
+    // Reveal (2,2): its only mine neighbor is (3,1), so neighbors = 1
+    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 2, y: 2 });
+    expect(engine.cells[2][2].state).toBe(CellState.Revealed);
+    expect(engine.cells[2][2].neighbors).toBe(1);
 
-    // Flag the mine at (1,1)
-    engine.handleAction({ type: MinesweeperActionType.Flag, x: 1, y: 1 });
-    expect(engine.cells[1][1].state).toBe(CellState.Flagged);
+    // Flag the mine at (3,1)
+    engine.handleAction({ type: MinesweeperActionType.Flag, x: 3, y: 1 });
+    expect(engine.cells[1][3].state).toBe(CellState.Flagged);
 
-    // Now neighbors count around (0,0) is 1, and flagged count is 1
-    // Clicking/chording on (0,0) should sweep (1,0) and (0,1)
-    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 0, y: 0 });
-    expect(engine.cells[0][1].state).toBe(CellState.Revealed);
-    expect(engine.cells[1][0].state).toBe(CellState.Revealed);
+    // Now neighbors count around (2,2) is 1, and flagged count is 1
+    // Clicking/chording on (2,2) should sweep remaining hidden neighbors like (3,2)
+    engine.handleAction({ type: MinesweeperActionType.Reveal, x: 2, y: 2 });
+    expect(engine.cells[2][3].state).toBe(CellState.Revealed);
   });
 
   it('generates high quality solve replay for any difficulty', () => {

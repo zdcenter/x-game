@@ -48,24 +48,24 @@
           <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
         </div>
       } @else {
-        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
+        <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
           @if (store.currentRoomMode() === GameMode.Single) {
             <!-- 关卡编号 -->
             <button
               type="button"
               (click)="goToLobby()"
-              class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-500 active:scale-95 transition-all cursor-pointer shrink-0"
+              class="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-500 active:scale-95 transition-all cursor-pointer shrink-0"
               [title]="i18n.t('lobby.select_level')() || '选择关卡'"
             >
-              <span class="text-xs sm:text-sm">#</span>
-              <span class="text-xs sm:text-base font-black font-mono leading-tight">
+              <span class="text-xs">#</span>
+              <span class="text-xs sm:text-sm font-black font-mono leading-tight">
                 {{ store.localLevelIndex() + 1 }}
               </span>
             </button>
 
             <!-- 目标指示 24 -->
-            <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono font-black text-xs sm:text-sm">
-              <span>🎯</span>
+            <div class="flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-mono font-black text-xs sm:text-sm shadow-2xs shrink-0">
+              <span class="text-xs">🎯</span>
               <span>24</span>
             </div>
 
@@ -73,18 +73,18 @@
             <button
               type="button"
               (click)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
+              class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs shrink-0"
               [title]="i18n.t('game.restart')() || '重新开始'"
             >
               {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
             </button>
 
             <!-- 耗时 -->
-            <div class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)]">
-              <span class="text-xs">⏱️</span>
-              <span class="text-xs sm:text-sm font-mono font-bold text-[var(--color-text-main)]">
+            <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">
+              <span class="text-[10px] sm:text-xs font-mono font-bold text-[var(--color-text-main)]">
                 {{ store.timeSpent() * 1000 | date:'mm:ss' }}
               </span>
+              <span class="text-[10px] opacity-75">⏱️</span>
             </div>
           } @else {
             <div class="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-500 font-bold text-xs sm:text-sm">

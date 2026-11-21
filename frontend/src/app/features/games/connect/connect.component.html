@@ -47,71 +47,48 @@
           <span>{{ i18n.t('lobby.select_level')() || '关卡选择' }}</span>
         </div>
       } @else {
-        <div class="flex items-center justify-center gap-1.5 sm:gap-3 w-full">
-        <!-- 关卡 -->
-        <button
-          type="button"
-          (click)="goBackToLobby()"
-          class="flex items-center gap-1 px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 active:scale-95 transition-all cursor-pointer shrink-0"
-          [title]="i18n.t('lobby.select_level')() || '选择关卡'"
-        >
-          <span class="text-xs sm:text-sm">#</span>
-          <span class="text-xs sm:text-base font-black font-mono leading-tight">
-            {{ store.currentLevelNum() }}
-          </span>
-        </button>
+        <div class="flex items-center justify-center gap-1.5 sm:gap-2.5 flex-1 min-w-0">
+          <!-- 关卡号 (点击可回选关) -->
+          <button
+            type="button"
+            (click)="goBackToLobby()"
+            class="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 active:scale-95 transition-all cursor-pointer shrink-0"
+            [title]="i18n.t('lobby.select_level')() || '选择关卡'"
+          >
+            <span class="text-xs">#</span>
+            <span class="text-xs sm:text-sm font-black font-mono leading-tight">
+              {{ store.currentLevelNum() }}
+            </span>
+          </button>
 
-        <!-- 连线配对 -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ i18n.t('game.flows')() || '连线' }}
-          </span>
-          <span class="text-xs sm:text-base font-black font-mono leading-tight"
-                [class.text-emerald-500]="store.connectedFlows() === store.totalFlows()"
-                [class.text-cyan-500]="store.connectedFlows() !== store.totalFlows()">
-            {{ store.connectedFlows() }}/{{ store.totalFlows() }}
-          </span>
+          <!-- 连线配对进度 -->
+          <div class="flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">
+            <span class="text-xs opacity-75">🔗</span>
+            <span class="text-xs sm:text-sm font-black font-mono leading-tight"
+                  [class.text-emerald-500]="store.connectedFlows() === store.totalFlows()"
+                  [class.text-cyan-500]="store.connectedFlows() !== store.totalFlows()">
+              {{ store.connectedFlows() }}/{{ store.totalFlows() }}
+            </span>
+          </div>
+
+          <!-- 笑脸重启 -->
+          <button
+            type="button"
+            (click)="onRestart()"
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
+            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+          >
+            {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}
+          </button>
+
+          <!-- 用时计时 -->
+          <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">
+            <span class="text-[10px] sm:text-xs text-blue-400 font-mono font-bold leading-tight">
+              {{ formatTime(store.timeSpent()) }}
+            </span>
+            <span class="text-[10px] opacity-75 select-none">⏱️</span>
+          </div>
         </div>
-
-        <!-- 覆盖率 -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ i18n.t('game.coverage')() || '覆盖率' }}
-          </span>
-          <span class="text-xs sm:text-base font-black font-mono leading-tight"
-                [class.text-emerald-500]="store.coveragePercent() === 100"
-                [class.text-amber-500]="store.coveragePercent() !== 100">
-            {{ store.coveragePercent() }}%
-          </span>
-        </div>
-
-        <!-- 笑脸重启 -->
-        <button
-          type="button"
-          (click)="onRestart()"
-          class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-sm active:scale-95 transition-all cursor-pointer shrink-0"
-          [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
-        >
-          {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}
-        </button>
-
-        <!-- 计时 -->
-        <div class="flex flex-col items-center justify-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg bg-[var(--color-bg-sub)]/80 border border-[var(--color-border-card)] min-w-[50px] sm:min-w-[65px]">
-          <span class="text-[9px] sm:text-[10px] font-bold text-[var(--color-text-sub)] uppercase tracking-wider leading-none">
-            {{ i18n.t('game.time')() || '用时' }}
-          </span>
-          <span class="text-xs sm:text-base font-black text-blue-400 font-mono leading-tight">
-            {{ formatTime(store.timeSpent()) }}
-          </span>
-        </div>
-
-        <!-- 🏆/💡 冲榜资格徽章 -->
-        <app-game-status-hud
-          [hintsUsed]="store.hintsUsed()"
-          [showTimer]="false"
-          [compact]="true">
-        </app-game-status-hud>
-      </div>
       }
     </app-game-handheld-header>
   }

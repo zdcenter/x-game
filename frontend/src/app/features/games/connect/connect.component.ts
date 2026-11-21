@@ -20,7 +20,6 @@ import { PkPlayerStats } from "../../../shared/components/game-pk-hud/game-pk-hu
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
-import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 
 @Component({
   selector: 'app-connect',
@@ -32,8 +31,7 @@ import { GameStatusHudComponent } from '../../../shared/components/game-status-h
     GameLayoutComponent,
     GamePkHudComponent,
     GameToolbarComponent,
-    GameHandheldHeaderComponent,
-    GameStatusHudComponent
+    GameHandheldHeaderComponent
   ],
   providers: [ConnectStore],
   changeDetection: ChangeDetectionStrategy.OnPush,

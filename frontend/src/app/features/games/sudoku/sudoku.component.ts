@@ -26,7 +26,6 @@ import { GameLayoutComponent } from '../../../shared/components/game-layout/game
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
-import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
 import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
 
@@ -44,7 +43,6 @@ import { InteractiveTutorialSuccessComponent } from '../../../shared/components/
     GameLayoutComponent,
     GameHandheldHeaderComponent,
     DifficultySelectorComponent,
-    GameStatusHudComponent,
     InteractiveTutorialBoardComponent,
     InteractiveTutorialSuccessComponent
   ],

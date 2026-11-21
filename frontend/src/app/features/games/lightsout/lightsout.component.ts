@@ -13,7 +13,6 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
-import { GameStatusHudComponent } from '../../../shared/components/game-status-hud/game-status-hud.component';
 import { InteractiveTutorialBoardComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-board.component';
 import { InteractiveTutorialPointerComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-pointer.component';
 import { InteractiveTutorialSuccessComponent } from '../../../shared/components/interactive-tutorial/interactive-tutorial-success.component';
@@ -28,7 +27,6 @@ import { InteractiveTutorialSuccessComponent } from '../../../shared/components/
     GameScoreCapsuleComponent,
     GameToolbarComponent,
     GameHandheldHeaderComponent,
-    GameStatusHudComponent,
     InteractiveTutorialBoardComponent,
     InteractiveTutorialPointerComponent,
     InteractiveTutorialSuccessComponent
