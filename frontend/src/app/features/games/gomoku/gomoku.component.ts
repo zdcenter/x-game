@@ -185,6 +185,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   currentDifficulty = signal<string>(GameDifficulty.Medium);
   roomId = signal<string>('');
   hostId = signal<string>('');
+  private hasInitializedRoom = false;
 
   get mappedPlayers() {
     return this.store.playersList();
@@ -199,6 +200,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
 
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
     if (joinInfo) {
+      this.hasInitializedRoom = true;
       if (joinInfo.isCreate) {
         this.handleCreateRoom(joinInfo);
       } else {
@@ -206,19 +208,17 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
       }
     } else {
       this.route.queryParams.subscribe(params => {
-        if (this.roomId() && this.currentRoomMode() !== GameMode.Single) {
-          return;
-        }
         const mode = params['mode'] || GameMode.Single;
         const diff = params['difficulty'] || getSavedDifficulty('gomoku', 'medium');
         const roomId = params['room'] || (mode === GameMode.Single ? '' : `gomoku-${Date.now()}`);
         const host = params['host'] || roomId;
         
         // Prevent re-joining if we already are in this room
-        if (this.roomId() === roomId && this.currentRoomMode() === mode) {
+        if (this.hasInitializedRoom && this.roomId() === roomId && this.currentRoomMode() === mode && this.currentDifficulty() === diff) {
           return;
         }
 
+        this.hasInitializedRoom = true;
         this.joinRoom(roomId, mode, diff, host);
         if (mode === GameMode.Single) {
           this.checkAndPromptResumeSession('gomoku');
