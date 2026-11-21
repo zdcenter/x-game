@@ -81,7 +81,7 @@ import { JuiceService } from '../../../core/services/juice.service';
   }
 
   <!-- Real-time PK Battle Reconnecting Pill -->
-  @if (wsService.isReconnecting() && effectiveRoomId()) {
+  @if (wsService.isReconnecting() && effectiveRoomId() && effectiveRoomMode() !== GameMode.Single) {
     <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs sm:text-sm shadow-2xl backdrop-blur-md animate-bounce pointer-events-auto border border-amber-300/40">
       <span class="animate-spin text-sm">🔄</span>
       <span>{{ i18n.t('game.reconnecting_notice')() || '网络波动，正在恢复对决连接...' }}</span>
@@ -346,7 +346,7 @@ import { JuiceService } from '../../../core/services/juice.service';
            [class.max-h-full]="isImmersiveEffective()"
            [class.overflow-hidden]="isImmersiveEffective()">
         <!-- Guest Playing in PK Room Badge (Unranked play) -->
-        @if (effectiveRoomId() && !authStore.isAuthenticated()) {
+        @if (effectiveRoomId() && effectiveRoomMode() !== GameMode.Single && !authStore.isAuthenticated()) {
           <div class="mb-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-bold flex items-center gap-1.5 shadow-sm animate-fade-in">
             <span>👀</span>
             <span>{{ i18n.t('pk.guest_badge')() }}</span>
@@ -498,7 +498,7 @@ import { JuiceService } from '../../../core/services/juice.service';
         }
 
         <!-- Emoji Broadcast Bar (When inside multiplayer room) -->
-        @if (effectiveRoomId()) {
+        @if (effectiveRoomId() && effectiveRoomMode() !== GameMode.Single) {
           <div class="w-full flex justify-center gap-2 mt-2 sm:mt-3 mb-3 sm:mb-2 animate-fade-in shrink-0 pb-[env(safe-area-inset-bottom,0px)]">
             @for (em of ['👏', '🎉', '😡', '😭', '⏱️', '💡']; track em) {
               <button (click)="sendEmoji(em)" class="w-9 h-9 sm:w-11 sm:h-11 bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-full text-lg sm:text-xl flex items-center justify-center hover:scale-110 hover:border-amber-500/50 transition-all shadow-md active:scale-95" [title]="i18n.t('game.send_emoji')()">

@@ -83,7 +83,7 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   // Responsive Board Size Calculation (standardized via boardSizePx utility)
   readonly boardSizePx = boardSizePx(
     this.windowSize,
-    { mobile: 145, tablet: 175, pc: 200 },
+    { mobile: 180, tablet: 190, pc: 210 },
     960,
     300,
     { mobile: 8, tablet: 24, pc: 48 },
@@ -206,12 +206,12 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
       }
     } else {
       this.route.queryParams.subscribe(params => {
-        if (this.roomId()) {
+        if (this.roomId() && this.currentRoomMode() !== GameMode.Single) {
           return;
         }
         const mode = params['mode'] || GameMode.Single;
         const diff = params['difficulty'] || getSavedDifficulty('gomoku', 'medium');
-        const roomId = params['room'] || `gomoku-${Date.now()}`;
+        const roomId = params['room'] || (mode === GameMode.Single ? '' : `gomoku-${Date.now()}`);
         const host = params['host'] || roomId;
         
         // Prevent re-joining if we already are in this room
@@ -245,14 +245,16 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
     isSpectator: boolean = false,
     action?: string
   ) {
-    if (!roomId) return;
+    if (!roomId && mode !== GameMode.Single) return;
     this.currentRoomMode.set(mode);
     this.currentDifficulty.set(difficulty);
     this.roomId.set(roomId);
     this.hostId.set(host);
 
-    const finalAction = action || (isSpectator ? 'spectate' : 'join');
-    this.wsService.setPendingAction(finalAction);
+    if (mode !== GameMode.Single) {
+      const finalAction = action || (isSpectator ? 'spectate' : 'join');
+      this.wsService.setPendingAction(finalAction);
+    }
     this.store.joinRoom(roomId, mode, difficulty, host, target, password, bounty, isSpectator);
     
     if (mode !== GameMode.Single && !isSpectator) {
