@@ -504,6 +504,16 @@ export class IdiomComponent extends BaseGameComponent implements OnInit, OnDestr
     this.inspectedIdiom.set(item);
   }
 
+  speakIdiom(text: string) {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.85;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
   scrollChainToEnd() {
     if (this.chainScrollContainer?.nativeElement) {
       const el = this.chainScrollContainer.nativeElement;

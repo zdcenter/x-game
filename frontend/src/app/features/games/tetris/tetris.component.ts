@@ -373,6 +373,7 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
 
   onTouchMove(e: TouchEvent) {
     if (this.store.status() !== GameStatus.Playing) return;
+    if (e.cancelable) e.preventDefault();
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
 

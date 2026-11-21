@@ -1,12 +1,13 @@
 import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { getLiquidTheme, LiquidColorTheme } from '../../water-colors.util';
+import { getLiquidTheme, getLiquidSymbol, LiquidColorTheme } from '../../water-colors.util';
 
 export interface LiquidLayerItem {
   color: string;
   heightPercent: number;
   isHidden: boolean;
   theme: LiquidColorTheme;
+  symbol: string;
 }
 
 @Component({
@@ -60,9 +61,13 @@ export interface LiquidLayerItem {
               <div class="absolute top-0 inset-x-0 h-[1px] bg-black/20 dark:bg-black/35 pointer-events-none"></div>
             }
 
-            <!-- Mystery Question Mark (Blind Mode) -->
+            <!-- Mystery Question Mark (Blind Mode) / Accessibility Symbol -->
             @if (liquid.isHidden) {
               <div class="text-slate-500/60 dark:text-slate-400/60 font-black text-lg select-none drop-shadow-xs">?</div>
+            } @else if (showSymbols && liquid.symbol) {
+              <div class="text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] text-xs sm:text-sm font-black select-none pointer-events-none transform transition-transform animate-scale-in">
+                {{ liquid.symbol }}
+              </div>
             }
           </div>
         }
@@ -110,6 +115,7 @@ export class TubeComponent implements OnChanges {
   @Input() selected: boolean = false;
   @Input() isBlindMode: boolean = false;
   @Input() completed: boolean = false;
+  @Input() showSymbols: boolean = false;
   
   @Output() tubeClick = new EventEmitter<void>();
 
@@ -144,7 +150,8 @@ export class TubeComponent implements OnChanges {
           color: currentColor,
           heightPercent: currentCount * blockHeight,
           isHidden: false,
-          theme: getLiquidTheme(currentColor)
+          theme: getLiquidTheme(currentColor),
+          symbol: getLiquidSymbol(currentColor)
         });
         currentColor = reversed[i];
         currentCount = 1;
@@ -154,7 +161,8 @@ export class TubeComponent implements OnChanges {
       color: currentColor,
       heightPercent: currentCount * blockHeight,
       isHidden: false,
-      theme: getLiquidTheme(currentColor)
+      theme: getLiquidTheme(currentColor),
+      symbol: getLiquidSymbol(currentColor)
     });
 
     // In blind mode, all layers except the top contiguous block are hidden

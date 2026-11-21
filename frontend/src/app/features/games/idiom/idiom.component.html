@@ -472,6 +472,13 @@
       <div class="flex items-center justify-between border-b border-[var(--color-border-card)] pb-3">
         <div class="flex items-center gap-2">
           <span class="text-2xl font-black text-[var(--color-text-main)]">{{ item.w }}</span>
+          <button (click)="speakIdiom(item.w)"
+                  type="button"
+                  class="p-1 px-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1 font-bold"
+                  title="朗读成语发音">
+            <span>🔊</span>
+            <span class="text-[11px]">发音</span>
+          </button>
           <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-500">
             {{ item.diff === 'easy' ? '常用' : item.diff === 'medium' ? '进阶' : '精通' }}
           </span>

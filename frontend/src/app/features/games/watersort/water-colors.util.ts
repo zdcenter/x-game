@@ -104,3 +104,28 @@ export function getLiquidTheme(colorName: string): LiquidColorTheme {
     surface: 'rgba(255, 255, 255, 0.8)'
   };
 }
+
+/**
+ * Unique distinguishable symbols for color-blind accessibility mode
+ */
+export const LIQUID_SYMBOLS: Record<string, string> = {
+  red: '❤️',
+  blue: '💧',
+  green: '🍀',
+  yellow: '⭐',
+  purple: '🍇',
+  orange: '🍊',
+  cyan: '❄️',
+  pink: '🌸',
+  brown: '🌰',
+  gray: '🔘',
+  lime: '🍋',
+  teal: '💎',
+  navy: '🌙',
+  magenta: '🌺'
+};
+
+export function getLiquidSymbol(colorName: string): string {
+  const key = (colorName || '').toLowerCase().trim();
+  return LIQUID_SYMBOLS[key] || '●';
+}

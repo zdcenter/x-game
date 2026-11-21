@@ -417,6 +417,7 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
   onTouchMove(e: TouchEvent) {
     if (this.store.status() !== GameStatus.Playing) return;
+    if (e.cancelable) e.preventDefault();
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
 

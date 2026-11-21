@@ -153,6 +153,16 @@ export class WatersortComponent extends BaseGameComponent implements OnInit, OnD
   isDifficultyModalOpen = signal(false);
   selectedDifficulty = signal<string>(GameDifficulty.Easy);
   isBlindMode = signal(false);
+  showSymbols = signal<boolean>(typeof localStorage !== 'undefined' && localStorage.getItem('watersort_show_symbols') === 'true');
+
+  toggleShowSymbols() {
+    const next = !this.showSymbols();
+    this.showSymbols.set(next);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('watersort_show_symbols', String(next));
+    }
+    this.haptic.vibrateLight();
+  }
   predefinedDifficulties = [
     { id: 'easy', labelKey: 'game.diff_watersort_easy', desc: '7 Tubes (5 Colors)' },
     { id: GameDifficulty.Medium, labelKey: 'game.diff_watersort_medium', desc: '11 Tubes (9 Colors)' },
