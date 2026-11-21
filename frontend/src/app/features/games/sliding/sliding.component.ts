@@ -54,17 +54,21 @@ export class SlidingComponent extends BaseGameComponent {
     const isPk = this.currentRoomMode() !== GameMode.Single;
     const isZen = this.zenService.isZenMode() || (typeof document !== 'undefined' && !!document?.body?.classList?.contains?.('zen-mode-active'));
 
+    // Accurate vertical chrome heights:
+    // mobile  = handheld-header (~48px) + toolbar (~56px) + board padding/margins (~80px) = ~185px
+    // tablet  = game-header (~60px) + cockpit/pedestal padding (~36px) + HUD (~60px) + toolbar (~60px) + gaps = ~230px
+    // desktop = navbar (64px) + game-header (60px) + pedestal padding (20px) + classic HUD (~60px) + toolbar (~60px) + gaps (~40px) = ~310px
     const chromeH = isZen
       ? Math.min(vw < 640 ? 120 : 90, vh * 0.15)
       : (isPk
-          ? (vw < 640 ? 230 : vw < 1024 ? 260 : 280)
-          : (vw < 640 ? 145 : vw < 1024 ? 180 : 200));
+          ? (vw < 640 ? 250 : vw < 1024 ? 275 : 310)
+          : (vw < 640 ? 185 : vw < 1024 ? 230 : 310));
     const availH = Math.max(260, vh - chromeH);
 
     const padW = vw < 640 ? 12 : vw < 1024 ? 32 : (isZen ? 40 : 64);
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
-    const maxDim = vw < 640 ? 500 : (vw < 1024 ? 740 : (isZen ? 960 : 780));
+    const maxDim = vw < 640 ? 480 : (vw < 1024 ? 640 : (isZen ? 960 : 660));
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
