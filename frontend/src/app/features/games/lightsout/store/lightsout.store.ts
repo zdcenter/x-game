@@ -8,6 +8,7 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { LocalLightsoutEngine, LightsoutActionType } from './lightsout-engine';
 import { LIGHTSOUT_TUTORIAL_START_BOARD, LIGHTSOUT_TUTORIAL_STEPS, LightsoutTutorialStep } from './lightsout-tutorial';
+import { isTutorialCompleted, markTutorialCompleted } from '../../../../core/utils/tutorial.util';
 
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
 
@@ -28,10 +29,8 @@ export class LightsoutStore extends BaseGameStore {
   // --- TUTORIAL SIGNALS ---
   readonly isTutorialActive = signal(false);
   readonly tutorialStep = signal(0);
-  readonly tutorialDismissed = signal(false);
-  readonly hasCompletedTutorial = signal(
-    typeof localStorage !== 'undefined' && localStorage.getItem('lightsout_tutorial_completed') === 'true'
-  );
+  readonly tutorialDismissed = signal(isTutorialCompleted('lightsout'));
+  readonly hasCompletedTutorial = signal(isTutorialCompleted('lightsout'));
   private tutorialBoard = signal<boolean[][]>(LIGHTSOUT_TUTORIAL_START_BOARD.map(r => [...r]));
 
   readonly currentTutorialStepInfo = computed<LightsoutTutorialStep | null>(() => {
@@ -363,9 +362,7 @@ export class LightsoutStore extends BaseGameStore {
           this.hasCompletedTutorial.set(true);
           this.audio.playPuzzle('success');
           this.haptic.vibrateSuccess();
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('lightsout_tutorial_completed', 'true');
-          }
+          markTutorialCompleted('lightsout');
         }
         this.tick.set(this.tick() + 1);
       } else {
@@ -508,20 +505,21 @@ export class LightsoutStore extends BaseGameStore {
   exitTutorial() {
     this.haptic.vibrateLight();
     this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('lightsout');
     this.startGame();
   }
 
   dismissTutorialPrompt() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('lightsout');
   }
 
   completeTutorialAndPlay() {
     this.haptic.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lightsout_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('lightsout');
     this.startGame();
   }
 

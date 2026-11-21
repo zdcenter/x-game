@@ -1,5 +1,6 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { isTutorialCompleted } from '../../../core/utils/tutorial.util';
 import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, untracked, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from "@angular/router";
@@ -197,7 +198,10 @@ export class SudokuComponent extends BaseGameComponent implements OnInit, OnDest
       }
     } else {
       // Check for unfinished single player session
-      this.checkAndPromptResumeSession('sudoku');
+      const hasResume = this.checkAndPromptResumeSession('sudoku');
+      if (!hasResume && !requestedDiff && !isTutorialCompleted('sudoku')) {
+        this.startTutorial();
+      }
     }
   }
 

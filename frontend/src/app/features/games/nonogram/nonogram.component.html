@@ -170,29 +170,6 @@
     <div class="min-w-fit flex flex-col items-center pt-0.5 sm:pt-1"
          [class.my-auto]="!isBoardOverflowing() && zoomLevel() <= 1.0">
 
-      <!-- 🎓 First-time Tutorial Invitation Capsule (Clean & Premium) -->
-      @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && store.currentRoomMode() === GameMode.Single) {
-        <div class="w-full max-w-[520px] mb-2 px-3.5 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-500/30 flex items-center justify-between gap-2 shadow-xs">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="text-base sm:text-lg shrink-0">🎓</span>
-            <span class="text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 truncate">
-              {{ t('tutorial.interactive.prompt')() || '第一次玩数织？30秒互动教程带你轻松玩懂' }}
-            </span>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button (click)="startTutorial()" 
-                    class="px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
-              {{ t('tutorial.interactive.start')() || '开始教学' }}
-            </button>
-            <button (click)="dismissTutorialCapsule()" 
-                    class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer text-xs"
-                    title="关闭">
-              ✕
-            </button>
-          </div>
-        </div>
-      }
-
       <!-- 🎓 Plan A: Reusable Top Guidance Board -->
       @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
         <app-interactive-tutorial-board

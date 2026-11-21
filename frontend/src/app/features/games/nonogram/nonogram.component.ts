@@ -5,6 +5,7 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { GameStatus, GameMode, GameDifficulty } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty, isBrowser } from '../../../core/utils/browser.util';
+import { isTutorialCompleted, markTutorialCompleted } from '../../../core/utils/tutorial.util';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameId } from '../../../core/models/game.model';
@@ -290,6 +291,8 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.tutorialStep.set(0);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('nonogram');
     this.store.startNewSingleGame(this.store.currentDifficulty() as string);
   }
 
@@ -311,14 +314,13 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (isBrowser()) {
-      localStorage.setItem('nonogram_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('nonogram');
     this.store.startNewSingleGame('easy');
   }
 
   dismissTutorialCapsule() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('nonogram');
   }
 
   checkTutorialStepProgress() {
@@ -387,7 +389,7 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
   override ngOnInit() {
     super.ngOnInit();
     if (isBrowser()) {
-      const completed = localStorage.getItem('nonogram_tutorial_completed') === 'true';
+      const completed = isTutorialCompleted('nonogram');
       this.hasCompletedTutorial.set(completed);
     }
     const pending = this.roomLifecycle.consumePendingOrReconnect();
@@ -445,6 +447,10 @@ export class NonogramComponent extends BaseGameComponent implements OnInit, OnDe
       if (this.store.currentRoomMode() === GameMode.Single && !this.store.isSpectator() && !this.store.roomId()) {
         const hasResume = this.checkAndPromptResumeSession('nonogram');
         if (!hasResume) {
+          if (!isTutorialCompleted('nonogram')) {
+            this.startTutorial();
+            return;
+          }
           const initialDiff = getSavedDifficulty('nonogram', GameDifficulty.Easy);
           this.store.currentDifficulty.set(initialDiff);
           this.store.joinRoom('', GameMode.Single, initialDiff);

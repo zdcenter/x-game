@@ -13,6 +13,7 @@ import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { SudokuCell } from './sudoku-engine';
 import { C2SAction } from '../../../../core/models/websocket.model';
 import { ResumeGameService } from '../../../../core/services/resume-game.service';
+import { isTutorialCompleted, markTutorialCompleted } from '../../../../core/utils/tutorial.util';
 import {
   SUDOKU_TUTORIAL_STEPS,
   SUDOKU_TUTORIAL_PUZZLE,
@@ -58,8 +59,8 @@ export class SudokuStore extends BaseGameStore {
   // ═══════════════════════════════════════════════════════════════════
   isTutorialActive = signal<boolean>(false);
   tutorialStep = signal<number>(0);
-  tutorialDismissed = signal<boolean>(false);
-  hasCompletedTutorial = signal<boolean>(typeof window !== 'undefined' && localStorage.getItem('sudoku_tutorial_completed') === 'true');
+  tutorialDismissed = signal<boolean>(isTutorialCompleted('sudoku'));
+  hasCompletedTutorial = signal<boolean>(isTutorialCompleted('sudoku'));
   readonly isTutorialFinished = computed(() => this.tutorialStep() >= SUDOKU_TUTORIAL_STEPS.length);
 
   readonly currentTutorialStepInfo = computed<SudokuTutorialStep | null>(() => {
@@ -459,20 +460,21 @@ export class SudokuStore extends BaseGameStore {
   exitTutorial() {
     this.haptic.vibrateLight();
     this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('sudoku');
     this.view.set('lobby');
   }
 
   dismissTutorialPrompt() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('sudoku');
   }
 
   completeTutorialAndPlay() {
     this.haptic.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sudoku_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('sudoku');
     this.view.set('lobby');
   }
 
@@ -551,9 +553,7 @@ export class SudokuStore extends BaseGameStore {
           this.hasCompletedTutorial.set(true);
           this.audio.playSudoku('success');
           this.haptic.vibrateSuccess();
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('sudoku_tutorial_completed', 'true');
-          }
+          markTutorialCompleted('sudoku');
         }
       } else {
         this.haptic.vibrateError();

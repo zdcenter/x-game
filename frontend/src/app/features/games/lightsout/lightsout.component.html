@@ -150,33 +150,6 @@
         </div>
       }
 
-      <!-- Tutorial Prompt Banner (First Time Players) -->
-      @if (!hasCompletedTutorial() && !isTutorialActive() && store.currentRoomMode() === GameMode.Single && !tutorialDismissed()) {
-        <div class="w-full max-w-sm sm:max-w-md mx-auto mb-2 px-2 shrink-0">
-          <div class="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/15 to-yellow-500/15 border border-amber-500/30 shadow-xs">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xl shrink-0 animate-bounce">🎓</span>
-              <div class="min-w-0">
-                <div class="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-300 truncate">
-                  {{ i18n.t('tutorial.lightsout.prompt')() || '第一次玩点灯游戏？30秒互动教学带你秒懂解题技巧' }}
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1.5 shrink-0 ml-2">
-              <button (click)="startTutorial()" 
-                      class="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500 text-white hover:bg-amber-600 active:scale-95 transition-all shadow-xs cursor-pointer">
-                {{ i18n.t('tutorial.interactive.btn_start')() || '立即体验' }}
-              </button>
-              <button (click)="dismissTutorialPrompt()" 
-                      class="p-1 text-xs text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors cursor-pointer"
-                      title="{{ i18n.t('common.close')() || '关闭' }}">
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
       <!-- Interactive Tutorial Board (Instructions & Formula) -->
       @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
         <div class="w-full max-w-sm sm:max-w-md mx-auto mb-2 px-2 shrink-0">

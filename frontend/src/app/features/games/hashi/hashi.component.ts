@@ -1,5 +1,6 @@
 import { GameMode, GameStatus } from "../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty, isBrowser } from "../../../core/utils/browser.util";
+import { isTutorialCompleted, markTutorialCompleted } from "../../../core/utils/tutorial.util";
 import { Component, inject, OnInit, OnDestroy, signal, effect, untracked, computed, HostListener } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -279,7 +280,7 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   override ngOnInit() {
     super.ngOnInit();
     if (isBrowser()) {
-      const completed = localStorage.getItem('hashi_tutorial_completed') === 'true';
+      const completed = isTutorialCompleted('hashi');
       this.hasCompletedTutorial.set(completed);
     }
     const pending = this.roomLifecycle.consumePendingOrReconnect();
@@ -301,6 +302,10 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     } else {
       const qp = this._baseRoute.snapshot.queryParamMap;
       const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      if (!requestedDiff && !isTutorialCompleted('hashi')) {
+        this.startTutorial();
+        return;
+      }
       const targetDiff = requestedDiff || getSavedDifficulty('hashi', 'easy');
       this.store.currentDifficulty.set(targetDiff);
       setSavedDifficulty('hashi', targetDiff);
@@ -659,6 +664,8 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
   exitTutorial() {
     this.vibrateLight();
     this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('hashi');
     this.goToLobby();
   }
 
@@ -666,14 +673,13 @@ export class HashiComponent extends BaseGameComponent implements OnInit, OnDestr
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (isBrowser()) {
-      localStorage.setItem('hashi_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('hashi');
     await this.loadFirstLevelOf('easy');
   }
 
   dismissTutorialCapsule() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('hashi');
   }
 
   playPreviousLevel() {

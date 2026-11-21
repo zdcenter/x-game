@@ -92,30 +92,6 @@
     </app-game-handheld-header>
   }
 
-  <!-- 🎓 新手教学引导条 (未完成新手教程时向玩家亲和展示) -->
-  @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && store.currentRoomMode() === GameMode.Single) {
-    <div class="w-full max-w-[500px] mb-2 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-emerald-500/10 border border-blue-500/30 flex items-center justify-between gap-2 shadow-xs shrink-0 animate-fade-in select-none mx-auto">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="text-lg sm:text-xl shrink-0">🎓</span>
-        <p class="text-xs sm:text-sm text-[var(--color-text-main)] font-bold truncate">
-          {{ i18n.t('tutorial.sudoku.prompt')() || '第一次玩数独？30秒互动速成教学带你秒懂解题技巧' }}
-        </p>
-      </div>
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button (click)="startTutorial()"
-                type="button"
-                class="px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-xs active:scale-95 transition-all cursor-pointer">
-          {{ i18n.t('tutorial.interactive.start')() || '开始教学' }}
-        </button>
-        <button (click)="dismissTutorialPrompt()"
-                type="button"
-                class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] px-1.5 py-1">
-          ✕
-        </button>
-      </div>
-    </div>
-  }
-
   <!-- 🎓 教程顶部指引面板 -->
   @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
     <app-interactive-tutorial-board

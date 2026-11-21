@@ -123,31 +123,6 @@
         </div>
       }
 
-      <!-- 🎓 教程引导卡片 / 邀请横幅 -->
-      @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && store.currentRoomMode() === GameMode.Single) {
-        <div class="w-full max-w-md mb-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-sky-500/15 via-emerald-500/15 to-teal-500/15 border border-sky-500/30 flex items-center justify-between gap-2 shadow-xs animate-fade-in select-none">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="text-base sm:text-lg animate-bounce">🌉</span>
-            <span class="text-xs sm:text-sm font-bold text-sky-800 dark:text-sky-200 truncate">
-              {{ i18n.t('tutorial.hashi.prompt')() || '第一次玩数桥？1分钟互动速成教学带你秒懂连桥规则' }}
-            </span>
-          </div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button (click)="startTutorial()" 
-                    type="button"
-                    class="px-3 py-1 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 text-white text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
-              {{ i18n.t('tutorial.interactive.start')() || '开始教学' }}
-            </button>
-            <button (click)="dismissTutorialCapsule()" 
-                    type="button"
-                    class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer text-xs"
-                    title="关闭">
-              ✕
-            </button>
-          </div>
-        </div>
-      }
-
       <!-- 🎓 教程顶部指引面板 -->
       @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
         <app-interactive-tutorial-board

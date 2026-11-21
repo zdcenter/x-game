@@ -1,5 +1,6 @@
 import { GameId, GameMode, GameResult, GameResultType, GameStatus } from "../../../core/models/game.model";
 import { getSavedDifficulty, setSavedDifficulty, isBrowser } from "../../../core/utils/browser.util";
+import { isTutorialCompleted, markTutorialCompleted } from "../../../core/utils/tutorial.util";
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, NgZone, Renderer2, inject, effect, signal, computed, untracked, ChangeDetectionStrategy, HostListener } from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
@@ -474,7 +475,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   override ngOnInit() {
     super.ngOnInit(); // connects lobby WS
     if (isBrowser()) {
-      const completed = localStorage.getItem('minesweeper_tutorial_completed') === 'true';
+      const completed = isTutorialCompleted('minesweeper');
       this.hasCompletedTutorial.set(completed);
     }
     const joinInfo = this.roomLifecycle.consumePendingOrReconnect();
@@ -505,6 +506,10 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       // Check if query params specify difficulty (e.g. from Hall of Fame 破纪录挑战)
       const q = this._baseRoute?.snapshot?.queryParams || {};
       const requestedDiff = q['difficulty'] || q['diff'];
+      if (!requestedDiff && !isTutorialCompleted('minesweeper')) {
+        this.startTutorial();
+        return;
+      }
       const hasResume = requestedDiff ? false : this.checkAndPromptResumeSession('minesweeper');
       if (!hasResume) {
         const savedDiff = requestedDiff || getSavedDifficulty('minesweeper', 'easy');
@@ -682,6 +687,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   exitTutorial() {
     this.vibrateLight();
     this.isTutorialActive.set(false);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('minesweeper');
     this.changeSingleDifficulty(getSavedDifficulty('minesweeper', 'easy'));
   }
 
@@ -689,14 +696,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (isBrowser()) {
-      localStorage.setItem('minesweeper_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('minesweeper');
     this.changeSingleDifficulty('easy');
   }
 
   dismissTutorialCapsule() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('minesweeper');
   }
 
   handleCellReveal(cell: any) {

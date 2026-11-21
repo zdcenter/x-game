@@ -9,6 +9,7 @@ import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/c
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty, isBrowser } from '../../../core/utils/browser.util';
+import { isTutorialCompleted, markTutorialCompleted } from '../../../core/utils/tutorial.util';
 import { TentsCellState } from './store/tents-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { WindowSizeService } from '../../../core/services/window-size.service';
@@ -222,6 +223,8 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.tutorialStep.set(0);
+    this.hasCompletedTutorial.set(true);
+    markTutorialCompleted('tents');
     this.store.startLocalGame(this.store.currentDifficulty() as string, 0);
   }
 
@@ -233,14 +236,13 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
     this.vibrateLight();
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
-    if (isBrowser()) {
-      localStorage.setItem('tents_tutorial_completed', 'true');
-    }
+    markTutorialCompleted('tents');
     this.store.startLocalGame('easy', 0);
   }
 
   dismissTutorialCapsule() {
     this.tutorialDismissed.set(true);
+    markTutorialCompleted('tents');
   }
 
   checkTutorialStepProgress() {
@@ -337,7 +339,7 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
   override ngOnInit(): void {
     super.ngOnInit();
     if (isBrowser()) {
-      const completed = localStorage.getItem('tents_tutorial_completed') === 'true';
+      const completed = isTutorialCompleted('tents');
       this.hasCompletedTutorial.set(completed);
     }
     const pending = this.roomLifecycle.consumePendingOrReconnect();
@@ -358,6 +360,10 @@ export class TentsComponent extends BaseGameComponent implements OnInit, OnDestr
       const requestedDiff = qp.get('difficulty') || qp.get('diff');
       const isTut = qp.get('tutorial') === 'true';
       if (isTut) {
+        this.startTutorial();
+        return;
+      }
+      if (!requestedDiff && !isTutorialCompleted('tents')) {
         this.startTutorial();
         return;
       }

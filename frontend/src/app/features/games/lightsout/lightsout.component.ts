@@ -1,5 +1,6 @@
 import { GameDifficulty, GameMode, GameStatus } from '../../../core/models/game.model';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { isTutorialCompleted } from '../../../core/utils/tutorial.util';
 import { Component, inject, OnDestroy, OnInit, ViewChild, signal, effect, HostListener, computed, untracked } from '@angular/core';
 import { BaseGameComponent } from '../../../core/utils/base-game.component';
 import { LightsoutStore } from './store/lightsout.store';
@@ -305,6 +306,10 @@ export class LightsoutComponent extends BaseGameComponent implements OnInit, OnD
     } else {
       const qp = this._baseRoute.snapshot.queryParamMap;
       const requestedDiff = qp.get('difficulty') || qp.get('diff');
+      if (!requestedDiff && !isTutorialCompleted('lightsout')) {
+        this.startTutorial();
+        return;
+      }
       const targetDiff = requestedDiff || getSavedDifficulty('lightsout', GameDifficulty.Medium);
       setSavedDifficulty('lightsout', targetDiff);
       this.store.currentDifficulty.set(targetDiff);

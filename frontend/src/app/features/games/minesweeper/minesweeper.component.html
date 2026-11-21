@@ -164,31 +164,6 @@
       </app-game-handheld-header>
     }
 
-    <!-- 🎓 教程引导卡片 / 邀请横幅 -->
-    @if (!isTutorialActive() && !hasCompletedTutorial() && !tutorialDismissed() && currentRoomMode() === GameMode.Single) {
-      <div class="w-full max-w-md mb-2 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-orange-500/15 border border-amber-500/30 flex items-center justify-between gap-2 shadow-xs animate-fade-in select-none">
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-base sm:text-lg animate-bounce">💣</span>
-          <span class="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-200 truncate">
-            {{ i18n.t('tutorial.minesweeper.prompt')() || '第一次玩扫雷？30秒互动速成教学带你秒懂排雷技巧' }}
-          </span>
-        </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button (click)="startTutorial()" 
-                  type="button"
-                  class="px-3 py-1 rounded-xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 text-white text-xs font-black shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer">
-            {{ i18n.t('tutorial.interactive.start')() || '开始教学' }}
-          </button>
-          <button (click)="dismissTutorialCapsule()" 
-                  type="button"
-                  class="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer text-xs"
-                  title="关闭">
-            ✕
-          </button>
-        </div>
-      </div>
-    }
-
     <!-- 🎓 教程顶部指引面板 -->
     @if (isTutorialActive() && currentTutorialStepInfo(); as stepInfo) {
       <app-interactive-tutorial-board
