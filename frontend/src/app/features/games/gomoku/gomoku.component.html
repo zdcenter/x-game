@@ -66,69 +66,54 @@
           <!-- Main Game Area with Centered Responsive Layout -->
           <div class="flex-1 w-full mx-auto px-1 sm:px-4 flex flex-col items-center py-1 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden select-none">
             <div class="w-full flex flex-col items-center my-auto">
-              <!-- Battle Status HUD Bar (Matches board width) -->
-              <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 mb-1.5 sm:mb-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-xs transition-all shrink-0"
+              <!-- Battle Status HUD Bar (Matches board width, fixed height, zero jitter) -->
+              <div class="w-full flex items-center justify-between gap-1 sm:gap-2 px-2 sm:px-3 h-10 sm:h-12 mb-1.5 sm:mb-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-xs shrink-0"
                    [style.max-width]="boardSizePx()">
               
-              <!-- Player 1: Black Stone -->
-              <div class="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300"
-                   [ngClass]="currentTurnColor === 1 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-85'">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full stone-black flex items-center justify-center shrink-0 relative shadow-sm">
-                  @if (myColor === 1 && !isSpectator()) {
-                    <span class="text-xs text-amber-400 font-black">★</span>
-                  }
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[140px]">
-                      {{ myColor === 1 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
-                    </span>
-                    <span class="badge-safe bg-black/40 text-gray-100 font-bold border border-white/10 shrink-0">
-                      {{ i18n.t('gomoku.you_are_black')() }}
-                    </span>
+                <!-- Player 1: Black Stone -->
+                <div class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-xl border transition-colors duration-150 min-w-0"
+                     [ngClass]="currentTurnColor === 1 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-xs' : 'border-transparent opacity-80'">
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full stone-black flex items-center justify-center shrink-0 relative shadow-xs">
+                    @if (myColor === 1 && !isSpectator()) {
+                      <span class="text-[9px] sm:text-[10px] text-amber-400 font-black">★</span>
+                    }
                   </div>
-                  @if (currentTurnColor === 1 && gameStatus() === GameStatus.Playing) {
-                    <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
-                      {{ myColor === 1 ? i18n.t('gomoku.turn.yours')() : (isSingleMode() ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
-                    </span>
-                  }
+                  <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[60px] sm:max-w-[100px]">
+                    {{ myColor === 1 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
+                  </span>
+                  <span class="badge-safe bg-black/40 text-gray-100 font-bold border border-white/10 shrink-0 text-[10px] px-1.5 py-0.5">
+                    {{ i18n.t('gomoku.you_are_black')() }}
+                  </span>
                 </div>
-              </div>
 
-              <!-- Center: Move count & VS status badge -->
-              <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <div class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] text-center shadow-inner">
+                <!-- Center: Move count & Turn status badge (fixed single line, rock-solid height) -->
+                <div class="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-inner shrink-0">
                   <span class="font-mono font-bold text-xs sm:text-sm text-[var(--color-text-secondary)] whitespace-nowrap">
                     {{ moveCountText() }}
                   </span>
+                  @if (gameStatus() === GameStatus.Playing) {
+                    <span class="text-[11px] sm:text-xs font-bold text-amber-500 animate-pulse whitespace-nowrap">
+                      · {{ currentTurnColor === myColor ? (i18n.t('gomoku.turn.yours')() || '该你落子') : (isSingleMode() ? (i18n.t('gomoku.thinking')() || '思考中...') : (i18n.t('gomoku.turn.opponent')() || '对方回合')) }}
+                    </span>
+                  }
                 </div>
-              </div>
 
-              <!-- Player 2: White Stone -->
-              <div class="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300"
-                   [ngClass]="currentTurnColor === 2 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]' : 'border-transparent opacity-85'">
-                <div class="flex flex-col items-end min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <span class="badge-safe bg-white text-gray-800 font-bold border border-black/10 shrink-0 shadow-2xs">
-                      {{ i18n.t('gomoku.you_are_white')() }}
-                    </span>
-                    <span class="text-sm sm:text-base font-black text-[var(--color-text-main)] truncate max-w-[90px] sm:max-w-[140px]">
-                      {{ myColor === 2 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
-                    </span>
+                <!-- Player 2: White Stone -->
+                <div class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-xl border transition-colors duration-150 min-w-0"
+                     [ngClass]="currentTurnColor === 2 && gameStatus() === GameStatus.Playing ? 'bg-amber-500/15 border-amber-500/50 shadow-xs' : 'border-transparent opacity-80'">
+                  <span class="badge-safe bg-white text-gray-800 font-bold border border-black/10 shrink-0 shadow-2xs text-[10px] px-1.5 py-0.5">
+                    {{ i18n.t('gomoku.you_are_white')() }}
+                  </span>
+                  <span class="text-xs sm:text-sm font-black text-[var(--color-text-main)] truncate max-w-[60px] sm:max-w-[100px]">
+                    {{ myColor === 2 ? (authStore.currentUser()?.nickname || authStore.currentUser()?.username || i18n.t('game.you')()) : opponentName() }}
+                  </span>
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full stone-white flex items-center justify-center shrink-0 relative shadow-xs">
+                    @if (myColor === 2 && !isSpectator()) {
+                      <span class="text-[9px] sm:text-[10px] text-amber-600 font-black">★</span>
+                    }
                   </div>
-                  @if (currentTurnColor === 2 && gameStatus() === GameStatus.Playing) {
-                    <span class="text-xs font-bold text-amber-500 animate-pulse leading-tight mt-0.5">
-                      {{ myColor === 2 ? i18n.t('gomoku.turn.yours')() : (isSingleMode() ? i18n.t('gomoku.thinking')() : i18n.t('gomoku.turn.opponent')()) }}
-                    </span>
-                  }
-                </div>
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full stone-white flex items-center justify-center shrink-0 relative shadow-sm">
-                  @if (myColor === 2 && !isSpectator()) {
-                    <span class="text-xs text-amber-600 font-black">★</span>
-                  }
                 </div>
               </div>
-            </div>
 
             <!-- Authentic Luxury Wood Board Area with Dynamic Viewport Size -->
             <div class="relative shrink-0 shadow-[0_24px_60px_rgba(0,0,0,0.5),0_6px_16px_rgba(0,0,0,0.25)] rounded-xl sm:rounded-3xl p-1.5 sm:p-4 md:p-6 transition-all duration-300 border-2 sm:border-4 border-[#8B5A2B]/40"
