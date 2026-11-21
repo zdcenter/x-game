@@ -13,11 +13,12 @@ import { boardSizePx } from '../../../core/utils/board-size.util';
 import { GomokuAI, type GomokuColor } from './store/gomoku-ai';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameLayoutComponent, GameHandheldHeaderComponent],
+  imports: [CommonModule, GameLayoutComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']
@@ -83,11 +84,19 @@ export class GomokuComponent extends BaseGameComponent implements OnInit, OnDest
   // Responsive Board Size Calculation (standardized via boardSizePx utility)
   readonly boardSizePx = boardSizePx(
     this.windowSize,
-    { mobile: 180, tablet: 190, pc: 210 },
+    { mobile: 185, tablet: 230, pc: 310 },
     960,
-    300,
+    280,
     { mobile: 8, tablet: 24, pc: 48 },
   );
+
+  get difficulties(): DifficultyOption[] {
+    return [
+      { id: 'easy', labelKey: 'gomoku.ai_easy', desc: '1-Ply Lookahead' },
+      { id: GameDifficulty.Medium, labelKey: 'gomoku.ai_medium', desc: '2-Ply Alpha-Beta' },
+      { id: GameDifficulty.Hard, labelKey: 'gomoku.ai_hard', desc: '4-Ply Deep Search' }
+    ];
+  }
 
   // Replay System
   readonly replayStep = signal<number | null>(null);

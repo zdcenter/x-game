@@ -49,9 +49,12 @@
           {{ i18n.t('game.gomoku')() || '五子棋' }}
         </span>
         @if (isSingleMode()) {
-          <span class="text-[11px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap">
-            {{ currentDifficulty() === 'easy' ? (i18n.t('game.diff_easy')() || '初级') : currentDifficulty() === 'hard' ? (i18n.t('game.diff_hard')() || '大师') : (i18n.t('game.diff_medium')() || '进阶') }}
-          </span>
+          <app-difficulty-selector
+            [availableDifficulties]="difficulties"
+            [currentDifficulty]="currentDifficulty()"
+            [gameId]="'gomoku'"
+            (difficultyChange)="changeDifficulty($event)">
+          </app-difficulty-selector>
         } @else {
           <span class="text-[11px] sm:text-xs px-2 py-0.5 rounded-full font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30 whitespace-nowrap">
             PK 对战
@@ -61,11 +64,11 @@
     </app-game-handheld-header>
   }
           <!-- Main Game Area with Centered Responsive Layout -->
-          <div class="flex-1 w-full mx-auto px-1 sm:px-4 flex flex-col items-center justify-center my-auto py-1 sm:py-3 min-h-0 overflow-y-auto lg:overflow-hidden select-none">
-            
-            <!-- Battle Status HUD Bar (Matches board width) -->
-            <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-3 mb-1.5 sm:mb-3.5 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-sm transition-all"
-                 [style.max-width]="boardSizePx()">
+          <div class="flex-1 w-full mx-auto px-1 sm:px-4 flex flex-col items-center py-1 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden select-none">
+            <div class="w-full flex flex-col items-center my-auto">
+              <!-- Battle Status HUD Bar (Matches board width) -->
+              <div class="w-full flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 mb-1.5 sm:mb-2 rounded-xl sm:rounded-2xl bg-[var(--color-bg-card)]/95 backdrop-blur-md border border-[var(--color-border-card)] shadow-xs transition-all shrink-0"
+                   [style.max-width]="boardSizePx()">
               
               <!-- Player 1: Black Stone -->
               <div class="flex items-center gap-2.5 sm:gap-3 px-3 py-1.5 sm:py-2 rounded-xl border transition-all duration-300"
@@ -324,5 +327,6 @@
                 </div>
               </div>
             }
+            </div>
           </div>
 </app-game-layout>
