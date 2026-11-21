@@ -101,11 +101,14 @@ export class TetrisComponent extends BaseGameComponent implements OnInit, OnDest
   readonly boardHeightPx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
     
+    const isPk = this.currentRoomMode() !== GameMode.Single;
     // Chrome height:
-    // Mobile (<768px): Header + mobile hold/next bar + ScoreCapsule + Virtual Controller (~310px)
-    // Tablet (768-1024px): Header + ScoreCapsule + Stage margins (~200px)
-    // Desktop (>=1024px): Header + ScoreCapsule + Stage margins (~220px)
-    const chromeH = vw < 768 ? 310 : (vw < 1024 ? 200 : 220);
+    // Mobile (<768px): Header + mobile hold/next bar + ScoreCapsule/PK + Virtual Controller (~320px)
+    // Tablet (768-1024px): Header + ScoreCapsule/PK + Stage margins (~230px, PK: ~260px)
+    // Desktop (>=1024px): Header + ScoreCapsule/PK + Stage margins (~250px, PK: ~280px)
+    const chromeH = vw < 768
+      ? (isPk ? 330 : 310)
+      : (vw < 1024 ? (isPk ? 260 : 230) : (isPk ? 280 : 250));
     const availH = Math.max(380, vh - chromeH);
 
     // Left and right wings on tablet/desktop:

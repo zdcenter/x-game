@@ -11,6 +11,7 @@ import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/mode
 import { getSavedDifficulty, setSavedDifficulty, isBrowser } from '../../../core/utils/browser.util';
 import { TentsCellState } from './store/tents-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
+import { WindowSizeService } from '../../../core/services/window-size.service';
 import {
   InteractiveTutorialStep,
   InteractiveTutorialBoardComponent,
@@ -37,6 +38,33 @@ import {
 })
 export class TentsComponent extends BaseGameComponent implements OnInit, OnDestroy {
   override store = inject(TentsStore);
+  private windowSize = inject(WindowSizeService);
+
+  readonly boardDimPx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const isHandheld = this.isHandheld();
+    const isPk = this.store.currentRoomMode() !== GameMode.Single;
+    const isZen = this.zenService.isZenMode() || (typeof document !== 'undefined' && !!document?.body?.classList?.contains?.('zen-mode-active'));
+
+    // Chrome height:
+    // Mobile: header (~50px) + bottom controls (~70px) + padding/margins (~50px) = ~170px
+    // Tablet: header (~60px) + pedestal padding (~30px) + status (~40px) + bottom toolbar (~70px) + margins (~40px) = ~240px
+    // Desktop: navbar (64px) + game header (60px) + pedestal (20px) + status/PK (45-75px) + toolbar (70px) + margins (~40px) = ~310px
+    const chromeH = isZen
+      ? Math.min(vw < 640 ? 120 : 90, vh * 0.15)
+      : (isHandheld
+          ? (isPk ? 210 : 175)
+          : (isPk ? (vw < 1024 ? 270 : 320) : (vw < 1024 ? 240 : 310)));
+    const availH = Math.max(260, vh - chromeH);
+
+    const padW = vw < 640 ? 16 : vw < 1024 ? 36 : 64;
+    const availW = Math.max(260, Math.min(vw - padW, 1400));
+
+    const maxDim = vw < 640 ? 460 : (vw < 1024 ? 600 : (isZen ? 900 : 640));
+
+    const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
+    return `${dim}px`;
+  });
 
   CellState = TentsCellState;
 

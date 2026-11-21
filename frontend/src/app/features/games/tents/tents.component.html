@@ -91,7 +91,7 @@
   </div>
 
   <!-- 游戏主舞台核心区域 (PC 端与全端最大化自适应) -->
-  <div class="w-full flex-grow flex flex-col relative min-h-0 items-center justify-between p-1.5 sm:p-3 max-w-4xl mx-auto">
+  <div class="w-full flex-1 flex flex-col items-center py-1 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden select-none max-w-4xl mx-auto">
 
     <!-- Integrated Board Header Bar (手持移动端/平板设备 或 开启专注全屏沉浸模式时展示) -->
     @if (isHandheld() || zenService.isZenMode()) {
@@ -143,6 +143,7 @@
     }
 
     <!-- 顶部状态 (单人模式，仅在 PC 桌面非专注模式时展示，手持端与专注模式已优雅整合入上方一体化顶梁) -->
+    <div class="w-full flex flex-col items-center my-auto">
     @if (!isHandheld() && !zenService.isZenMode() && store.currentRoomMode() === GameMode.Single) {
       <div class="w-full flex items-center justify-between px-2 mb-2">
         <!-- 关卡与章节标题 / 教程徽标 -->
@@ -247,8 +248,8 @@
     <!-- ───────────────────────────────────────────────────────────── -->
     <div class="relative w-full p-2.5 sm:p-5 rounded-[28px] bg-[#dce9cd] dark:bg-[#1b2b1b] border-2 border-[#c7dab4] dark:border-[#2e472e] shadow-xl select-none flex flex-col items-center justify-center transition-all duration-300 mx-auto touch-manipulation overscroll-contain"
          style="touch-action: manipulation; overscroll-behavior: contain;"
-         [style.max-width]="'min(96vw, 680px)'"
-         [style.width]="'min(96vw, 86vmin, 680px)'"
+         [style.max-width]="boardDimPx()"
+         [style.width]="boardDimPx()"
          [class.pointer-events-none]="store.isSpectator()">
 
       <!-- 顶栏：左侧空白占位 + 列提示数 -->
@@ -563,6 +564,7 @@
         </div>
       </div>
     }
+    </div>
   </div>
 
   <!-- 🎓 Tutorial Completion Celebration Modal -->

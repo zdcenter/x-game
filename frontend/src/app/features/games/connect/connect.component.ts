@@ -66,18 +66,18 @@ export class ConnectComponent extends BaseGameComponent implements OnInit, OnDes
     const isPk = this.store.currentRoomMode() !== GameMode.Single;
     
     const chromeH = isPk
-      ? (vw < 640 ? 250 : vw < 1024 ? 270 : 290)
-      : (vw < 640 ? 210 : vw < 1024 ? 230 : 250);
+      ? (vw < 640 ? 250 : vw < 1024 ? 280 : 310)
+      : (vw < 640 ? 185 : vw < 1024 ? 230 : 310);
     const availH = Math.max(260, vh - chromeH);
 
-    const padW = vw < 640 ? 24 : vw < 1024 ? 48 : 64;
+    const padW = vw < 640 ? 16 : vw < 1024 ? 36 : 64;
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
     // Dynamic max board dimension:
     // Mobile: up to 440px
-    // Tablet (iPad): up to 720px (allows board, dots and pipes to be large, immersive and easy to drag without huge empty margins)
-    // Desktop: up to 760px
-    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 720 : 760);
+    // Tablet (iPad): up to 640px
+    // Desktop: up to 660px
+    const maxDim = vw < 640 ? 440 : (vw < 1024 ? 640 : 660);
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;

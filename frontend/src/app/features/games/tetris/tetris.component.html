@@ -79,7 +79,7 @@
     </app-game-handheld-header>
   }
 
-  <div class="flex-grow flex flex-col items-center justify-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-hidden gap-1.5" #boardArea>
+  <div class="flex-grow flex flex-col items-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-y-auto overflow-x-hidden gap-1.5 select-none" #boardArea>
             
           <!-- Universal PK Battle HUD (Tetris) -->
           @if (currentRoomMode() !== GameMode.Single) {

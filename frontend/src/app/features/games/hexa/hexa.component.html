@@ -211,14 +211,15 @@
   }
 
           <!-- The Grid Area + Compact Available Pieces Palette -->
-          <div class="w-full flex-grow flex flex-col items-center justify-center min-h-0 py-1 sm:py-2 select-none overflow-hidden my-auto" #boardArea>
-            <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,560px)] md:max-w-[min(94vw,620px)] mx-auto gap-2 sm:gap-3 shrink-0">
+          <div class="w-full flex-1 flex flex-col items-center py-1 sm:py-2 select-none overflow-y-auto overflow-x-hidden min-h-0" #boardArea>
+            <div class="flex flex-col items-center justify-center w-full max-w-[min(96vw,560px)] md:max-w-[min(94vw,620px)] mx-auto gap-2 sm:gap-3 shrink-0 my-auto">
             
               <!-- Outer: danger glow only (no shake) -->
               <div class="relative flex items-center justify-center shrink-0 w-full"
                    [class.hexa-danger-1]="store.fillPct() > 0.78 && store.fillPct() <= 0.90 && !store.gameOver()"
                    [class.hexa-danger-2]="store.fillPct() > 0.90 && !store.gameOver()"
-                   style="width: min(calc(100vw - 16px), calc(100dvh - 200px), 540px); height: min(calc(100vw - 16px), calc(100dvh - 200px), 540px);">
+                   [style.width]="boardDimPx()"
+                   [style.height]="boardDimPx()">
                 <!-- Inner: shake only (separate from danger animation) -->
                 <div class="absolute inset-0 flex items-center justify-center" [class.hexa-shake]="isShaking()">
                   <div class="w-full h-full relative flex items-center justify-center">

@@ -116,7 +116,7 @@
     </app-game-handheld-header>
   }
 
-  <div class="w-full flex-grow flex flex-col justify-center my-auto items-center relative min-h-0 w-full py-1 sm:py-2 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+  <div class="w-full flex-1 flex flex-col items-center py-1 sm:py-2 min-h-0 overflow-y-auto overflow-x-hidden select-none">
     <ng-container *ngIf="view() === 'lobby'">
       <app-connect-lobby class="flex-grow flex flex-col w-full h-full min-h-0"
         (startLevel)="startLevel($event)">
@@ -124,7 +124,8 @@
     </ng-container>
 
     <ng-container *ngIf="view() === 'play'">
-      <!-- INFO BAR for single player (PC 桌面端展示) -->
+      <div class="w-full flex flex-col items-center my-auto">
+        <!-- INFO BAR for single player (PC 桌面端展示) -->
       @if (!isHandheld() && store.currentRoomMode() === GameMode.Single) {
         <div class="w-full mx-auto flex flex-wrap justify-between items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-xl mb-4 text-sm border border-[var(--color-border-card)] shadow-sm" [style.max-width]="boardWidthPx()">
         <div class="text-[var(--color-text-main)] font-bold flex items-center gap-2.5">
@@ -215,6 +216,7 @@
           (restart)="onRestart()"
           (hintApplied)="onHintApplied()">
         </app-game-toolbar>
+      </div>
       </div>
     </ng-container>
   </div>

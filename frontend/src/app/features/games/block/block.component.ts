@@ -13,7 +13,7 @@ import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
-
+import { WindowSizeService } from '../../../core/services/window-size.service';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
@@ -57,6 +57,34 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   `]
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
+  private windowSize = inject(WindowSizeService);
+
+  readonly boardDimPx = computed(() => {
+    const { w: vw, h: vh } = this.windowSize.size();
+    const isHandheld = this.isHandheld();
+    const isPk = this.store.currentRoomMode() !== GameMode.Single;
+    const isZen = this.zenService.isZenMode() || (typeof document !== 'undefined' && !!document?.body?.classList?.contains?.('zen-mode-active'));
+
+    // Chrome height:
+    // handheld: header (~50px) + palette (~80px) + gaps/padding (~40px) = ~170px (single), ~210px (PK)
+    // tablet: game header (~60px) + pedestal padding (~30px) + HUD (~55px) + palette (~80px) + gaps (~35px) = ~260px
+    // desktop: navbar (64px) + game header (60px) + pedestal (20px) + HUD/PK (55-75px) + palette (96px) + gaps (~35px) = ~330px
+    const chromeH = isZen
+      ? Math.min(vw < 640 ? 120 : 90, vh * 0.15)
+      : (isHandheld
+          ? (isPk ? 220 : 180)
+          : (isPk ? (vw < 1024 ? 290 : 330) : (vw < 1024 ? 270 : 310)));
+    const availH = Math.max(240, vh - chromeH);
+
+    const padW = vw < 640 ? 16 : vw < 1024 ? 32 : 48;
+    const availW = Math.max(240, Math.min(vw - padW, 1400));
+
+    const maxDim = vw < 640 ? 460 : (vw < 1024 ? 520 : (isZen ? 640 : 520));
+
+    const dim = Math.max(240, Math.floor(Math.min(availW, availH, maxDim)));
+    return `${dim}px`;
+  });
+
   spectatingPlayers = computed<SpectatingPlayerInfo[]>(() => {
     const opps = this.store.opponents().map(opp => ({
       id: opp.id,

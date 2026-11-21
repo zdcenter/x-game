@@ -81,7 +81,7 @@
       </app-game-handheld-header>
     }
 
-    <div class="flex-1 overflow-y-auto md:overflow-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2">
+    <div class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col relative bg-[var(--color-bg-base)] p-2 sm:p-4 gap-2 select-none">
 
       <!-- Universal PK Battle HUD -->
       @if (store.currentRoomMode() !== GameMode.Single) {

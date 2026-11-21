@@ -324,8 +324,8 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
     
     // Chrome height (header, score capsule, toolbar, padding)
     const chromeH = isSingle
-      ? (vw < 640 ? 190 : vw < 1024 ? 220 : 240)
-      : (vw < 640 ? 250 : vw < 1024 ? 270 : 290);
+      ? (vw < 640 ? 200 : vw < 1024 ? 250 : 290)
+      : (vw < 640 ? 260 : vw < 1024 ? 290 : 310);
     const availH = Math.max(300, vh - chromeH);
 
     // Left and right wings on tablet/desktop: ~220px to 280px total
@@ -342,8 +342,8 @@ export class Drop2048Component extends BaseGameComponent implements OnInit, OnDe
 
     if (vw < 380) return Math.min(54, fitCell);
     if (vw < 640) return Math.min(60, fitCell);
-    // On tablet / desktop: scale up to 102px so it fills the screen height!
-    return Math.max(58, Math.min(fitCell, 102));
+    // On tablet / desktop: scale up to 96px so it fills the screen comfortably without overflow!
+    return Math.max(48, Math.min(fitCell, 96));
   });
 
   getBlockStyle(val: number): Record<string, string> {

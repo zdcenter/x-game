@@ -59,18 +59,18 @@ export class SokobanComponent extends BaseGameComponent implements OnInit, OnDes
     const chromeH = isZen
       ? Math.min(vw < 640 ? 130 : 90, vh * 0.15)
       : (isPk
-          ? (vw < 640 ? 220 : vw < 1024 ? 250 : 270)
-          : (vw < 640 ? 145 : vw < 1024 ? 180 : 200));
+          ? (vw < 640 ? 250 : vw < 1024 ? 280 : 320)
+          : (vw < 640 ? 185 : vw < 1024 ? 230 : 310));
     const availH = Math.max(260, vh - chromeH);
 
     const padW = vw < 640 ? 12 : vw < 1024 ? 32 : (isZen ? 40 : 64);
     const availW = Math.max(260, Math.min(vw - padW, 1400));
 
     // Dynamic max board dimension:
-    // Mobile: up to 500px (fills screen width)
-    // Tablet (iPad): up to 740px
-    // Desktop: up to 960px in Zen mode, 800px normal
-    const maxDim = vw < 640 ? 500 : (vw < 1024 ? 740 : (isZen ? 960 : 800));
+    // Mobile: up to 480px (fills screen width)
+    // Tablet (iPad): up to 640px
+    // Desktop: up to 960px in Zen mode, 660px normal
+    const maxDim = vw < 640 ? 480 : (vw < 1024 ? 640 : (isZen ? 960 : 660));
 
     const dim = Math.max(260, Math.floor(Math.min(availW, availH, maxDim)));
     return `${dim}px`;
