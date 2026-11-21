@@ -362,7 +362,7 @@
               <div class="m-auto flex flex-col items-center justify-center">
                 @if (store.status() !== GameStatus.Waiting || currentRoomMode() === GameMode.Single) {
                   <div #board
-                    class="ms-board-plate inline-flex flex-col relative z-0 origin-center rounded-xl shadow-xl overflow-hidden"
+                    class="ms-board-plate inline-flex flex-col relative z-0 origin-center rounded-xl shadow-xl overflow-visible"
                     [style.--ms-cell-size.px]="cellSize()"
                     [class.pointer-events-none]="isFrozen() || store.status() === GameStatus.Starting"
                     [class.opacity-50]="isFrozen()" [class.animate-board-shake]="store.status() === GameStatus.Finished">
@@ -380,7 +380,8 @@
                           @if (isFirstTutorialTarget(cell.x, cell.y)) {
                             <app-interactive-tutorial-pointer
                               [text]="currentTutorialMicroAction()"
-                              [direction]="cell.y === 0 ? 'up' : 'down'">
+                              [direction]="cell.y === 0 ? 'up' : 'down'"
+                              [align]="cell.x === 0 ? 'left' : (cell.x === store.width() - 1 ? 'right' : 'center')">
                             </app-interactive-tutorial-pointer>
                           }
 

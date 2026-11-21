@@ -111,9 +111,9 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       }))
     );
 
-    // Hardcode mines at (0,0) and (2,1) [y=0, x=0] and [y=1, x=2]
+    // Hardcode mines at (0,0) and (3,1) [y=0, x=0] and [y=1, x=3]
     (this.cells[0][0] as any).isMine = true;
-    (this.cells[1][2] as any).isMine = true;
+    (this.cells[1][3] as any).isMine = true;
 
     this.calculateNeighbors();
   }

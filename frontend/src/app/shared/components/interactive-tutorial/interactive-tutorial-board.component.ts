@@ -35,7 +35,7 @@ import { InteractiveTutorialStep } from './interactive-tutorial.model';
       <!-- Formula Pill & Badge (Visual Rule) -->
       <div *ngIf="stepInfo.formula"
            class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 flex items-center justify-between gap-2 text-xs font-bold text-blue-900 dark:text-blue-200">
-        <span class="font-mono text-xs sm:text-sm tracking-wide font-black truncate">{{ stepInfo.formula }}</span>
+        <span class="font-mono text-[11px] sm:text-xs md:text-sm tracking-wide font-black leading-snug break-words flex-1 min-w-0">{{ stepInfo.formula }}</span>
         <span *ngIf="stepInfo.formulaBadge"
               class="px-2 py-0.5 rounded-lg bg-blue-600/10 dark:bg-blue-400/15 text-blue-700 dark:text-blue-300 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shrink-0 border border-blue-500/20">
           {{ stepInfo.formulaBadge }}

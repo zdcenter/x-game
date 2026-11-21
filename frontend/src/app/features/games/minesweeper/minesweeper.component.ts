@@ -86,15 +86,6 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
 
   readonly currentTutorialMicroAction = computed(() => {
     if (!this.isTutorialActive()) return '';
-    const step = this.tutorialStep();
-    if (step === 3) {
-      const board = this.store.board();
-      const cell00 = board[0]?.[0];
-      if (cell00 && cell00.state !== CellState.Flagged) {
-        return this.i18n.t('tutorial.minesweeper.step2_micro')() || '右键/长按插旗 🚩';
-      }
-      return this.i18n.t('tutorial.minesweeper.step3_micro')() || '安全格，点击揭开 🔍';
-    }
     const info = this.currentTutorialStepInfo();
     if (!info) return '';
     const microKey = info.microActionKey;
@@ -626,23 +617,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
       return x === 0 && y === 3;
     }
     if (step === 1) {
-      return x === 2 && y === 1;
-    }
-    if (step === 2) {
       return x === 3 && y === 1;
     }
+    if (step === 2) {
+      return x === 2 && y === 0;
+    }
     if (step === 3) {
-      const board = this.store.board();
-      const cell00 = board[0]?.[0];
-      if (cell00 && cell00.state !== CellState.Flagged) {
-        return x === 0 && y === 0;
-      }
-      for (const cx of [1, 2, 3]) {
-        const c = board[0]?.[cx];
-        if (c && c.state !== CellState.Revealed) {
-          return x === cx && y === 0;
-        }
-      }
+      return x === 0 && y === 0;
     }
     return false;
   }
@@ -735,29 +716,20 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
         // Step 2/4 is a Flagging step!
         this.vibrateError();
       } else if (step === 2) {
-        // Step 3/4: Reveal (3, 1)
-        if (cell.x === 3 && cell.y === 1) {
+        // Step 3/4: Reveal safe cells on row 0: (1, 0), (2, 0), (3, 0)
+        if ((cell.x === 1 || cell.x === 2 || cell.x === 3) && cell.y === 0) {
           this.vibrateLight();
-          this.store.revealCell(cell.x, cell.y);
+          this.store.revealCell(1, 0);
+          this.store.revealCell(2, 0);
+          this.store.revealCell(3, 0);
           this.tutorialStep.set(3);
-          this.mobileActionMode.set('reveal');
+          this.mobileActionMode.set('flag');
         } else {
           this.vibrateError();
         }
       } else if (step === 3) {
-        // Step 4/4: Reveal safe cells (1, 0), (2, 0), (3, 0)
-        if (cell.x === 0 && cell.y === 0) {
-          // Explode protection! (0,0) is a mine, don't allow reveal!
-          this.vibrateError();
-          return;
-        }
-        if ((cell.x === 1 || cell.x === 2 || cell.x === 3) && cell.y === 0) {
-          this.vibrateLight();
-          this.store.revealCell(cell.x, cell.y);
-          this.checkTutorialCompletion();
-        } else {
-          this.vibrateError();
-        }
+        // Step 4/4 is a Flagging step to lock the last mine at (0, 0)!
+        this.vibrateError();
       }
       return;
     }
@@ -771,8 +743,8 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     if (this.isTutorialActive()) {
       const step = this.tutorialStep();
       if (step === 1) {
-        // Step 2/4: Flag (2, 1)
-        if (cell.x === 2 && cell.y === 1) {
+        // Step 2/4: Flag (3, 1)
+        if (cell.x === 3 && cell.y === 1) {
           this.vibrateMedium();
           this.store.toggleFlag(cell.x, cell.y);
           this.tutorialStep.set(2);
@@ -781,11 +753,17 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
           this.vibrateError();
         }
       } else if (step === 3) {
-        // Step 4/4: Flag (0, 0)
+        // Step 4/4: Flag the final mine at (0, 0)
         if (cell.x === 0 && cell.y === 0) {
           this.vibrateMedium();
           this.store.toggleFlag(cell.x, cell.y);
-          this.checkTutorialCompletion();
+          this.tutorialStep.set(4);
+          this.vibrateSuccess();
+          this.celebrateVictory();
+          this.hasCompletedTutorial.set(true);
+          if (isBrowser()) {
+            localStorage.setItem('minesweeper_tutorial_completed', 'true');
+          }
         } else {
           this.vibrateError();
         }
