@@ -26,6 +26,34 @@
     <!-- Semantic SEO Headline (Screen Reader & Search Engines) -->
     <h1 class="sr-only">{{ i18n.t('lobby.title')() }} - {{ i18n.t('lobby.subtitle')() }}</h1>
 
+    <!-- 🕒 最近常玩 (Recently Played Quick-Launch Bar - Top Placement) -->
+    @if (recentGames().length > 0) {
+      <section class="flex flex-col gap-2 py-1 animate-fade-in">
+        <div class="flex items-center justify-between text-xs font-bold text-[var(--color-text-secondary)]">
+          <span class="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+            <span>🕒</span>
+            <span>{{ i18n.t('lobby.recent_played')() || '最近常玩' }}</span>
+          </span>
+          <button (click)="clearRecentGamesList()" class="text-[10px] opacity-50 hover:opacity-100 hover:text-red-400 transition-colors cursor-pointer flex items-center gap-1">
+            <span>✕</span>
+            <span>{{ i18n.t('lobby.clear_history')() || '清空' }}</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
+          @for (rg of recentGames(); track rg.id) {
+            <a [routerLink]="rg.route"
+               class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] text-xs font-bold shrink-0 transition-all shadow-sm hover:shadow active:scale-95 group">
+              <span class="text-base group-hover:scale-110 transition-transform">{{ rg.emoji }}</span>
+              <span class="truncate max-w-[100px] sm:max-w-none">{{ rg.title }}</span>
+              @if (rg.isPk) {
+                <span class="text-[9px] font-extrabold px-1 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">PK</span>
+              }
+            </a>
+          }
+        </div>
+      </section>
+    }
+
     <!-- ⚔️ 首页全网对决大厅 · 实时擂台与激战专区 (Live Battle Hub & Matchmaking Deck) -->
     @if (liveRoom.hasAnyRooms()) {
       <section class="w-full animate-fade-in">
@@ -220,34 +248,6 @@
     <section class="w-full">
       <app-hall-of-fame class="w-full block" />
     </section>
-
-    <!-- 🕒 最近常玩 (Recently Played Quick-Launch Bar) -->
-    @if (recentGames().length > 0) {
-      <section class="flex flex-col gap-2 pt-1 animate-fade-in">
-        <div class="flex items-center justify-between text-xs font-bold text-[var(--color-text-secondary)]">
-          <span class="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
-            <span>🕒</span>
-            <span>{{ i18n.t('lobby.recent_played')() || '最近常玩' }}</span>
-          </span>
-          <button (click)="clearRecentGamesList()" class="text-[10px] opacity-50 hover:opacity-100 hover:text-red-400 transition-colors cursor-pointer flex items-center gap-1">
-            <span>✕</span>
-            <span>{{ i18n.t('lobby.clear_history')() || '清空' }}</span>
-          </button>
-        </div>
-        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none no-scrollbar">
-          @for (rg of recentGames(); track rg.id) {
-            <a [routerLink]="rg.route"
-               class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)] border border-[var(--color-border-card)] hover:border-[var(--color-accent-from)] text-[var(--color-text-main)] hover:text-[var(--color-accent-from)] text-xs font-bold shrink-0 transition-all shadow-sm hover:shadow active:scale-95 group">
-              <span class="text-base group-hover:scale-110 transition-transform">{{ rg.emoji }}</span>
-              <span class="truncate max-w-[100px] sm:max-w-none">{{ rg.title }}</span>
-              @if (rg.isPk) {
-                <span class="text-[9px] font-extrabold px-1 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">PK</span>
-              }
-            </a>
-          }
-        </div>
-      </section>
-    }
 
     <!-- Filters & Search Toolbar -->
     <section class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">

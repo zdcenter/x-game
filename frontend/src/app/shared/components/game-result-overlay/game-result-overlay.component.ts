@@ -23,6 +23,7 @@ import { LiveActivityService } from '../../../core/services/live-activity.servic
 import { HapticService } from '../../../core/services/haptic.service';
 import { GameSwitchService } from '../../../core/services/game-switch.service';
 import { PosterService } from '../../../core/services/poster.service';
+import { CoinFlyService } from '../../../core/services/coin-fly.service';
 import { PosterModalComponent } from '../poster-modal/poster-modal.component';
 import { TimelapseModalComponent } from '../timelapse-modal/timelapse-modal.component';
 import confetti from 'canvas-confetti';
@@ -110,6 +111,7 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
   private liveActivityService = inject(LiveActivityService);
   private gameSwitchService = inject(GameSwitchService);
   private posterService = inject(PosterService);
+  private coinFly = inject(CoinFlyService);
   dailyQuestService = inject(DailyQuestService);
   readonly Math = Math;
 
@@ -144,6 +146,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
 
   @Input() currentGameId?: string;
   @Input() replayData?: any;
+  @Input() stars?: number;
+
+  readonly displayStars = computed(() => {
+    if (this.stars !== undefined) return this.stars;
+    return this.status === GameResult.Win ? 3 : 0;
+  });
 
   @Input({ required: true }) status!: GameResultType;
   @Input({ required: true }) title!: string;
@@ -562,6 +570,12 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
       this.rollingCoins.set(0);
       this.rollingXp.set(0);
       return;
+    }
+
+    if (targetCoins > 0 && this.status === GameResult.Win) {
+      setTimeout(() => {
+        this.coinFly.flyCoins({ amount: targetCoins, count: Math.min(Math.max(targetCoins, 5), 10) });
+      }, 350);
     }
 
     let startTimestamp: number | null = null;

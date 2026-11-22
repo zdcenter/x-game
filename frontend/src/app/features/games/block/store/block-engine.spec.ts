@@ -33,4 +33,17 @@ describe('BlockEngine', () => {
     expect(engine.hand.length).toBe(3);
     expect(engine.hand.every(shape => shape !== null)).toBe(true);
   });
+
+  it('should allow swapping hand with a new triad of shapes', () => {
+    const engine = new BlockEngine();
+    engine.initGame({ difficulty: 'medium' });
+
+    expect(engine.hand.length).toBe(3);
+    expect(engine.hand.every(s => s !== null)).toBe(true);
+
+    const swapped = engine.swapHand();
+    expect(swapped).toBe(true);
+    expect(engine.hand.length).toBe(3);
+    expect(engine.hand.every(s => s !== null)).toBe(true);
+  });
 });

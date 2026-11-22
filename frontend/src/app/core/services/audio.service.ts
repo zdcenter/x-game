@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { playUISound } from './audio/ui.sound';
+import { playUISound, UISoundName } from './audio/ui.sound';
 import { playMinesweeperSound } from './audio/minesweeper.sound';
 import { playSokobanSound } from './audio/sokoban.sound';
 import { playWaterSortSound } from './audio/watersort.sound';
@@ -171,7 +171,7 @@ export class AudioService {
   }
 
   // --- UI Sounds ---
-  async playUI(name: 'click' | 'victory' | 'pk_victory' | 'gameover' | 'pk_defeat' | 'error' | 'countdown' | 'countdown_go') {
+  async playUI(name: UISoundName) {
     if (this.isMuted()) return;
     await this.initWebAudio();
     if (this.audioCtx && this.masterGain) {
@@ -180,6 +180,7 @@ export class AudioService {
   }
 
   playClick() { this.playUI('click'); }
+  playCoin() { this.playUI('coin'); }
   playWin(isPk = false) { this.playUI(isPk ? 'pk_victory' : 'victory'); }
   playLose(isPk = false) { this.playUI(isPk ? 'pk_defeat' : 'gameover'); }
   playDrop() { this.playUI('click'); }

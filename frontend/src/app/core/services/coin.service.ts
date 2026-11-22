@@ -6,6 +6,7 @@ import { AuthStore, User } from '../auth/auth.store';
 import { FloatingTextService } from './floating-text.service';
 import { ToastService } from './toast.service';
 import { I18nService } from '../i18n/i18n.service';
+import { CoinFlyService } from './coin-fly.service';
 
 export interface ConsumeCoinsResponse {
   success: boolean;
@@ -24,11 +25,21 @@ export class CoinService {
   private floatingText = inject(FloatingTextService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private coinFly = inject(CoinFlyService);
   private apiUrl = environment.apiUrl;
 
   readonly coins = computed(() => this.authStore.currentUser()?.brain_coins ?? 0);
   readonly isAuthenticated = computed(() => this.authStore.isAuthenticated());
   readonly pendingCoinGain = signal<{ amount: number } | null>(null);
+  readonly isPillBouncing = signal<boolean>(false);
+
+  triggerPillBounce(): void {
+    this.isPillBouncing.set(false);
+    setTimeout(() => {
+      this.isPillBouncing.set(true);
+      setTimeout(() => this.isPillBouncing.set(false), 600);
+    }, 10);
+  }
 
   showCoinGain(amount: number): void {
     if (amount <= 0) return;
@@ -85,6 +96,7 @@ export class CoinService {
     const x = window.innerWidth / 2;
     const y = 140;
     this.floatingText.show(`+${amount} 🪙`, x, y, { color: '#34d399', size: 'xl' });
+    this.coinFly.flyCoins({ fromX: x, fromY: y, count: Math.min(Math.max(amount, 4), 10) });
   }
 
   setCoins(coins: number) {

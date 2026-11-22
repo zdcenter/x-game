@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { Router } from '@angular/router';
@@ -53,6 +53,20 @@ export class GameToolbarComponent {
       if (match) {
         this.gameId = match[1];
       }
+    }
+  }
+
+  @HostListener('window:xgame:shortcut', ['$event'])
+  onShortcut(event: any): void {
+    const action = event?.detail?.action;
+    if (action === 'restart' && this.showRestart) {
+      this.restart.emit();
+    } else if (action === 'undo' && this.showUndo && !this.disableUndo) {
+      this.undo.emit();
+    } else if (action === 'hint' && this.showHint) {
+      this.hintApplied.emit();
+    } else if (action === 'next' && this.showNext && !this.disableNext) {
+      this.nextLevel.emit();
     }
   }
 

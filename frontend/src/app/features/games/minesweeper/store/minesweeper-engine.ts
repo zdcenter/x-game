@@ -50,6 +50,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
   startAt: number = 0;
   endAt: number = 0;
   isMinesPlaced: boolean = false;
+  isTutorial: boolean = false;
   lastFailedCell: {x: number, y: number} | null = null;
   moveHistory: MinesweeperReplayStep[] = [];
   private currentActionChanges: MinesweeperCellSnapshot[] = [];
@@ -75,6 +76,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     this.startAt = Date.now();
     this.endAt = 0;
     this.isMinesPlaced = false;
+    this.isTutorial = false;
     this.lastFailedCell = null;
     this.moveHistory = [];
     this.currentActionChanges = [];
@@ -100,6 +102,7 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     this.moveHistory = [];
     this.currentActionChanges = [];
     this.isMinesPlaced = true; // Pre-placed
+    this.isTutorial = true;
 
     this.cells = Array.from({ length: this.height }, (_, y) =>
       Array.from({ length: this.width }, (_, x) => ({
@@ -257,6 +260,10 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
       this.recordCellChange(x, y);
       this.commitMove('flag', x, y);
     }
+
+    if (this.isTutorial) {
+      this.checkTutorialWinCondition();
+    }
   }
 
   private placeMines(excludeX: number, excludeY: number) {
@@ -352,6 +359,11 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
     
     // In strict single player, winning is just revealing all safe cells
     if (this.revealedCnt === totalSafeCells) {
+      if (this.isTutorial) {
+        // 在教程模式下，最后一步（步骤4）需要玩家亲自体会插上最后一面红旗
+        // 因此教程期间不自动代插红旗，保持未揭开状态等待玩家操作
+        return;
+      }
       this.status = GameStatus.Finished;
       this.endAt = Date.now();
       // Auto-flag remaining mines
@@ -364,6 +376,29 @@ export class LocalMinesweeperEngine implements ILocalEngine<any, MinesweeperActi
           }
         }
       }
+    }
+  }
+
+  private checkTutorialWinCondition() {
+    const totalSafeCells = (this.width * this.height) - this.mines;
+    if (this.revealedCnt !== totalSafeCells) return;
+
+    let allMinesFlagged = true;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        const cell = this.cells[y][x] as any;
+        if (cell.isMine && cell.state !== CellState.Flagged) {
+          allMinesFlagged = false;
+          break;
+        }
+      }
+      if (!allMinesFlagged) break;
+    }
+
+    if (allMinesFlagged) {
+      this.status = GameStatus.Finished;
+      this.endAt = Date.now();
+      this.commitMove('win', 0, 0);
     }
   }
 

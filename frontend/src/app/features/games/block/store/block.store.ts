@@ -366,6 +366,20 @@ export class BlockStore extends BaseGameStore {
     }
   }
 
+  swapHand() {
+    if (this.isDead() || this.localStatus() !== GameStatus.Playing) return;
+    this.engine.handleAction({ type: BlockActionType.SwapHand });
+    this.updateSignals();
+    if (this.currentRoomMode() === GameMode.Single) {
+      this.saveSinglePlayerProgress();
+    } else {
+      this.syncState();
+    }
+    if (this.engine.isDead) {
+      this.onGameOver();
+    }
+  }
+
   canPlace(shape: BlockShape, startRow: number, startCol: number, board: number[][]): boolean {
     const size = this.boardSize();
     for (let r = 0; r < shape.matrix.length; r++) {

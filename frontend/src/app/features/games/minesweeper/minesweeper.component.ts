@@ -473,6 +473,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
   private elapsedInterval: any;
 
   override ngOnInit() {
+    this.mobileActionMode.set('reveal');
     super.ngOnInit(); // connects lobby WS
     if (isBrowser()) {
       const completed = isTutorialCompleted('minesweeper');
@@ -689,6 +690,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
     markTutorialCompleted('minesweeper');
+    this.mobileActionMode.set('reveal');
     this.changeSingleDifficulty(getSavedDifficulty('minesweeper', 'easy'));
   }
 
@@ -697,11 +699,13 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.isTutorialActive.set(false);
     this.hasCompletedTutorial.set(true);
     markTutorialCompleted('minesweeper');
+    this.mobileActionMode.set('reveal');
     this.changeSingleDifficulty('easy');
   }
 
   dismissTutorialCapsule() {
     this.tutorialDismissed.set(true);
+    this.mobileActionMode.set('reveal');
     markTutorialCompleted('minesweeper');
   }
 
@@ -764,6 +768,7 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
           this.vibrateMedium();
           this.store.toggleFlag(cell.x, cell.y);
           this.tutorialStep.set(4);
+          this.mobileActionMode.set('reveal');
           this.vibrateSuccess();
           this.celebrateVictory();
           this.hasCompletedTutorial.set(true);
@@ -840,7 +845,18 @@ export class MinesweeperComponent extends BaseGameComponent implements OnInit, O
     this.changeSingleDifficulty(diffId);
   }
 
+  override handleRestart() {
+    this.mobileActionMode.set('reveal');
+    super.handleRestart();
+  }
+
+  override handleRematch() {
+    this.mobileActionMode.set('reveal');
+    super.handleRematch();
+  }
+
   changeSingleDifficulty(diff: string) {
+    this.mobileActionMode.set('reveal');
     if (this.currentRoomMode() !== GameMode.Single || this.store.roomId()) {
       return;
     }

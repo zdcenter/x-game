@@ -19,13 +19,16 @@ import { CoinGuideModalComponent } from '../../shared/components/coin-guide-moda
 import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.component';
 import { FriendService } from '../services/friend.service';
 import { DeviceService } from '../services/device.service';
+import { AudioService } from '../services/audio.service';
+import { KeyboardShortcutService } from '../services/keyboard-shortcut.service';
+import { KeyboardShortcutsModalComponent } from '../../shared/components/keyboard-shortcuts-modal/keyboard-shortcuts-modal.component';
 import { OfflineBannerComponent } from '../../shared/components/offline-banner/offline-banner.component';
 import { NotificationService, NotificationItem } from '../services/notification.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent, OfflineBannerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CommonModule, ShareModalComponent, FooterComponent, CoinGuideModalComponent, CoinIconComponent, OfflineBannerComponent, KeyboardShortcutsModalComponent],
   template: `
     <div class="h-[100dvh] w-full flex flex-col font-sans transition-colors duration-300 overflow-hidden">
 
@@ -77,6 +80,13 @@ import { NotificationService, NotificationItem } from '../services/notification.
           <!-- Right: Controls -->
           <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
 
+            <!-- Keyboard Shortcuts Button (Desktop) -->
+            <button (click)="shortcutService.openModal()"
+                    class="hidden md:flex items-center justify-center p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-amber-500 hover:bg-[var(--color-bg-main)] cursor-pointer"
+                    [title]="(i18n.t('shortcuts.title')() || '快捷键指南') + ' (?)'">
+              <span class="text-base leading-none block">⌨️</span>
+            </button>
+
             <!-- Theme Toggle -->
             <button (click)="theme.cycleTheme()"
                     class="hidden sm:flex p-2 rounded-lg transition-colors text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)]"
@@ -116,11 +126,15 @@ import { NotificationService, NotificationItem } from '../services/notification.
             @if (authStore.isAuthenticated()) {
 
               <!-- Coins Pill (Click to open Coin Economy Guide) -->
-              <button (click)="coinGuideService.open()"
-                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 font-black text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              <button id="navbar-coins-pill"
+                      (click)="coinGuideService.open()"
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 dark:bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/30 dark:border-amber-500/25 text-amber-700 dark:text-amber-300 font-black text-xs shadow-xs transition-all hover:scale-105 active:scale-95 cursor-pointer coins-pill-target"
+                      [class.ring-2]="coinService.isPillBouncing()"
+                      [class.ring-amber-400]="coinService.isPillBouncing()"
+                      [class.scale-110]="coinService.isPillBouncing()"
                       [title]="i18n.t('game.coins_balance')() + ': ' + coinService.coins() + ' (' + (i18n.t('coins.guide_title')() || '规则指南') + ')'">
-                <app-coin-icon size="sm" />
-                <span class="font-mono font-black">{{ coinService.coins() }}</span>
+                <app-coin-icon size="sm" [class.animate-bounce]="coinService.isPillBouncing()" />
+                <span class="font-mono font-black transition-all">{{ coinService.coins() }}</span>
               </button>
 
               <!-- Friends Pill (Clean Navbar Entry) -->
@@ -540,6 +554,7 @@ import { NotificationService, NotificationItem } from '../services/notification.
           <app-footer class="mt-auto"></app-footer>
         }
         <app-share-modal></app-share-modal>
+        <app-keyboard-shortcuts-modal></app-keyboard-shortcuts-modal>
       </div>
 
       <!-- Global PWA Install Floating Prompt (彻底避开右下角【🎁 推荐本站】按钮，已安装则自动隐匿) -->
@@ -696,6 +711,8 @@ export class MainLayoutComponent {
   friendService = inject(FriendService);
   deviceService = inject(DeviceService);
   notificationService = inject(NotificationService);
+  shortcutService = inject(KeyboardShortcutService);
+  audioService = inject(AudioService);
 
   isNotificationDropdownOpen = signal(false);
   isUserMenuOpen = signal(false);
@@ -743,11 +760,69 @@ export class MainLayoutComponent {
 
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
+    if (this.shortcutService.isModalOpen()) {
+      this.shortcutService.closeModal();
+      return;
+    }
     if (this.isNotificationDropdownOpen()) {
       this.isNotificationDropdownOpen.set(false);
     }
     if (this.isUserMenuOpen()) {
       this.isUserMenuOpen.set(false);
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGlobalKeydown(event: KeyboardEvent): void {
+    if (this.shortcutService.isTyping(event.target)) return;
+
+    if (event.key === '?' || (event.shiftKey && event.key === '/')) {
+      event.preventDefault();
+      this.shortcutService.toggleModal();
+      return;
+    }
+
+    if (this.shortcutService.isModalOpen()) return;
+
+    const key = event.key.toLowerCase();
+
+    if (key === 'm') {
+      this.audioService.toggleMute();
+      return;
+    }
+
+    if (key === 'f') {
+      if (typeof document !== 'undefined') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      return;
+    }
+
+    if (key === 'r') {
+      this.shortcutService.dispatchAction('restart');
+      return;
+    }
+
+    if (key === 'z') {
+      this.shortcutService.dispatchAction('undo');
+      return;
+    }
+
+    if (key === 'h') {
+      this.shortcutService.dispatchAction('hint');
+      return;
+    }
+
+    if (event.code === 'Space') {
+      if (this.zenService.isGameRoute()) {
+        event.preventDefault();
+        this.shortcutService.dispatchAction('space' as any);
+      }
+      return;
     }
   }
 

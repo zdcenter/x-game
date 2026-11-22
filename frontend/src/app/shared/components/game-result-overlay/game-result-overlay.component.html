@@ -142,6 +142,21 @@
             : (isPkMatch ? i18n.t('result.honor_title_pk_lose')() : i18n.t('result.honor_title_lose')()))) }}
         </p>
 
+        <!-- Single Player Victory 3-Star Rating -->
+        @if (status === GameResult.Win && !isPkMatch) {
+          <div class="flex items-center justify-center gap-2.5 mt-2.5 mb-0.5">
+            @for (star of [1, 2, 3]; track star) {
+              <div class="relative flex items-center justify-center transition-all duration-500"
+                   [style.animation-delay.ms]="star * 160"
+                   [ngClass]="displayStars() >= star ? 'scale-100 animate-trophy-impact' : 'scale-90 opacity-30 grayscale'">
+                <span class="text-2xl sm:text-3xl filter drop-shadow-[0_0_8px_rgba(250,204,21,0.7)] select-none">
+                  ⭐
+                </span>
+              </div>
+            }
+          </div>
+        }
+
         <!-- Dopamine Defeat Near-Miss Hook -->
         @if (!isSpectator && status === GameResult.Lose) {
           <div class="w-full max-w-sm mt-3 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-500/15 via-amber-500/15 to-rose-500/15 border border-rose-500/30 flex items-center justify-between text-xs animate-pulse">
@@ -665,6 +680,16 @@
                 : 'bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 hover:from-amber-500/25 hover:to-purple-500/25 text-amber-500 border border-amber-500/40'">
               <span>⚔️</span>
               <span>{{ warpostCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : '下战帖' }}</span>
+            </button>
+
+            <!-- 1.5 极简战报复制 (Wordle-style Text Result) -->
+            <button (click)="copyTextResult()"
+              class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs"
+              [class]="textCopied()
+                ? 'bg-emerald-500 text-white font-black shadow-emerald-500/30'
+                : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-emerald-400 border border-[var(--color-border-card)] hover:border-emerald-500/40 hover:bg-[var(--color-border-card)]/40'">
+              <span>📋</span>
+              <span>{{ textCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : (i18n.t('text_share.btn')() || '战绩复制') }}</span>
             </button>
 
             <!-- 2. 海报 (Poster) -->

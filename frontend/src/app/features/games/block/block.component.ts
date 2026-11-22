@@ -14,6 +14,7 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
 import { GameScoreCapsuleComponent } from '../../../shared/components/game-score-capsule/game-score-capsule.component';
 import { GameHandheldScoreComponent } from '../../../shared/components/game-handheld-score/game-handheld-score.component';
 import { WindowSizeService } from '../../../core/services/window-size.service';
+import { CoinService } from '../../../core/services/coin.service';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 
@@ -58,6 +59,10 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
 })
 export class BlockComponent extends BaseGameComponent implements OnInit, OnDestroy {
   private windowSize = inject(WindowSizeService);
+  coinService = inject(CoinService);
+
+  readonly costSwap = computed(() => this.settingsService.coinEconomy().costSwap);
+  isSwapping = signal(false);
 
   readonly boardDimPx = computed(() => {
     const { w: vw, h: vh } = this.windowSize.size();
@@ -469,6 +474,35 @@ export class BlockComponent extends BaseGameComponent implements OnInit, OnDestr
     } else {
       this.previewShadow.set(null);
     }
+  }
+
+  onSwapHand(event: MouseEvent) {
+    if (this.store.isDead() || this.isSwapping()) return;
+    if (this.store.currentRoomMode() !== GameMode.Single) return;
+
+    if (!this.authStore.isAuthenticated()) {
+      this.toast.show(this.i18n.t('game.login_required_coins')() || '请先登录以使用换牌锦囊', 'info');
+      return;
+    }
+
+    const cost = this.costSwap();
+    if (this.coinService.coins() < cost) {
+      this.toast.show(this.i18n.t('game.insufficient_coins')() || '脑力币不足，可通过闯关挑战获取！', 'error');
+      return;
+    }
+
+    this.isSwapping.set(true);
+    this.haptic.vibrateMedium();
+    this.coinService.consumeCoins('swap', event).subscribe({
+      next: () => {
+        this.audioService.playMath24('flip');
+        this.store.swapHand();
+        setTimeout(() => this.isSwapping.set(false), 350);
+      },
+      error: () => {
+        this.isSwapping.set(false);
+      }
+    });
   }
 
   onDragStart(event: MouseEvent | TouchEvent, shape: BlockShape, index: number) {

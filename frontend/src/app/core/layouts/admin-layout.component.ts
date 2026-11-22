@@ -55,7 +55,7 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
           </a>
           <a routerLink="/admin/feedbacks" routerLinkActive="bg-rose-500/20 text-rose-400 border-rose-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>📬</span>
-            <span>玩家反馈与留言</span>
+            <span>{{ i18n.t('admin.menu.feedback')() }}</span>
           </a>
 
           <!-- Divider -->
@@ -85,11 +85,11 @@ import { CoinIconComponent } from '../../shared/components/coin-icon/coin-icon.c
 
           <a routerLink="/admin/images" routerLinkActive="bg-violet-500/20 text-violet-400 border-violet-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🖼️</span>
-            <span>图片管理</span>
+            <span>{{ i18n.t('admin.menu.images')() }}</span>
           </a>
           <a routerLink="/admin/database" routerLinkActive="bg-cyan-500/20 text-cyan-400 border-cyan-500/50" class="flex items-center space-x-3 px-4 py-3 rounded-xl border border-transparent hover:bg-[var(--color-border-card)] transition-colors text-sm font-bold tracking-wide">
             <span>🗄️</span>
-            <span>数据库管理</span>
+            <span>{{ i18n.t('admin.menu.database')() }}</span>
           </a>
         </nav>
 

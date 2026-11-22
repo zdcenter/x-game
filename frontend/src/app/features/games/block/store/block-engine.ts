@@ -11,7 +11,8 @@ export interface BlockGameState {
 }
 
 export enum BlockActionType {
-  Place = 'Place'
+  Place = 'Place',
+  SwapHand = 'SwapHand'
 }
 
 export interface BlockAction {
@@ -94,7 +95,17 @@ export class BlockEngine implements ILocalEngine<BlockGameState, BlockAction> {
       if (action.handIndex !== undefined && action.startRow !== undefined && action.startCol !== undefined) {
         this.placeShape(action.handIndex, action.startRow, action.startCol);
       }
+    } else if (action.type === BlockActionType.SwapHand) {
+      this.swapHand();
     }
+  }
+
+  swapHand(): boolean {
+    if (this.isDead || this.status !== GameStatus.Playing) return false;
+    this.hand = getRandomShapes(3);
+    this.checkGameOver();
+    if (this.config?.onSyncState) this.config.onSyncState();
+    return true;
   }
 
   getState(): BlockGameState {

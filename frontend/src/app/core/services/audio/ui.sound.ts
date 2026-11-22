@@ -2,6 +2,7 @@ import { createOsc, createGain, createLpf } from "./audio-utils";
 
 export type UISoundName =
   | 'click'
+  | 'coin'
   | 'victory'
   | 'pk_victory'
   | 'gameover'
@@ -20,6 +21,23 @@ export function playUISound(audioCtx: AudioContext, out: AudioNode, name: UISoun
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
     o.connect(g); g.connect(out);
     o.start(t); o.stop(t + 0.08);
+
+  } else if (name === 'coin') {
+    // === Shimmering Golden Coin Chime: B5 (987.77Hz) -> E6 (1318.51Hz) ===
+    const o1 = createOsc(audioCtx, 'sine', 987.77);
+    const g1 = createGain(audioCtx, 0.15);
+    g1.gain.setValueAtTime(0.15, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    o1.connect(g1); g1.connect(out);
+    o1.start(t); o1.stop(t + 0.09);
+
+    const o2 = createOsc(audioCtx, 'sine', 1318.51);
+    const g2 = createGain(audioCtx, 0);
+    g2.gain.setValueAtTime(0, t + 0.06);
+    g2.gain.linearRampToValueAtTime(0.20, t + 0.08);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    o2.connect(g2); g2.connect(out);
+    o2.start(t + 0.06); o2.stop(t + 0.36);
 
   } else if (name === 'victory') {
     // === Single-Player Victory: High-Dopamine Arcade Fanfare + Slot Machine Crystal Cascade ===

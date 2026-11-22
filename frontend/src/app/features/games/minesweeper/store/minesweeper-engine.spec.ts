@@ -77,8 +77,19 @@ describe('LocalMinesweeperEngine', () => {
       }
     }
 
-    expect(engine.status).toBe(GameStatus.Finished);
+    // In tutorial mode, revealing all safe cells does not auto-flag mines or finish prematurely,
+    // allowing the player to flag the final mine as the tutorial intends.
+    expect(engine.status).toBe(GameStatus.Playing);
     expect(engine.revealedCnt).toBe(14);
+    expect(engine.cells[0][0].state).toBe(CellState.Hidden);
+
+    // Flag both mines to complete the tutorial
+    engine.handleAction({ type: MinesweeperActionType.Flag, x: 3, y: 1 });
+    engine.handleAction({ type: MinesweeperActionType.Flag, x: 0, y: 0 });
+
+    expect(engine.status).toBe(GameStatus.Finished);
+    expect(engine.cells[0][0].state).toBe(CellState.Flagged);
+    expect(engine.cells[1][3].state).toBe(CellState.Flagged);
   });
 
   it('performs Chording correctly when surrounding flags match cell neighbors', () => {
