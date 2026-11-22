@@ -17,6 +17,7 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 import { CoinService } from '../../../core/services/coin.service';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-block',
@@ -27,7 +28,8 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
     GamePkHudComponent,
     GameScoreCapsuleComponent,
     GameHandheldHeaderComponent,
-    GameHandheldScoreComponent],
+    GameHandheldScoreComponent,
+    GameToolbarComponent],
   templateUrl: './block.component.html',
   styles: [`
     @keyframes block-shake {

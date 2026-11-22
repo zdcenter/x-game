@@ -331,6 +331,21 @@
                 </div>
               }
 
+              <!-- Standard Actions Toolbar -->
+              @if (currentRoomMode() === GameMode.Single) {
+                <div class="w-full max-w-xs mx-auto py-1">
+                  <app-game-toolbar
+                    [gameId]="'hexa'"
+                    [showPrev]="false"
+                    [showNext]="false"
+                    [showRestart]="true"
+                    [showUndo]="false"
+                    [showHint]="false"
+                    (restart)="store.restartGame()">
+                  </app-game-toolbar>
+                </div>
+              }
+
         </div>
       </div>
 

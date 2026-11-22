@@ -153,6 +153,17 @@ export class GameResultOverlayComponent implements OnInit, OnDestroy, OnChanges 
     return this.status === GameResult.Win ? 3 : 0;
   });
 
+  readonly hasReplayData = computed(() => {
+    if (!this.replayData) return false;
+    if (Array.isArray(this.replayData)) return this.replayData.length > 0;
+    if (typeof this.replayData === 'object') {
+      if (Array.isArray(this.replayData.steps)) return this.replayData.steps.length > 0;
+      if (Array.isArray(this.replayData.moves)) return this.replayData.moves.length > 0;
+      return Object.keys(this.replayData).length > 0;
+    }
+    return false;
+  });
+
   @Input({ required: true }) status!: GameResultType;
   @Input({ required: true }) title!: string;
   @Input() subtitle?: string;

@@ -12,6 +12,7 @@ import { XpService } from '../../../core/services/xp.service';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-idiom',
@@ -21,7 +22,8 @@ import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hu
     CommonModule,
     GameLayoutComponent,
     GameHandheldHeaderComponent,
-    GamePkHudComponent
+    GamePkHudComponent,
+    GameToolbarComponent
   ],
   templateUrl: './idiom.component.html',
   styles: [`

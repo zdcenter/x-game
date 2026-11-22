@@ -363,49 +363,21 @@
               </div>
             </div>
 
-            <!-- Actions Toolbar (Centered, Uniform Cards, Zero Awkward Gaps) -->
-            <div class="flex-none w-full mx-auto relative z-10 shrink-0 py-1.5 sm:py-2 flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-              <!-- 🔄 重来 -->
-              <button type="button"
-                      (click)="isTutorialActive() ? restartTutorial() : changeSingleDifficulty(currentDifficulty())"
-                      class="w-[58px] sm:w-[68px] h-[50px] sm:h-[54px] rounded-xl border border-[var(--color-border-card)] bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] text-[var(--color-text-main)] font-bold transition-all active:scale-95 shadow-xs flex flex-col items-center justify-center shrink-0 cursor-pointer group"
-                      [title]="isTutorialActive() ? (i18n.t('tutorial.interactive.btn_restart')() || '重置教程') : (i18n.t('minesweeper.restart')() || '重新开始')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 mb-0.5 text-red-500 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span class="w-full text-center tracking-tighter whitespace-nowrap text-[9px] sm:text-xs leading-none">
-                  {{ i18n.t('game.retry')() || '重来' }}
-                </span>
-              </button>
-
-              <!-- 💡 提示 -->
-              @if (currentRoomMode() === GameMode.Single && !isTutorialActive()) {
-                <div class="w-[58px] sm:w-[68px] h-[50px] sm:h-[54px] shrink-0">
-                  <app-hint-button [layout]="'sudoku'" (hintApplied)="store.applyHint()" class="w-full h-full block"></app-hint-button>
-                </div>
-              }
-
-              <!-- 🎓 教程 (上图标下文字，统一卡片尺寸，不隐文字) -->
-              @if (currentRoomMode() === GameMode.Single) {
-                <button type="button"
-                        (click)="isTutorialActive() ? restartTutorial() : startTutorial()"
-                        class="w-[58px] sm:w-[68px] h-[50px] sm:h-[54px] rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold transition-all active:scale-95 shadow-xs flex flex-col items-center justify-center shrink-0 cursor-pointer group relative"
-                        [class.ring-2]="isTutorialActive()"
-                        [class.ring-amber-500]="isTutorialActive()"
-                        [title]="i18n.t('tutorial.interactive.btn_tutorial')() || '新手教程'">
-                  @if (!hasCompletedTutorial() && !isTutorialActive()) {
-                    <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
-                    </span>
-                  }
-                  <span class="text-base sm:text-lg leading-none mb-0.5 group-hover:scale-110 transition-transform">🎓</span>
-                  <span class="w-full text-center tracking-tighter whitespace-nowrap text-[9px] sm:text-xs leading-none">
-                    {{ i18n.t('tutorial.interactive.btn_tutorial')() || '教程' }}
-                  </span>
-                </button>
-              }
-
+            <!-- Standard Actions Toolbar -->
+            <div class="flex-none w-full max-w-xs mx-auto relative z-10 shrink-0 py-1">
+              <app-game-toolbar
+                [gameId]="'minesweeper'"
+                [showPrev]="false"
+                [showNext]="false"
+                [showRestart]="true"
+                [showHint]="currentRoomMode() === GameMode.Single && !isTutorialActive()"
+                [showTutorial]="currentRoomMode() === GameMode.Single"
+                [isTutorialActive]="isTutorialActive()"
+                [hasCompletedTutorial]="hasCompletedTutorial()"
+                (restart)="isTutorialActive() ? restartTutorial() : changeSingleDifficulty(currentDifficulty())"
+                (hintApplied)="store.applyHint()"
+                (tutorialClick)="isTutorialActive() ? restartTutorial() : startTutorial()">
+              </app-game-toolbar>
             </div>
           </div>
 

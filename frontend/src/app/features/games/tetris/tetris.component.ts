@@ -19,11 +19,12 @@ import { WindowSizeService } from '../../../core/services/window-size.service';
 
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-tetris',
   standalone: true,
-  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
+  imports: [GameSpectatingOverlayComponent, CommonModule, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent, GameToolbarComponent],
   templateUrl: './tetris.component.html',
   styleUrls: ['./tetris.component.css'],
   providers: [TetrisStore]

@@ -264,49 +264,35 @@
             </button>
           </div>
 
-          <!-- Quick Prop Buttons -->
-          <div class="flex items-center gap-2 sm:gap-2.5">
-            <!-- Hint -->
-            <button (click)="useHint()"
-                    [disabled]="hintsRemaining() <= 0"
-                    title="画龙点睛：填入正确字"
-                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border transition-all active:scale-95 cursor-pointer"
-                    [ngClass]="hintsRemaining() > 0
-                      ? 'border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10'
-                      : 'opacity-40 border-[var(--color-border-card)] text-[var(--color-text-secondary)] cursor-not-allowed'">
-              <span class="text-sm sm:text-base">💡</span>
-              <span class="hidden sm:inline">提示</span>
-              <span class="text-xs sm:text-sm font-mono font-extrabold">({{ hintsRemaining() }})</span>
-            </button>
-
-            <!-- Shuffle Keypad -->
-            <button (click)="useShuffle()"
-                    [disabled]="shufflesRemaining() <= 0"
-                    title="移花接木：重置候选字盘"
-                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border transition-all active:scale-95 cursor-pointer"
-                    [ngClass]="shufflesRemaining() > 0
-                      ? 'border-sky-500/40 text-sky-500 hover:bg-sky-500/10'
-                      : 'opacity-40 border-[var(--color-border-card)] text-[var(--color-text-secondary)] cursor-not-allowed'">
-              <span class="text-sm sm:text-base">🔄</span>
-              <span class="hidden sm:inline">换字</span>
-              <span class="text-xs sm:text-sm font-mono font-extrabold">({{ shufflesRemaining() }})</span>
-            </button>
-
-            <!-- Dictionary/Candidates -->
-            <button (click)="openCandidatesModal()"
-                    title="成语宝库：查看所有可接成语"
-                    class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border border-amber-500/40 text-amber-500 hover:bg-amber-500/10 active:scale-95 transition-all cursor-pointer">
-              <span class="text-sm sm:text-base">📖</span>
-              <span class="hidden sm:inline">宝典</span>
-            </button>
-
-            <!-- Restart -->
-            <button (click)="startNewSolitaireGame()"
-                    title="重新开启一条全新神龙"
-                    class="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm md:text-base font-bold border border-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-main)] active:scale-95 transition-all cursor-pointer">
-              <span class="text-sm sm:text-base">⚡</span>
-              <span class="hidden sm:inline">重开</span>
-            </button>
+          <!-- Standard Actions Toolbar -->
+          <div class="flex items-center">
+            <app-game-toolbar
+              [gameId]="'idiom'"
+              [showPrev]="false"
+              [showNext]="false"
+              [showRestart]="true"
+              [showUndo]="false"
+              [showHint]="true"
+              (restart)="startNewSolitaireGame()"
+              (hintApplied)="useHint()">
+              <button toolbar-extra
+                      type="button"
+                      (click)="useShuffle()"
+                      [disabled]="shufflesRemaining() <= 0"
+                      title="移花接木：重置候选字盘"
+                      class="flex-1 min-w-[50px] max-w-[100px] min-h-[46px] sm:min-h-[50px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-[var(--color-border-card)] text-[var(--color-text-main)] touch-manipulation select-none cursor-pointer disabled:opacity-40">
+                <span class="text-xs sm:text-sm mb-0.5">🔄</span>
+                <span class="text-[8px] min-[380px]:text-[10px] sm:text-xs whitespace-nowrap">换字({{ shufflesRemaining() }})</span>
+              </button>
+              <button toolbar-extra
+                      type="button"
+                      (click)="openCandidatesModal()"
+                      title="成语宝库：查看所有可接成语"
+                      class="flex-1 min-w-[50px] max-w-[100px] min-h-[46px] sm:min-h-[50px] flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl font-bold transition-all bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-main)] active:scale-95 text-[10px] sm:text-xs border border-amber-500/40 text-amber-500 touch-manipulation select-none cursor-pointer">
+                <span class="text-xs sm:text-sm mb-0.5">📖</span>
+                <span class="text-[8px] min-[380px]:text-[10px] sm:text-xs whitespace-nowrap">宝典</span>
+              </button>
+            </app-game-toolbar>
           </div>
         </div>
 

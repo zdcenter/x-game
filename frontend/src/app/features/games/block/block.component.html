@@ -312,6 +312,21 @@
               </div>
             }
 
+            <!-- Standard Actions Toolbar -->
+            @if (store.currentRoomMode() === GameMode.Single) {
+              <div class="w-full max-w-xs mx-auto py-1">
+                <app-game-toolbar
+                  [gameId]="'block'"
+                  [showPrev]="false"
+                  [showNext]="false"
+                  [showRestart]="true"
+                  [showUndo]="false"
+                  [showHint]="false"
+                  (restart)="store.currentRoomMode() === GameMode.Single ? store.startGame() : store.restartGame()">
+                </app-game-toolbar>
+              </div>
+            }
+
         </div>
       </div>
 

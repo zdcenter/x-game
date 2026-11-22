@@ -716,19 +716,6 @@ import { JuiceService } from '../../../core/services/juice.service';
   <!-- Overlay slot for dragged pieces that must escape overflow: hidden / backdrop-filter -->
   <ng-content select="[game-overlay]"></ng-content>
 
-  <!-- Floating Feedback / Bug Report Button (Single minimalist button at bottom right, globally persistent for all games) -->
-  <aside class="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] right-2.5 sm:right-4 z-50 flex items-center pointer-events-auto"
-         aria-label="Feedback button">
-    <!-- Feedback / Bug Report Button -->
-    <button type="button"
-            (click)="onOpenFeedback()"
-            class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[var(--color-bg-card)]/90 hover:bg-[var(--color-bg-card)] backdrop-blur-md border border-[var(--color-border-card)] text-amber-500 hover:text-amber-400 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center opacity-70 hover:opacity-100 group cursor-pointer"
-            [attr.title]="i18n.t('feedback.tooltip')() || '意见建议与 Bug 反馈'">
-      <span class="text-sm sm:text-base group-hover:scale-110 transition-transform">🐞</span>
-      <span class="sr-only">{{ i18n.t('feedback.tooltip')() || '意见反馈' }}</span>
-    </button>
-  </aside>
-
   <!-- Auto-managed Game Finished Result Overlay (True Viewport Fullscreen Grand Hall) -->
   @if (isAutoResultVisible()) {
     <app-game-result-overlay

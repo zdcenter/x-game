@@ -14,11 +14,12 @@ import { GomokuAI, type GomokuColor } from './store/gomoku-ai';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-gomoku',
   standalone: true,
-  imports: [CommonModule, GameLayoutComponent, GameHandheldHeaderComponent, DifficultySelectorComponent],
+  imports: [CommonModule, GameLayoutComponent, GameHandheldHeaderComponent, DifficultySelectorComponent, GameToolbarComponent],
   providers: [GomokuStore],
   templateUrl: './gomoku.component.html',
   styleUrls: ['./gomoku.component.css']

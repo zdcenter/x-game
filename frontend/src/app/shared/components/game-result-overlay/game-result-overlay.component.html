@@ -83,20 +83,12 @@
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <button (click)="peekBoard()"
-                  type="button"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
-                  [attr.title]="i18n.t('game.peek_board_desc')() || '隐藏战报查看当前棋盘/残局，可随时返回'">
-            <span>👁️</span>
-            <span>{{ i18n.t('game.view_board')() || '查看棋盘残局' }}</span>
-          </button>
           @if (canShowLeave) {
             <button (click)="handleLeave()"
                     type="button"
-                    class="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-500 border border-rose-500/25 transition-all flex items-center gap-1 cursor-pointer shadow-xs active:scale-95"
+                    class="w-8 h-8 rounded-full bg-[var(--color-bg-main)] hover:bg-[var(--color-border-card)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] border border-[var(--color-border-card)] transition-all flex items-center justify-center cursor-pointer active:scale-95 text-xs font-bold"
                     [attr.title]="i18n.t('game.leave')() || '退出对局'">
-              <span>🚪</span>
-              <span class="hidden sm:inline">{{ i18n.t('game.leave')() || '退出' }}</span>
+              ✕
             </button>
           }
         </div>
@@ -386,44 +378,21 @@
         </div>
       }
 
-      <!-- Social Challenge & PK Invitation Gateway (Only for Solo games) -->
-      @if (currentGameId && !isPkMatch) {
-        <div class="w-full my-3 p-4 rounded-2xl bg-gradient-to-r from-violet-500/10 via-indigo-500/5 to-purple-500/10 border border-violet-500/30 relative z-10 shadow-inner">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl shrink-0 p-2.5 rounded-2xl bg-[var(--color-bg-main)] border border-violet-500/30 shadow-inner">⚔️</span>
-              <div>
-                <h4 class="text-sm font-black text-[var(--color-text-main)] flex items-center gap-1.5">
-                  <span>{{ i18n.t('result.challenge_friend_title')() }}</span>
-                </h4>
-                <p class="text-xs text-[var(--color-text-secondary)] mt-0.5 leading-snug">
-                  {{ i18n.t('result.challenge_friend_desc')() }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Action Buttons: Challenge / Matchmaking -->
-            <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
-              <button (click)="generateWarpost()"
-                      class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-500 border border-amber-500/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
-                @if (warpostCopied()) {
-                  <span>✓</span>
-                  <span>{{ i18n.t('text_share.copied_short')() || '已复制战帖!' }}</span>
-                } @else {
-                  <span>⚔️</span>
-                  <span>{{ i18n.t('result.copy_challenge')() || '下战帖约战' }}</span>
-                }
-              </button>
-
-              @if (hasPkMode) {
-                <button (click)="goToPkArena()"
-                        class="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md shadow-violet-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-                  <span>⚡</span>
-                  <span>{{ i18n.t('result.enter_pk')() }}</span>
-                </button>
-              }
+      <!-- Social Challenge Gateway (Only on New Record) -->
+      @if (currentGameId && !isPkMatch && isNewRecord) {
+        <div class="w-full my-2 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/35 relative z-10 flex items-center justify-between gap-3 shadow-sm animate-fade-in">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-xl shrink-0">👑</span>
+            <div class="truncate">
+              <span class="text-xs font-black text-amber-500">{{ i18n.t('result.personal_best')() || '新纪录诞生！' }}</span>
+              <span class="text-[11px] text-[var(--color-text-secondary)] ml-1 hidden sm:inline">{{ i18n.t('result.challenge_friend_title')() || '向好友发起挑战' }}</span>
             </div>
           </div>
+          <button (click)="generateWarpost()"
+                  class="px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs active:scale-95 transition-all flex items-center gap-1 cursor-pointer shrink-0">
+            <span>⚔️</span>
+            <span>{{ warpostCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : (i18n.t('result.copy_challenge')() || '下战帖') }}</span>
+          </button>
         </div>
       }
 
@@ -661,57 +630,51 @@
           </button>
         }
 
-        <!-- Secondary Tool Row (Balanced 5-column grid on desktop, 2 or 3-column on mobile) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 mt-1">
-          <!-- 0. 查看残局 (Peek Board) -->
+        <!-- Secondary Action Row (Clean, single-tier toolbar) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1 w-full"
+             [ngClass]="{ 'sm:grid-cols-5': hasReplayData() }">
+          <!-- 1. 查看残局 (Peek Board) -->
           <button (click)="peekBoard()"
             type="button"
-            class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] hover:border-amber-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+            class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] hover:border-amber-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
             <span>👁️</span>
             <span>{{ i18n.t('game.view_board')() || '查看残局' }}</span>
           </button>
 
           @if (currentGameId) {
-            <!-- 1. 下战帖 (Viral Warpost) -->
-            <button (click)="generateWarpost()"
-              class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs"
-              [class]="warpostCopied()
-                ? 'bg-amber-500 text-slate-950 font-black shadow-amber-500/30'
-                : 'bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-purple-500/15 hover:from-amber-500/25 hover:to-purple-500/25 text-amber-500 border border-amber-500/40'">
-              <span>⚔️</span>
-              <span>{{ warpostCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : '下战帖' }}</span>
+            <!-- 2. 战报海报 (Poster) -->
+            <button (click)="openPosterModal()"
+              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] hover:border-amber-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+              <span>📸</span>
+              <span>{{ i18n.t('poster.button_title')() || '战报海报' }}</span>
             </button>
 
-            <!-- 1.5 极简战报复制 (Wordle-style Text Result) -->
+            <!-- 3. 复制战报 (Text Result) -->
             <button (click)="copyTextResult()"
               class="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs"
               [class]="textCopied()
                 ? 'bg-emerald-500 text-white font-black shadow-emerald-500/30'
                 : 'bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-emerald-400 border border-[var(--color-border-card)] hover:border-emerald-500/40 hover:bg-[var(--color-border-card)]/40'">
               <span>📋</span>
-              <span>{{ textCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : (i18n.t('text_share.btn')() || '战绩复制') }}</span>
+              <span>{{ textCopied() ? (i18n.t('text_share.copied_short')() || '已复制!') : (i18n.t('text_share.copy_result')() || '复制战绩') }}</span>
             </button>
 
-            <!-- 2. 海报 (Poster) -->
-            <button (click)="openPosterModal()"
-              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-amber-400 border border-[var(--color-border-card)] hover:border-amber-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-              <span>📸</span>
-              <span>{{ i18n.t('poster.button_title')() || '生成海报' }}</span>
-            </button>
-
-            <!-- 3. 极速回放 (Time-lapse replay) -->
-            <button (click)="openTimelapseModal()"
-              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-purple-400 border border-[var(--color-border-card)] hover:border-purple-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
-              <span>🎬</span>
-              <span>复盘回放</span>
-            </button>
+            <!-- 4. 极速回放 (Only if replay steps exist, e.g. Minesweeper, Nonogram) -->
+            @if (hasReplayData()) {
+              <button (click)="openTimelapseModal()"
+                class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-purple-400 border border-[var(--color-border-card)] hover:border-purple-500/40 hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
+                <span>🎬</span>
+                <span>复盘回放</span>
+              </button>
+            }
           }
 
+          <!-- 5. 返回大厅 (Leave) -->
           @if (canShowLeave) {
             <button (click)="handleLeave()"
-              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-red-400 border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              class="py-2.5 px-3 rounded-xl text-xs font-bold bg-[var(--color-bg-main)] text-[var(--color-text-secondary)] hover:text-red-400 border border-[var(--color-border-card)] hover:bg-[var(--color-border-card)]/40 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs">
               <span>🚪</span>
-              <span>{{ t('game.return_lobby') || '大厅' }}</span>
+              <span>{{ t('game.return_lobby') || '返回大厅' }}</span>
             </button>
           }
 

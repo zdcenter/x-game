@@ -431,6 +431,19 @@
       </button>
     </div>
 
+    <!-- Standard Actions Toolbar -->
+    <div class="w-full max-w-xs mx-auto py-0.5">
+      <app-game-toolbar
+        [gameId]="'tilematch'"
+        [showPrev]="false"
+        [showNext]="false"
+        [showRestart]="true"
+        [showUndo]="false"
+        [showHint]="false"
+        (restart)="handleRestart(); vibrateLight()">
+      </app-game-toolbar>
+    </div>
+
     <!-- Flying Card Animation Overlay -->
     @for (fly of flyingTiles(); track fly.id) {
       <div

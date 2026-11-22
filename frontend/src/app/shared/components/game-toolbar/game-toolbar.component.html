@@ -97,6 +97,10 @@
         <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[8px] min-[380px]:text-[10px] sm:text-xs">{{ i18n.t('idiom.share')() }}</span>
       </button>
     }
+
+    <!-- Custom Extra Actions Slot -->
+    <ng-content select="[toolbar-extra]"></ng-content>
+    <ng-content></ng-content>
   </div>
 } @else {
   <!-- Default Layout (e.g. Hashi style) -->
@@ -174,5 +178,9 @@
         </svg>
       </button>
     }
+
+    <!-- Custom Extra Actions Slot -->
+    <ng-content select="[toolbar-extra]"></ng-content>
+    <ng-content></ng-content>
   </div>
 }

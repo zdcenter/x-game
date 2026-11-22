@@ -5,6 +5,7 @@ import { TentsStore } from './store/tents.store';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { PkPlayerStats } from '../../../shared/components/game-pk-hud/game-pk-hud.model';
 import { GameDifficulty, GameId, GameMode, GameStatus } from '../../../core/models/game.model';
@@ -28,6 +29,7 @@ import {
     GameLayoutComponent,
     GamePkHudComponent,
     GameHandheldHeaderComponent,
+    GameToolbarComponent,
     DifficultySelectorComponent,
     InteractiveTutorialBoardComponent,
     InteractiveTutorialPointerComponent,

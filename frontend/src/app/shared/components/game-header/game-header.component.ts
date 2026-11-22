@@ -14,6 +14,7 @@ import { AuthStore } from '../../../core/auth/auth.store';
 import { AuthModalService } from '../../../core/services/auth-modal.service';
 import { isBrowser } from '../../../core/utils/browser.util';
 import { StreamerModeService } from '../../../core/services/streamer-mode.service';
+import { FeedbackService } from '../../../core/services/feedback.service';
 
 @Component({
   selector: 'app-game-header',
@@ -42,6 +43,7 @@ export class GameHeaderComponent implements OnInit {
   coinService = inject(CoinService);
   coinGuideService = inject(CoinGuideService);
   streamerMode = inject(StreamerModeService);
+  feedbackService = inject(FeedbackService);
   i18n = inject(I18nService);
   router = inject(Router);
   authStore = inject(AuthStore);
@@ -90,6 +92,13 @@ export class GameHeaderComponent implements OnInit {
 
   closeToolsMenu(): void {
     this.isToolsMenuOpen.set(false);
+  }
+
+  openFeedback(): void {
+    this.feedbackService.open({
+      gameId: this.gameId,
+      gameTitle: this.title
+    });
   }
 
   toggleZen(): void {

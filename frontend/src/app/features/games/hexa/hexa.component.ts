@@ -17,6 +17,7 @@ import { GameHandheldScoreComponent } from '../../../shared/components/game-hand
 import { WindowSizeService } from '../../../core/services/window-size.service';
 
 import { GameHandheldHeaderComponent } from '../../../shared/components/game-handheld-header/game-handheld-header.component';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 @Component({
   selector: 'app-hexa',
@@ -24,7 +25,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   imports: [CommonModule,
     FormsModule,
     HexaBoardComponent,
-    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
+    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent, GameToolbarComponent],
   providers: [HexaStore],
   templateUrl: './hexa.component.html',
   styleUrl: './hexa.component.css'

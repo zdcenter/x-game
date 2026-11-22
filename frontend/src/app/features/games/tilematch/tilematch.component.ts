@@ -10,6 +10,7 @@ import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/
 import { TILE_EMOJIS, TileCard } from './store/tilematch-engine';
 import { DifficultySelectorComponent, DifficultyOption } from '../../../shared/components/difficulty-selector/difficulty-selector.component';
 import { getSavedDifficulty, setSavedDifficulty } from '../../../core/utils/browser.util';
+import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 
 import { TileIconComponent } from './components/tile-icon/tile-icon.component';
 
@@ -44,7 +45,8 @@ export interface ClearingMatchEvent {
     GameLayoutComponent,
     GamePkHudComponent,
     TileIconComponent,
-    DifficultySelectorComponent
+    DifficultySelectorComponent,
+    GameToolbarComponent
   ],
   providers: [TilematchStore],
   templateUrl: './tilematch.component.html',
