@@ -63,15 +63,13 @@
             </span>
           </div>
 
-          <!-- 笑脸重置 -->
-          <button
-            type="button"
-            (click)="store.startGame()"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs shrink-0"
-            [title]="i18n.t('game.restart')() || '重新开始'"
+          <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+          <div
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs select-none shrink-0"
+            [title]="store.status() === GameStatus.Finished ? 'Victory' : 'Playing'"
           >
             {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-          </button>
+          </div>
 
           <!-- 进度百分比 -->
           <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 font-mono text-xs font-bold shadow-2xs shrink-0">
@@ -102,31 +100,12 @@
             [worldRecordHolder]="worldRecord()?.username"
             [scoreIcon]="store.targetMode() === 'on' ? '💡' : '🌑'"
           >
-            <!-- Center: Mode Toggle Switcher + Dynamic Progress Meter -->
-            <div class="flex items-center gap-2 sm:gap-3">
-              <!-- Target Mode Toggle Button -->
-              <button
-                type="button"
-                (click)="store.toggleTargetMode()"
-                class="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer select-none border"
-                [class]="store.targetMode() === 'on' 
-                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
-                  : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30 hover:bg-slate-500/25'"
-                [title]="store.targetMode() === 'on' ? (i18n.t('lightsout.switch_to_off')() || '切换为灭灯模式') : (i18n.t('lightsout.switch_to_on')() || '切换为点灯模式')">
-                <span class="text-xs">{{ store.targetMode() === 'on' ? '💡' : '🌑' }}</span>
-                <span class="font-mono tracking-tight whitespace-nowrap">
-                  {{ store.targetMode() === 'on' ? (i18n.t('lightsout.mode_on')() || '点灯模式') : (i18n.t('lightsout.mode_off')() || '灭灯模式') }}
-                </span>
-                <span class="text-[10px] opacity-60 hidden sm:inline">⇄</span>
-              </button>
-
-              <!-- Dynamic Progress Ratio & Percentage Pill -->
-              <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 rounded-full">
-                <span class="text-xs">⚡</span>
-                <span class="text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap font-mono">
-                  {{ store.clearedPercentage() }}% {{ store.targetMode() === 'on' ? (i18n.t('lightsout.lit')() || '已点亮') : (i18n.t('lightsout.extinguished')() || '已熄灭') }}
-                </span>
-              </div>
+            <!-- Center: Dynamic Progress Ratio & Percentage Pill (纯参数展示) -->
+            <div class="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 rounded-full">
+              <span class="text-xs">⚡</span>
+              <span class="text-[11px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap font-mono">
+                {{ store.clearedPercentage() }}% {{ store.targetMode() === 'on' ? (i18n.t('lightsout.lit')() || '已点亮') : (i18n.t('lightsout.extinguished')() || '已熄灭') }}
+              </span>
             </div>
           </app-game-score-capsule>
         </div>
@@ -286,7 +265,22 @@
             (restart)="isTutorialActive() ? restartTutorial() : store.startGame()"
             (hintApplied)="applyHint()"
             class="w-full max-w-sm sm:max-w-md"
-          ></app-game-toolbar>
+          >
+            <!-- Target Mode Toggle Button (操作按钮统一下沉至工具栏) -->
+            <button toolbar-extra
+                    type="button"
+                    (click)="store.toggleTargetMode()"
+                    class="flex-1 min-w-[50px] min-h-[46px] max-w-[120px] flex flex-col items-center justify-center p-1 rounded-xl font-bold transition-all border active:scale-95 touch-manipulation select-none cursor-pointer shadow-xs"
+                    [class]="store.targetMode() === 'on' 
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
+                      : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30 hover:bg-slate-500/25'"
+                    [title]="store.targetMode() === 'on' ? (i18n.t('lightsout.switch_to_off')() || '切换为灭灯模式') : (i18n.t('lightsout.switch_to_on')() || '切换为点灯模式')">
+              <span class="text-base leading-none mb-0.5">{{ store.targetMode() === 'on' ? '💡' : '🌑' }}</span>
+              <span class="w-full text-center tracking-tighter whitespace-nowrap overflow-visible text-[10px] font-semibold">
+                {{ store.targetMode() === 'on' ? (i18n.t('lightsout.mode_on')() || '点灯模式') : (i18n.t('lightsout.mode_off')() || '灭灯模式') }}
+              </span>
+            </button>
+          </app-game-toolbar>
         </div>
       }
     </div>

@@ -137,12 +137,11 @@
                 </span>
               </div>
 
-              <!-- 😃 经典笑脸重开 -->
-              <button (click)="changeSingleDifficulty(currentDifficulty())"
-                      class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-base select-none cursor-pointer shrink-0"
-                      [title]="i18n.t('minesweeper.restart')() || '重新开始'">
+              <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+              <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs text-sm sm:text-base select-none shrink-0"
+                   [title]="store.status() === GameStatus.Finished && isDefeat() ? 'Defeat' : (store.status() === GameStatus.Finished && !isDefeat() ? 'Victory' : 'Playing')">
                 {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
-              </button>
+              </div>
 
               <!-- ⏱️ 计时器 -->
               <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
@@ -182,8 +181,8 @@
     @if (!isHandheld() && !zenService.isZenMode() && currentRoomMode() === GameMode.Single && !isTutorialActive()) {
       <div class="flex-none flex items-center justify-between px-3 sm:px-5 py-2 bg-[var(--color-bg-card)]/90 backdrop-blur-md rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full max-w-[480px] shadow-sm z-10 mx-auto">
 
-        <!-- Mines Remaining -->
-        <div class="flex items-center gap-1 sm:gap-2">
+        <!-- Left: Mines Remaining (靠左) -->
+        <div class="flex-1 flex items-center justify-start gap-1 sm:gap-2">
           <span class="text-base sm:text-xl opacity-80" title="Remaining Mines">💣</span>
           <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg flex items-center px-1.5 sm:px-2 py-0.5 h-8 sm:h-9 w-14 sm:w-16 justify-center">
             <span class="font-digital text-rose-500 font-bold text-xl sm:text-2xl tracking-widest leading-none">
@@ -192,14 +191,20 @@
           </div>
         </div>
 
-        <!-- Smiley Reset Button -->
-        <button (click)="changeSingleDifficulty(currentDifficulty())" 
-                class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md active:scale-95 transition-all text-xl sm:text-2xl select-none cursor-pointer">
-          {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
-        </button>
+        <!-- Center: Status Smiley & Qualification Badges (居中) -->
+        <div class="flex-none flex items-center justify-center gap-1.5 sm:gap-2">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full flex items-center justify-center border border-amber-600/30 shadow-md text-xl sm:text-2xl select-none"
+               [title]="store.status() === GameStatus.Finished && isDefeat() ? '触雷失败' : (store.status() === GameStatus.Finished && !isDefeat() ? '排雷胜利' : '排雷中')">
+            {{ store.status() === GameStatus.Finished && isDefeat() ? '😵' : (store.status() === GameStatus.Finished && !isDefeat() ? '😎' : '😃') }}
+          </div>
+          <app-game-status-hud
+            [hintsUsed]="store.hintsUsed()"
+            [showTimer]="false">
+          </app-game-status-hud>
+        </div>
 
-        <!-- Timer -->
-        <div class="flex items-center gap-1 sm:gap-2">
+        <!-- Right: Timer (靠最右) -->
+        <div class="flex-1 flex items-center justify-end gap-1 sm:gap-2">
           <div class="bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg flex items-center px-1.5 sm:px-2 py-0.5 h-8 sm:h-9 w-14 sm:w-16 justify-center">
             <span class="font-digital text-cyan-500 font-bold text-xl sm:text-2xl tracking-widest leading-none">
               {{ Math.min(999, elapsedSeconds()) | number:'3.0-0' }}
@@ -207,12 +212,6 @@
           </div>
           <span class="text-base sm:text-xl opacity-80" title="Elapsed Time">⏱️</span>
         </div>
-
-        <!-- 🏆/💡 冲榜资格徽章 -->
-        <app-game-status-hud
-          [hintsUsed]="store.hintsUsed()"
-          [showTimer]="false">
-        </app-game-status-hud>
       </div>
     } @else if (currentRoomMode() !== GameMode.Single) {
       <!-- Universal PK Battle HUD (Minesweeper Speed & Steal Mode) -->

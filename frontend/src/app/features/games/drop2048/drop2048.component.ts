@@ -9,7 +9,6 @@ import { getDrop2048BlockStyle } from './store/drop2048-engine';
 import { setupRoomLifecycle, RoomLifecycleHandle } from '../../../core/services/room-lifecycle';
 import { GameLobbyPanelComponent } from '../../../shared/components/game-lobby-panel/game-lobby-panel.component';
 import { Drop2048BoardComponent } from './components/drop2048-board/drop2048-board.component';
-import { GameToolbarComponent } from '../../../shared/components/game-toolbar/game-toolbar.component';
 import { GameLayoutComponent } from '../../../shared/components/game-layout/game-layout.component';
 import { FloatingTextService } from '../../../core/services/floating-text.service';
 import { GamePkHudComponent } from '../../../shared/components/game-pk-hud/game-pk-hud.component';
@@ -26,7 +25,7 @@ import { GameHandheldHeaderComponent } from '../../../shared/components/game-han
   imports: [GameSpectatingOverlayComponent, 
     CommonModule, 
     Drop2048BoardComponent,
-    GameToolbarComponent, GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
+    GameLayoutComponent, GamePkHudComponent, GameScoreCapsuleComponent, GameHandheldHeaderComponent, GameHandheldScoreComponent],
   providers: [Drop2048Store],
   templateUrl: './drop2048.component.html',
   styleUrls: ['./drop2048.component.css']

@@ -68,7 +68,7 @@
         <button
           type="button"
           (click)="store.cycleColorTheme()"
-          class="hidden sm:flex w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] items-center justify-center text-xs sm:text-sm active:scale-95 transition-all shrink-0 cursor-pointer"
+          class="flex w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[var(--color-bg-sub)]/80 hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] items-center justify-center text-xs sm:text-sm active:scale-95 transition-all shrink-0 cursor-pointer"
           [title]="i18n.t('tetris.theme_tooltip')()"
         >
           🎨
@@ -77,7 +77,7 @@
     </app-game-handheld-header>
   }
 
-  <div class="flex-grow flex flex-col items-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-y-auto overflow-x-hidden gap-1.5 select-none" #boardArea>
+  <div class="flex-grow flex flex-col items-center my-auto min-h-0 w-full py-1 sm:py-2 overflow-y-auto overflow-x-hidden gap-1.5 select-none overscroll-contain touch-manipulation" #boardArea>
             
           <!-- Universal PK Battle HUD (Tetris) -->
           @if (currentRoomMode() !== GameMode.Single) {
@@ -546,20 +546,7 @@
               </div>
             }
 
-            <!-- Standard Actions Toolbar -->
-            @if (store.currentRoomMode() === GameMode.Single) {
-              <div class="w-full max-w-xs mx-auto py-1">
-                <app-game-toolbar
-                  [gameId]="'tetris'"
-                  [showPrev]="false"
-                  [showNext]="false"
-                  [showRestart]="true"
-                  [showUndo]="false"
-                  [showHint]="false"
-                  (restart)="store.startGame()">
-                </app-game-toolbar>
-              </div>
-            }
+
 
           </div>
 

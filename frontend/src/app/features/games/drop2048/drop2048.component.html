@@ -109,7 +109,7 @@
             [worldRecordHolder]="worldRecord()?.username"
             scoreIcon="⭐"
           >
-            <!-- Center: Level & Dynamic Combo Badge -->
+            <!-- Center: Level & Dynamic Combo Badge Only (纯参数无功能冗余) -->
             <div class="flex items-center gap-1.5 sm:gap-2.5">
               <div class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)]">
                 <span class="text-xs sm:text-sm font-bold text-cyan-500">LV</span>
@@ -253,19 +253,7 @@
                     ></app-drop2048-board>
                   </div>
 
-                  @if (store.currentRoomMode() === GameMode.Single) {
-                    <div class="w-full max-w-[360px] z-10 shrink-0 mt-2">
-                      <app-game-toolbar
-                        [layoutStyle]="'compact'"
-                        [showRestart]="true"
-                        [showUndo]="false"
-                        [showHint]="false"
-                        [showPrev]="false"
-                        [showNext]="false"
-                        (restart)="store.restartGame()"
-                      ></app-game-toolbar>
-                    </div>
-                  }
+
                 </div>
 
                 <!-- RIGHT WING CONSOLE (Desktop / Tablet) -->

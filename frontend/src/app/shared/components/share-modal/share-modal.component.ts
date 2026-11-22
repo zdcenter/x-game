@@ -4,13 +4,14 @@ import { ShareService } from '../../../core/services/share.service';
 import { ShareImageService } from '../../../core/services/share-image.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { isBrowser, getOrigin } from '../../../core/utils/browser.util';
 import * as QRCode from 'qrcode';
 
 @Component({
   selector: 'app-share-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BaseModalComponent],
   templateUrl: './share-modal.component.html',
 })
 export class ShareModalComponent implements OnDestroy {

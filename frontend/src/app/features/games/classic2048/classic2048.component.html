@@ -55,12 +55,12 @@
           [worldBestScore]="worldRecord()?.bestScore"
           [worldRecordHolder]="worldRecord()?.username"
         >
-          <!-- 😃 经典笑脸重启 -->
-          <button (click)="store.restartGame()"
-                  class="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-lg select-none cursor-pointer shrink-0"
-                  [title]="i18n.t('game.restart')() || '重新开始'">
-            {{ store.status() === GameStatus.Finished ? '😵' : '😃' }}
-          </button>
+        <!-- Dynamic Combo Surge Badge Only -->
+        @if (comboCount() > 1) {
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-black animate-pulse">
+            🔥{{ comboCount() }}x
+          </span>
+        }
         </app-game-handheld-score>
       } @else {
         <!-- PK 模式头部指示器 -->
@@ -102,17 +102,8 @@
                   [worldRecordHolder]="worldRecord()?.username"
                   scoreIcon="🔢"
                 >
-                  <!-- Center: Theme Selector, Moves & Timer, Quick Restart -->
+                  <!-- Center: Moves & Timer, Dynamic Combo Surge Badge Only (纯参数无功能冗余) -->
                   <div class="flex items-center gap-1.5 sm:gap-2.5">
-                    <!-- Theme Toggle Button -->
-                    <button type="button"
-                            (click)="cycleTheme()"
-                            class="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                            [title]="i18n.t('game.theme')() || 'Theme'">
-                      <span class="text-xs sm:text-sm">{{ currentThemeIcon() }}</span>
-                      <span class="hidden md:inline font-medium text-[11px]">{{ currentThemeName() }}</span>
-                    </button>
-
                     <!-- Moves & Time Indicator -->
                     <div class="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] rounded-xl text-xs font-mono font-bold text-[var(--color-text-muted)] shadow-xs">
                       <span>⏱️ {{ timeDisplay }}</span>
@@ -127,15 +118,6 @@
                         <span>{{ comboCount() }}x COMBO</span>
                       </div>
                     }
-
-                    <!-- Instant Restart Button -->
-                    <button type="button"
-                            (click)="store.restartGame()"
-                            class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] rounded-xl text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer group"
-                            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-                      <span class="text-xs sm:text-sm group-hover:rotate-180 transition-transform duration-300">🔄</span>
-                      <span class="hidden md:inline font-medium text-[11px]">{{ i18n.t('game.restart')() || '重开' }}</span>
-                    </button>
                   </div>
                 </app-game-score-capsule>
               </div>
@@ -221,8 +203,18 @@
                     [showPrev]="false"
                     [showNext]="false"
                     (restart)="store.restartGame()"
-                    (undo)="store.undo()"
-                  ></app-game-toolbar>
+                    (undo)="store.undo()">
+
+                    <!-- 🎨 主题切换移至底部工具栏 -->
+                    <button toolbar-extra
+                            type="button"
+                            (click)="cycleTheme()"
+                            class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--color-bg-card)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] text-xs font-semibold text-[var(--color-text-main)] shadow-sm hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                            [title]="i18n.t('game.theme')() || 'Theme'">
+                      <span class="text-xs sm:text-sm">{{ currentThemeIcon() }}</span>
+                      <span class="font-medium text-xs">{{ currentThemeName() }}</span>
+                    </button>
+                  </app-game-toolbar>
                 </div>
               }
           </div>

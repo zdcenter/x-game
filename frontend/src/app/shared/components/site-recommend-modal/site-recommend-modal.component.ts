@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { SiteRecommendService, RecommendScript } from '../../../core/services/site-recommend.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AuthStore } from '../../../core/auth/auth.store';
+import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { isBrowser } from '../../../core/utils/browser.util';
 import * as QRCode from 'qrcode';
 
 @Component({
   selector: 'app-site-recommend-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BaseModalComponent],
   template: `
     <!-- Floating Action Button (FAB) anchored at bottom-right of screen -->
     <div class="fixed bottom-6 right-4 sm:right-6 z-40 flex items-center select-none">
@@ -26,42 +27,14 @@ import * as QRCode from 'qrcode';
     </div>
 
     <!-- Modal Backdrop & Dialog -->
-    @if (recommendService.isOpen()) {
-      <div class="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-5 overflow-hidden"
-           style="overscroll-behavior: contain;">
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/65 backdrop-blur-md transition-opacity" (click)="closeModal()"></div>
-
-        <!-- Dialog Container -->
-        <div class="relative bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-in z-10 text-[var(--color-text-main)]">
-          
-          <!-- Header -->
-          <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[var(--color-border-card)] bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-green-500/10 shrink-0">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center text-xl shadow-md shrink-0">
-                🎁
-              </div>
-              <div>
-                <h3 class="text-base sm:text-lg font-black tracking-tight text-[var(--color-text-main)]">
-                  {{ i18n.t('recommend.modal_title')() || '推荐 Puzzle PK · 脑力宇宙' }}
-                </h3>
-                <p class="text-xs text-[var(--color-text-secondary)]">
-                  {{ i18n.t('recommend.modal_subtitle')() || '好游戏值得与好友共享' }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Close Button -->
-            <button
-              (click)="closeModal()"
-              type="button"
-              class="w-8 h-8 rounded-full bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors cursor-pointer">
-              ✕
-            </button>
-          </div>
-
-          <!-- Body Scrollable Content -->
-          <div class="flex-1 overflow-y-auto custom-scrollbar p-5 sm:p-6 space-y-5">
+    <app-base-modal
+      [isOpen]="recommendService.isOpen()"
+      [title]="i18n.t('recommend.modal_title')() || '推荐 Puzzle PK · 脑力宇宙'"
+      [subtitle]="i18n.t('recommend.modal_subtitle')() || '好游戏值得与好友共享'"
+      icon="🎁"
+      maxWidth="2xl"
+      bodyClass="space-y-5"
+      (closed)="closeModal()">
             
             <!-- Section 1: 场景分享寄语切换 -->
             <div class="space-y-2.5">
@@ -236,11 +209,7 @@ import * as QRCode from 'qrcode';
               </div>
             </div>
 
-          </div>
-
-        </div>
-      </div>
-    }
+    </app-base-modal>
 
     <!-- 微信内右上角分享指引遮罩 (在微信内置浏览器内唤起) -->
     @if (showWechatMask()) {

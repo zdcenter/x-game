@@ -1,6 +1,7 @@
 import { GameDifficulty, GameId, GameMode, GameStatus, GameStatusType } from '../../../../core/models/game.model';
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { AudioService } from '../../../../core/services/audio.service';
+import { HapticService } from '../../../../core/services/haptic.service';
 import { BaseGameStore } from '../../../../core/store/base-game.store';
 import { LocalGomokuEngine, GomokuActionType } from './gomoku-engine';
 import { GomokuColor } from './gomoku-ai';
@@ -12,6 +13,7 @@ export class GomokuStore extends BaseGameStore {
   readonly gameId = GameId.Gomoku;
 
   private audio = inject(AudioService);
+  private haptic = inject(HapticService);
   private resumeService = inject(ResumeGameService);
 
   private emptyBoard = this.createEmptyBoard();
@@ -258,11 +260,13 @@ export class GomokuStore extends BaseGameStore {
       if (engine && engine.currentTurn === this.playerId()) {
         engine.handleAction({ type: GomokuActionType.Move, y, x });
         this.audio.playGomoku('stoneDrop');
+        this.haptic.vibrateSnap();
         this.tick.set(this.tick() + 1);
       }
     } else {
       if (this.currentTurn() !== this.playerId()) return;
       this.ws.send({ action: C2SAction.Move, y, x });
+      this.haptic.vibrateSnap();
     }
   }
 

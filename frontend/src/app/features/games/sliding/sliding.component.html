@@ -62,12 +62,11 @@
             </span>
           </div>
 
-          <!-- 😃 经典笑脸重启 -->
-          <button (click)="store.startGame()"
-                  class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-90 transition-all text-sm sm:text-base select-none cursor-pointer shrink-0"
-                  [title]="t('game.restart')() || '重新开始'">
+          <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+          <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs text-sm sm:text-base select-none shrink-0"
+               [title]="store.status() === GameStatus.Finished ? 'Victory!' : 'Playing'">
             {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-          </button>
+          </div>
 
           <!-- ⏱️ 耗时 -->
           <div class="flex items-center gap-1 bg-[var(--color-bg-main)] border border-[var(--color-border-card)] rounded-lg sm:rounded-xl px-1.5 sm:px-2.5 py-0.5 sm:py-1 h-7 sm:h-8 justify-center shadow-2xs shrink-0"
@@ -91,12 +90,12 @@
   <!-- Centered Interactive Play Stage (Board + Controls Vertically & Horizontally Balanced in Viewport) -->
   <div class="w-full flex flex-col items-center my-auto">
 
-    <!-- Single Player Classic Header (PC 桌面端展示，手持端已整合入一体化顶梁中) -->
+    <!-- Single Player Classic Header (PC 桌面端展示：左侧步数，中间表情/状态，右侧计时靠最右) -->
     @if (!isHandheld() && currentRoomMode() === GameMode.Single) {
       <div class="flex-none flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--color-bg-card)]/95 backdrop-blur-md rounded-xl sm:rounded-2xl border border-[var(--color-border-card)] shrink-0 w-full shadow-xs mx-auto mb-2 sm:mb-3 z-10" [style.max-width]="boardSizePx()">
         
-        <!-- Moves -->
-        <div class="flex items-center gap-1 sm:gap-2">
+        <!-- Left: Moves (靠左) -->
+        <div class="flex-1 flex items-center justify-start gap-1 sm:gap-2">
           <span class="text-base sm:text-xl opacity-80 drop-shadow-sm select-none" title="Moves">🔄</span>
           <div class="bg-rose-50 dark:bg-[#050505] border border-rose-200 dark:border-[var(--color-border-card)] rounded-lg flex items-center px-1.5 sm:px-2.5 py-0.5 sm:py-1 shadow-[inset_0_2px_4px_rgba(225,29,72,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-8 sm:h-10 min-w-14 sm:min-w-18 justify-center transition-colors duration-300">
             <span class="font-digital text-rose-600 dark:text-red-500 font-bold text-xl sm:text-2xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)]">
@@ -105,15 +104,21 @@
           </div>
         </div>
 
-        <!-- Smiley Reset Button (0ms instant restart like Minesweeper) -->
-        <button (click)="store.startGame()"
-                class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs active:scale-95 transition-all text-lg sm:text-xl select-none cursor-pointer"
-                [title]="t('game.restart')() || 'Restart'">
-          {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-        </button>
+        <!-- Center: Status Smiley & Qualification Badges (居中) -->
+        <div class="flex-none flex items-center justify-center gap-1.5 sm:gap-2">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-b from-amber-300 to-amber-500 rounded-full flex items-center justify-center border border-amber-600/30 shadow-xs text-lg sm:text-xl select-none"
+               [title]="store.status() === GameStatus.Finished ? '胜利' : '解谜中'">
+            {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
+          </div>
+          <app-game-status-hud
+            [hintsUsed]="store.hintsUsed()"
+            [showTimer]="false"
+            [compact]="true">
+          </app-game-status-hud>
+        </div>
 
-        <!-- Timer -->
-        <div class="flex items-center gap-1 sm:gap-2">
+        <!-- Right: Timer (靠最右) -->
+        <div class="flex-1 flex items-center justify-end gap-1 sm:gap-2">
           <div class="bg-slate-100 dark:bg-[#050505] border border-slate-300 dark:border-[var(--color-border-card)] rounded-lg flex items-center px-2 sm:px-3 py-0.5 sm:py-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] h-8 sm:h-10 min-w-18 sm:min-w-22 justify-center transition-colors duration-300">
             <span class="font-digital text-slate-700 dark:text-red-500 font-bold text-xl sm:text-2xl tracking-widest leading-none drop-shadow-[0_1px_1px_rgba(255,255,255,1)] dark:drop-shadow-[0_0_2px_rgba(239,68,68,0.8)]">
               {{ formatTime(getElapsedMs(store.myBoard()?.startAt || 0)) }}
@@ -121,13 +126,6 @@
           </div>
           <span class="text-base sm:text-xl opacity-80 drop-shadow-sm select-none" title="Elapsed Time">⏱️</span>
         </div>
-
-        <!-- 🏆/💡 冲榜资格徽章 -->
-        <app-game-status-hud
-          [hintsUsed]="store.hintsUsed()"
-          [showTimer]="false"
-          [compact]="true">
-        </app-game-status-hud>
       </div>
     } @else if (currentRoomMode() !== GameMode.Single) {
       <!-- Universal PK Battle HUD (Sliding Puzzle) -->

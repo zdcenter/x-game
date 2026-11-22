@@ -69,15 +69,13 @@
               <span>24</span>
             </div>
 
-            <!-- 笑脸重置 / 下一题 -->
-            <button
-              type="button"
-              (click)="store.currentRoomMode() === GameMode.Single ? playNextLevel() : store.restartGame()"
-              class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs shrink-0"
-              [title]="i18n.t('game.restart')() || '重新开始'"
+            <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+            <div
+              class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs select-none shrink-0"
+              [title]="store.status() === GameStatus.Finished ? 'Victory' : 'Playing'"
             >
               {{ store.status() === GameStatus.Finished ? '😎' : '😃' }}
-            </button>
+            </div>
 
             <!-- 耗时 -->
             <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">

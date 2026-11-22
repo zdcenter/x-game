@@ -51,15 +51,13 @@
             <span>{{ myState()?.guesses?.length || 0 }} {{ i18n.t('codebreaker.guess')() || '次' }}</span>
           </div>
 
-          <!-- 笑脸重置 -->
-          <button
-            type="button"
-            (click)="onRestart()"
-            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs"
-            [title]="i18n.t('game.restart')() || '重新开始'"
+          <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+          <div
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-base sm:text-lg shadow-xs select-none"
+            [title]="store.status() === GameStatus.Finished ? (winners().includes(myPlayerId()) ? 'Victory' : 'Defeat') : 'Playing'"
           >
             {{ store.status() === GameStatus.Finished ? (winners().includes(myPlayerId()) ? '😎' : '😵') : '😃' }}
-          </button>
+          </div>
 
           <!-- 最佳战绩 -->
           @if (maxAchievedA() > 0) {

@@ -77,15 +77,13 @@
             </span>
           </div>
 
-          <!-- 😃 经典笑脸重启 -->
-          <button
-            type="button"
-            (click)="handleRestart()"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
-            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+          <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+          <div
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs select-none shrink-0"
+            [title]="store.status() === GameStatus.Finished ? 'Victory' : (store.isDead() ? 'Stuck' : 'Playing')"
           >
             {{ store.status() === GameStatus.Finished ? '😎' : (store.isDead() ? '😵' : '😊') }}
-          </button>
+          </div>
 
           <!-- 用时 -->
           <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">

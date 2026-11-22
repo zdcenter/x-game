@@ -141,7 +141,7 @@
             }
           </div>
 
-          <!-- 右侧常用功能区：【⚔️ 开房PK】+【🔄 重新开始】 -->
+          <!-- 右侧操作区：【⚔️ 开房PK】 -->
           <div class="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
@@ -150,13 +150,6 @@
               title="开房PK / 联机对战">
               <span class="text-xs sm:text-sm">⚔️</span>
               <span class="pk-micro-badge">PK</span>
-            </button>
-            <button
-              type="button"
-              (click)="store.restartGame(); vibrateLight()"
-              class="sheep-nav-btn cursor-pointer"
-              title="重新开始本关">
-              <span class="text-xs sm:text-sm">🔄</span>
             </button>
           </div>
         </div>
@@ -271,7 +264,7 @@
     }
 
     <!-- Main Game Board (完全无边界！悬浮在明朗大草地上的主牌堆舞台) -->
-    <div class="classic-sheep-board relative flex-grow min-h-0 w-full flex items-center justify-center my-0.5">
+    <div class="classic-sheep-board relative flex-grow min-h-0 w-full flex items-center justify-center my-0.5 overscroll-contain touch-manipulation select-none">
       <!-- 饱满充实的长方形舞台，全比例无负向缩放，自适应平板大屏扩张 -->
       <div class="board-stage relative mx-auto transition-all duration-300"
            [ngClass]="deviceService.isTablet() ? 'w-[560px] h-[650px]' : (deviceService.isDesktop() ? 'w-[420px] h-[450px]' : 'w-[360px] h-[420px]')">

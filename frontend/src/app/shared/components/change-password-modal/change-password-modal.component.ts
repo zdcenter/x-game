@@ -3,65 +3,41 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { BaseModalComponent } from '../base-modal/base-modal.component';
 
 @Component({
   selector: 'app-change-password-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BaseModalComponent],
   template: `
-    @if (isOpen()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in"
-           style="overscroll-behavior: contain;">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="close()"></div>
+    <app-base-modal
+      [isOpen]="isOpen()"
+      [title]="i18n.t('auth.change_password.title')()"
+      [subtitle]="i18n.t('auth.change_password.subtitle')()"
+      icon="🔑"
+      maxWidth="md"
+      (closed)="close()">
 
-        <!-- Modal Dialog -->
-        <div class="relative w-full max-w-md bg-[var(--color-bg-card)] border border-[var(--color-border-card)] rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-6 overflow-hidden z-10 flex flex-col">
-          
-          <!-- Header -->
-          <div class="flex items-center justify-between pb-3.5 border-b border-[var(--color-border-card)]">
-            <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--color-accent-from)] to-[var(--color-accent-to)] flex items-center justify-center text-white shadow-sm text-lg">
-                🔑
-              </div>
-              <div>
-                <h3 class="text-base sm:text-lg font-black text-[var(--color-text-main)]">
-                  {{ i18n.t('auth.change_password.title')() }}
-                </h3>
-                <p class="text-[11px] text-[var(--color-text-muted)]">
-                  {{ i18n.t('auth.change_password.subtitle')() }}
-                </p>
-              </div>
-            </div>
-            <button (click)="close()"
-                    class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:bg-[var(--color-bg-main)] transition-colors active:scale-95"
-                    [attr.aria-label]="i18n.t('common.close')() || 'Close'">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+      <!-- Success State -->
+      @if (isSuccess()) {
+        <div class="py-8 flex flex-col items-center text-center animate-fade-in">
+          <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 flex items-center justify-center text-2xl mb-3 shadow-inner">
+            ✓
           </div>
-
-          <!-- Success State -->
-          @if (isSuccess()) {
-            <div class="py-8 flex flex-col items-center text-center animate-fade-in">
-              <div class="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 flex items-center justify-center text-2xl mb-3 shadow-inner">
-                ✓
-              </div>
-              <h4 class="text-base font-bold text-[var(--color-text-main)] mb-1">
-                {{ i18n.t('auth.change_password.success')() }}
-              </h4>
-              <p class="text-xs text-[var(--color-text-muted)] max-w-xs mb-5">
-                {{ i18n.t('auth.change_password.subtitle')() }}
-              </p>
-              <button (click)="close()"
-                      class="px-6 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-xs shadow-md active:scale-95 transition-all">
-                {{ i18n.t('common.confirm')() || 'OK' }}
-              </button>
-            </div>
-          } @else {
-            <!-- Form Body -->
-            <form (ngSubmit)="onSubmit()" class="pt-4 space-y-4">
+          <h4 class="text-base font-bold text-[var(--color-text-main)] mb-1">
+            {{ i18n.t('auth.change_password.success')() }}
+          </h4>
+          <p class="text-xs text-[var(--color-text-muted)] max-w-xs mb-5">
+            {{ i18n.t('auth.change_password.subtitle')() }}
+          </p>
+          <button (click)="close()"
+                  class="px-6 py-2 rounded-xl bg-gradient-to-r from-[var(--color-accent-from)] to-[var(--color-accent-to)] text-white font-bold text-xs shadow-md active:scale-95 transition-all">
+            {{ i18n.t('common.confirm')() || 'OK' }}
+          </button>
+        </div>
+      } @else {
+        <!-- Form Body -->
+        <form (ngSubmit)="onSubmit()" class="space-y-4">
               
               <!-- Error Banner -->
               @if (errorMessage()) {
@@ -160,9 +136,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
               </div>
             </form>
           }
-        </div>
-      </div>
-    }
+    </app-base-modal>
   `
 })
 export class ChangePasswordModalComponent {

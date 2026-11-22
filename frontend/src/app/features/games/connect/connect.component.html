@@ -71,15 +71,13 @@
             </span>
           </div>
 
-          <!-- 笑脸重启 -->
-          <button
-            type="button"
-            (click)="onRestart()"
-            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] hover:bg-[var(--color-border-card)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs active:scale-95 transition-all cursor-pointer shrink-0"
-            [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'"
+          <!-- 😃 经典笑脸状态徽章 (仅展示游戏状态，操作统一归属底部工具栏) -->
+          <div
+            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] flex items-center justify-center text-sm sm:text-base shadow-xs select-none shrink-0"
+            [title]="store.status() === GameStatus.Finished ? 'Victory' : 'Playing'"
           >
             {{ store.status() === GameStatus.Finished ? '😎' : '😊' }}
-          </button>
+          </div>
 
           <!-- 用时计时 -->
           <div class="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl bg-[var(--color-bg-main)] border border-[var(--color-border-card)] shadow-2xs shrink-0">
@@ -129,14 +127,10 @@
             <span class="text-xs sm:text-sm">{{ i18n.t('game.coverage')() || '覆盖率' }}: <b class="font-mono text-sm sm:text-base">{{ store.coveragePercent() }}%</b></span>
           </div>
 
-          <!-- Timer & Quick Restart -->
-          <div class="flex items-center gap-2.5">
-            <span class="text-[var(--color-text-main)] font-mono font-bold text-sm sm:text-base">⏱️ {{ formatTime(store.timeSpent()) }}</span>
-            <button (click)="onRestart()"
-                    class="p-1.5 rounded-lg bg-[var(--color-bg-card)] hover:bg-[var(--color-bg-sub)] border border-[var(--color-border-card)] shadow-xs hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer group"
-                    [title]="(i18n.t('game.restart')() || 'Restart') + ' (R)'">
-              <span class="group-hover:rotate-180 transition-transform duration-300 inline-block">🔄</span>
-            </button>
+          <!-- Timer (纯参数展示，操作统一归属底部工具栏) -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-card)]">
+            <span class="text-xs">⏱️</span>
+            <span class="text-[var(--color-text-main)] font-mono font-bold text-sm sm:text-base">{{ formatTime(store.timeSpent()) }}</span>
           </div>
         </div>
       </div>
